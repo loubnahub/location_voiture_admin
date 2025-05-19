@@ -1,0 +1,197 @@
+/* src/components/DynamicTable.css */
+/* Styles for the DynamicTable component to achieve an alternating card-row look */
+/* This assumes the DynamicTable.jsx uses react-bootstrap <Table> component */
+
+/* --- Wrapper for the entire table structure --- */
+/* This div in DynamicTable.jsx gets the class 'table-wrapper-figma-style' */
+.table-wrapper-figma-style {
+  width: 100%;
+  margin-top: 1.25rem; /* Default top margin, can be adjusted by parent */
+  /* This wrapper itself does not need a background or shadow if rows act as cards */
+}
+
+/* --- Styling for the <Table> component from react-bootstrap --- */
+/* This class is applied to the <Table> in DynamicTable.jsx */
+.data-table-figma-style {
+  margin-bottom: 0 !important; /* Remove default Bootstrap table margin */
+  border: none !important;      /* No outer border for the table itself */
+  font-size: 0.875rem;        /* 14px, base font size for table content */
+  font-family: 'Poppins', sans-serif; /* Ensure Poppins font */
+  border-collapse: separate !important; /* CRUCIAL for border-spacing and row styling */
+  border-spacing: 0 8px !important;   /* Vertical space between TR elements (acts as margin for cards) */
+  background-color: transparent; /* Table background is transparent, rows will have color */
+  width: 100%; /* Ensure table takes full width of its wrapper */
+}
+
+/* --- Table Header Styling --- */
+/* This class is applied to <thead> in DynamicTable.jsx */
+.data-table-figma-style thead.table-header-figma-style tr {
+  background-color: #ffffff !important; /* Header row is a white card */
+  /* border-radius is applied to th elements below */
+}
+
+.data-table-figma-style thead.table-header-figma-style th {
+  background-color: transparent !important; /* Cells are transparent, TR has background */
+  color: #6b7280 !important;           /* Figma: Muted gray for header text */
+  text-transform: uppercase;
+  font-size: 0.75rem;                   /* 12px, smaller header text */
+  letter-spacing: 0.05em;
+  padding: 12px 24px !important;        /* Figma: Padding (approx 24px L/R) */
+  text-align: left;                     /* Default alignment */
+  border: none !important;  
+  font-weight: 600 !important;
+  white-space: nowrap;    
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); /* Shadow for header card */
+              /* Prevent header text from wrapping */
+}
+/* Rounded corners for the header "card" by styling first and last th */
+.data-table-figma-style thead.table-header-figma-style tr th:first-child {
+  border-top-left-radius: 50px  !important;
+  border-bottom-left-radius: 50px  !important; /* If only one header row, otherwise on last header row */
+}
+.data-table-figma-style thead.table-header-figma-style tr th:last-child {
+  border-top-right-radius: 50px !important;
+  border-bottom-right-radius: 50px !important; /* If only one header row */
+}
+/* If you have multiple <tr> in <thead>, adjust radius for tr:first-child th and tr:last-child th */
+
+
+/* --- Table Body Styling for Alternating "Cards" --- */
+
+
+/* ODD data rows get the card style */
+.data-table-figma-style tbody tr:nth-child(even) {
+  background-color: #ffffff !important; /* White card background for the TR */
+  /* border-radius is applied to the first and last TD cells within this TR */
+}
+.data-table-figma-style tbody tr:nth-child(even) td {
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); /* Shadow for the card TR */
+  border-top: none !important; /* Remove top border inherited from default td style */
+  border-bottom: none !important; /* Card edge defines bottom */
+}
+.data-table-figma-style tbody tr:nth-child(even) td:first-child {
+  border-top-left-radius: 50px;
+  border-bottom-left-radius: 50px;
+}
+.data-table-figma-style tbody tr:nth-child(even) td:last-child {
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
+}
+
+/* EVEN data rows are "transparent" with a line */
+.data-table-figma-style tbody tr:nth-child(odd) {
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); /* Shadow for the card TR */
+  background-color: transparent !important; /* Row itself is transparent */
+  box-shadow: none !important;
+}
+.data-table-figma-style tbody tr:nth-child(odd) td {
+  background-color: transparent !important; /* Cells are also transparent */
+  border-top: none !important; /* No top border for these non-card rows */
+  border-radius: 0 !important; /* Ensure no accidental radius */
+}
+/* The very first data row (if it happens to be even due to some other structure) */
+.data-table-figma-style tbody tr:first-child td {
+    border-top: none !important; /* Ensure no top border on first data row cells */
+}
+/* The very last data row, if it's an "even" (transparent) row, remove its bottom border */
+.data-table-figma-style tbody tr:nth-child(odd):last-child td {
+    border-bottom: none !important;
+}
+/* Add to e.g., DynamicTable.css or a global admin styles CSS file */
+.badge { /* General badge styling if not using Bootstrap's directly */
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem; /* Bootstrap's default is often .25rem */
+}
+
+.bg-success-light { background-color: #065F46; } /* Tailwind green-100 */
+.text-success-dark { color: #e8fff8; }      /* Tailwind green-800 */
+
+.bg-danger-light { background-color: #991B1B; } /* Tailwind red-100 */
+.text-danger-dark { color: #ffeeee; }       /* Tailwind red-800 */
+
+/* Add more for warning, info if needed */
+.bg-warning-light { background-color: #92400E; } /* Tailwind yellow-100 */
+.text-warning-dark { color: #FEF3C7; }      /* Tailwind yellow-700 */
+.bg-secondary-light { background-color: #2b2b2b; } /* Tailwind yellow-100 */
+.text-secondary-dark { color: #e7e7e7; } 
+.bg-primary-light { background-color:#1E40AF; }   /* Tailwind blue-100 */
+.text-primary-dark { color: #DBEAFE; }        /* Tailwind blue-700 */
+.bg-info-light { background-color:#146a6d; }   /* Tailwind blue-100 */
+.text-info-dark { color: #d1fcfd; }        /* Tailwind blue-700 */
+/* General TD styling (padding, default text color, vertical alignment) */
+.data-table-figma-style tbody td {
+  padding: 5px 24px !important; /* Figma-like padding */
+  color: #374151;                 /* Default cell text color */
+  vertical-align: middle;
+  /* Default border will be overridden by :nth-child rules */
+  border: none; /* Start with no borders on td, let :nth-child define them */
+}
+
+
+/* --- Specific Cell Content Styling (Examples) --- */
+.text-muted-custom { /* For "N/A" or placeholder text in cells */
+  color: #9ca3af;
+  font-style: italic;
+}
+.data-cell-name { /* If you apply this class via column.className */
+  font-weight: 500;
+  color: #111827;
+}
+.data-cell-description { /* If you apply this class */
+  color: #4b5563;
+}
+.data-cell-date { /* If you apply this class */
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+
+/* --- Action Buttons in Table --- */
+.actions-cell-figma { /* The <td> containing action buttons */
+  white-space: nowrap; /* Prevent buttons from wrapping */
+  /* text-align: right is applied by Bootstrap's text-end on the <td> or <th> */
+}
+.action-button-table-figma { /* Applied to react-bootstrap Button variant="link" */
+  color: #6b7280 !important; /* Default icon color */
+  padding: 0.2rem 0.3rem !important; /* Tight padding */
+  margin-left: 0.5rem !important;   /* Space between action buttons */
+  text-decoration: none !important;
+  line-height: 1;
+  border: none !important;
+  background: none !important;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out; /* Added transition */
+}
+.action-button-table-figma:first-child {
+  margin-left: 0 !important;
+}
+/* Specific colors for action icons (matching Figma) */
+.action-button-table-figma.view { color: #10b981 !important; }
+.action-button-table-figma.edit { color: #3b82f6 !important; }
+.action-button-table-figma.delete { color: #ef4444 !important; }
+/* Hover states for action buttons */
+.action-button-table-figma:hover.view { color: #059669 !important; background-color: rgba(16, 185, 129, 0.1) !important; border-radius:4px;}
+.action-button-table-figma:hover.edit { color: #2563eb !important; background-color: rgba(59, 130, 246, 0.1) !important; border-radius:4px;}
+.action-button-table-figma:hover.delete { color: #dc2626 !important; background-color: rgba(239, 68, 68, 0.1) !important; border-radius:4px;}
+
+
+/* --- Message Styles for Loading/No Data (within the table area) --- */
+.dynamic-table-message {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-family: 'Poppins', sans-serif;
+}
+.dynamic-table-message.no-data-card-look {
+  background-color: #ffffff;
+  border-radius: 50px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  padding: 2.5rem;
+  text-align: center;
+  /* margin-top is handled by .table-wrapper-figma-style */
+}

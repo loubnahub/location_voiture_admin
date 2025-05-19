@@ -1,0 +1,164 @@
+/* src/components/VehicleModelTable.css */
+
+.vehicle-model-list-container {
+  /* This is the main container for the header card and all row cards.
+     It doesn't need much styling itself, but acts as the parent for :nth-child selectors. */
+  width: 100%;
+}
+
+/* Styling for placeholder messages (loading, no data) */
+.loading-message-card,
+.no-data-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem; /* 8px */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  padding: 2.5rem; /* Generous padding */
+  text-align: center;
+  color: #6b7280; /* Muted text color */
+  margin-top: 20px; /* Space from controls bar */
+  font-size: 0.9rem;
+}
+
+/* Header Card Styling */
+.list-header-card {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff; /* White background for the header card */
+  color: #6b7280; /* Muted gray for header text (Figma) */
+  font-weight: 500; /* Medium weight */
+  text-transform: uppercase;
+  font-size: 0.75rem; /* 12px, smaller header text */
+  letter-spacing: 0.05em; /* Slight letter spacing */
+  padding: 12px 24px; /* Padding inside the header card (Figma has ~24px left/right) */
+  border-radius:50px; /* 8px rounded corners */
+  margin-bottom: 8px; /* Space between header and first data row */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); /* Subtle shadow */
+}
+
+.header-item {
+  padding: 0 4px; /* Minimal internal padding for header items, width controlled by flex */
+}
+
+/* Base Data Row Styling (applied to all rows before alternation) */
+.list-row-card {
+  display: flex;
+  align-items: center; /* Vertically align items in the row */
+  padding: 14px 24px; /* Padding inside data rows (match header L/R padding) */
+  font-size: 0.875rem; /* 14px */
+  color: #374151; /* Default text color for row items */
+  /* Default state is "transparent" with a bottom border */
+  background-color: transparent;
+  border-radius: 0; /* No radius by default */
+  box-shadow: none; /* No shadow by default */
+  transition: box-shadow 0.2s ease-in-out; /* For potential hover effects */
+}
+
+/* Styling for the "card" appearance on ODD data rows */
+/* Direct child selector '>' ensures we only target immediate list-row-card children */
+.vehicle-model-list-container > .list-row-card:nth-child(odd) {
+  background-color: #ffffff; /* White background for the card */
+  border-radius:50px; /* 8px rounded corners */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); /* Subtle shadow */
+  border-bottom: none; /* Card appearance means no separate line needed */
+ 
+}
+
+/* Adjust margin for the very first odd card if the header already provides space */
+.vehicle-model-list-container > .list-row-card:first-of-type:nth-child(odd) {
+  /* If header has margin-bottom: 8px, this card might not need margin-top: 8px */
+  /* Depending on exact desired spacing, you might keep or remove this margin-top */
+   margin-top: 0; /* Assuming header's margin-bottom is sufficient */
+}
+
+/* Styling for "transparent" EVEN data rows (they inherit the base border-bottom) */
+.vehicle-model-list-container > .list-row-card:nth-child(even) {
+  /* Already transparent and no shadow by default */
+  /* The border-bottom from the base .list-row-card will create the line */
+  /* No extra margin needed as spacing is dictated by the carded rows */
+}
+
+/* Remove bottom border and margin from the very last row element, regardless of its type */
+.vehicle-model-list-container > .list-row-card:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+
+/* Individual cell styling within a row */
+.row-item {
+  padding: 0 4px; /* Minimal internal padding, width controlled by flex */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-item.data-title { /* For the title column in data rows */
+  font-weight: 500; /* Slightly bolder as per Figma */
+  color: #111827;   /* Darker text for title */
+}
+
+
+/* Flex Column Width Definitions (adjust flex-grow values as needed) */
+/* These define the relative widths of your columns */
+.flex-col-id {
+  flex-grow: 5; /* Example: Model ID column takes 2 parts of space */
+  flex-shrink: 0; /* Prevent shrinking */
+  flex-basis: 0%; /* Standard for flex-grow */
+  /* min-width: 100px; /* Optional: set a minimum width */
+}
+.flex-col-title {
+  flex-grow: 6; /* Example: Title column takes 5 parts of space (wider) */
+  flex-shrink: 0;
+  flex-basis: 0%;
+}
+.flex-col-actions {
+  flex-grow: 1; /* Example: Actions column takes 2 parts of space */
+  flex-shrink: 0;
+  flex-basis: 0%;
+  /* min-width: 120px; /* Optional: ensure enough space for buttons */
+}
+
+/* Helper for text alignment */
+.text-right {
+text-align: center !important;
+
+}
+
+
+/* Action Buttons Styling */
+.actions-cell { /* The div containing action buttons */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.action-button-figma {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem; /* Minimal padding for the clickable area around icon */
+  margin-left: 0.6rem; /* Space between buttons (approx 8-10px) */
+  color: #6b7280; /* Default icon color */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px; /* Slight rounding for hover effect area */
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+.action-button-figma:first-child {
+  margin-left: 0; /* No left margin for the first action button */
+}
+
+.action-button-figma:hover {
+  /* background-color: #f0f0f0; /* Optional: subtle background on hover */
+}
+
+/* Specific colors for action icons to match Figma */
+.action-button-figma.view { color: #10b981; }
+.action-button-figma.edit { color: #3b82f6; }
+.action-button-figma.delete { color: #ef4444; }
+
+/* Hover states for icon colors */
+.action-button-figma.view:hover { color: #059669; background-color: rgba(16, 185, 129, 0.1); }
+.action-button-figma.edit:hover { color: #2563eb; background-color: rgba(59, 130, 246, 0.1); }
+.action-button-figma.delete:hover { color: #dc2626; background-color: rgba(239, 68, 68, 0.1); }

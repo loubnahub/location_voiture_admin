@@ -1,0 +1,238 @@
+/* src/components/ResourcePage.css */
+/* This file will contain styles for the overall layout of a typical CRUD page
+   that uses the ResourcePage.jsx component. It reuses concepts from your
+   VehicleModelPage.css for page header, controls bar, etc. */
+
+/* --- Font (Ensure Poppins is loaded globally, e.g., in index.css or App.css) --- */
+.resource-page-container {
+  font-family: 'Poppins', sans-serif;
+  /* padding from Bootstrap (p-4) is applied in ResourcePage.jsx */
+}
+
+/* --- Page Header (Title and Create Button) --- */
+/* These classes are used by ResourcePage.jsx */
+.page-header-custom {
+  margin-bottom: 1.75rem !important; /* Approx 28px */
+}
+
+.page-title-custom {
+  font-size: 1.75rem; /* Approx 28px */
+  font-weight: 600;
+  color: #111827; /* Dark slate gray */
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.page-title-custom svg { /* Icon in title */
+  margin-right: 0.5rem; /* Space between icon and title text */
+}
+
+.create-button-custom {
+  background-color: #1f2937 !important;
+  border-color: #1f2937 !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  border-radius: 0.5rem !important; /* 8px */
+  padding: 0.6rem 1.1rem !important;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+  transition: background-color 0.15s ease-in-out;
+}
+.create-button-custom:hover,
+.create-button-custom:focus {
+  background-color: #374151 !important;
+  border-color: #374151 !important;
+  box-shadow: none !important;
+}
+.create-button-custom svg { /* Icon in button */
+  margin-right: 0.25rem !important;
+}
+
+
+/* --- Controls Bar (Search and Action Icons) --- */
+/* These classes are used by ResourcePage.jsx */
+.controls-bar-figma {
+  display: flex;
+  justify-content: space-between; /* Default, can be overridden if only search */
+  align-items: center;
+  background-color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 0.5rem; /* 8px */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0,0,0,0.05);
+  margin-bottom: 1.25rem; /* 20px */
+}
+/* If only search bar, ResourcePage.jsx might need a different class or inline style for justify-content: flex-start; */
+.controls-bar-figma.search-only {
+    justify-content: flex-start;
+}
+
+
+.search-container-figma {
+  flex-grow: 1; /* If there are action icons on the right */
+  margin-right: 1rem;
+}
+.controls-bar-figma.search-only .search-container-figma {
+    flex-grow: 0; /* Don't grow if it's the only item */
+    width: 100%;
+    max-width: 450px; /* Or as configured by props */
+    margin-right: 0;
+}
+
+.search-input-group-figma { /* This is the react-bootstrap InputGroup */
+  position: relative;
+  /* max-width is applied on .search-container-figma or directly */
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #f3f4f6;
+  overflow: hidden;
+}
+.search-input-group-figma .input-group-text { display: none; }
+
+.search-icon-wrapper-figma {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.search-icon-actual-figma {
+  color: #9ca3af;
+  width: 16px;
+  height: 16px;
+}
+
+.search-input-field-figma,
+.search-input-field-figma:focus {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0.6rem 0.75rem !important;
+  padding-left: 36px !important;
+  font-size: 0.875rem;
+  color: #1f2937;
+  box-shadow: none !important;
+  line-height: 1.5;
+  height: auto;
+}
+.search-input-field-figma::placeholder { color: #9ca3af; opacity: 1; }
+
+/* Action icons on the right of search bar (if ResourcePage renders them) */
+.action-icons-figma {
+  display: flex;
+  align-items: center;
+}
+.icon-button-figma { /* Style for generic icon buttons like filter/sort */
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #4b5563 !important;
+  border-radius: 6px !important;
+  padding: 0.45rem !important;
+  margin-left: 0.5rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+.icon-button-figma:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #adb5bd !important;
+}
+.icon-button-figma:focus,
+.icon-button-figma:active {
+  box-shadow: 0 0 0 0.2rem rgba(209, 213, 219, 0.5) !important;
+  outline: none !important;
+}
+
+
+/* --- Pagination Styling --- */
+/* These classes are used by ResourcePage.jsx for its <BSPagination> wrapper */
+.pagination-custom { /* Wrapper for react-bootstrap Pagination */
+  /* display:flex and justify-content:center applied in JSX */
+}
+/* Styles for .page-link, .page-item.active .page-link etc. are applied by Bootstrap
+   but can be overridden here if needed to match custom button pagination.
+   However, the ResourcePage currently uses BSPagination directly, so we style those.
+   If using the custom button pagination, use .pagination-custom-figma and its children.
+*/
+.pagination-custom .page-link {
+  color: #374151;
+  border-radius: 6px !important;
+  margin: 0 3px !important;
+  border: 1px solid #d1d5db !important;
+  padding: 0.5rem 0.85rem !important;
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #ffffff;
+  line-height: 1;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+.pagination-custom .page-link:hover {
+  background-color: #f3f4f6;
+  border-color: #adb5bd;
+  color: #1f2937;
+}
+.pagination-custom .page-item.active .page-link {
+  background-color: #1f2937 !important;
+  border-color: #1f2937 !important;
+  color: white !important;
+  font-weight: 600;
+  z-index: 1;
+}
+.pagination-custom .page-item.disabled .page-link {
+  color: #9ca3af !important;
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+.pagination-custom .page-item .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(31, 41, 55, 0.25);
+}
+.pagination-custom .pagination-ellipsis .page-link {
+    border-color: transparent !important; /* Make ellipsis non-bordered */
+    background-color: transparent !important;
+    color: #6b7280 !important;
+    box-shadow: none !important;
+}
+
+
+/* --- Message Card Styles (Used by ResourcePage for loading/error/success) --- */
+.loading-message-card,
+.no-data-card-resource, /* Specific to ResourcePage's no data message */
+.error-message-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0,0,0,0.05);
+  padding: 2rem 2.5rem;
+  text-align: center;
+  color: #6b7280;
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+}
+.error-message-card {
+  color: #991b1b;
+  background-color: #fef2f2;
+}
+
+
+/* --- Modal Specific Styles (Used by ResourcePage) --- */
+/* These are Bootstrap overrides if needed */
+.modal-header { border-bottom: 1px solid #e5e7eb; }
+.modal-title { font-weight: 600; color: #111827; }
+.modal-footer { border-top: 1px solid #e5e7eb; }
+
+.submit-button-figma { /* Class applied to the main submit button in modal */
+  background-color: #1f2937 !important;
+  border-color: #1f2937 !important;
+  color: #ffffff !important; /* Ensure text is white */
+}
+.submit-button-figma:hover {
+  background-color: #374151 !important;
+  border-color: #374151 !important;
+}

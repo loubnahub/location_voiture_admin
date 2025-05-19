@@ -1,0 +1,43 @@
+/* src/components/FeatureList.css */
+
+.feature-list-container {
+  font-family: 'Poppins', sans-serif;
+}
+
+.no-items-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    padding: 10px 0;
+}
+
+.feature-group-figma {
+  margin-bottom: 0.75rem; /* Space between categories */
+}
+.feature-group-figma:last-child {
+    margin-bottom: 0;
+}
+
+
+.feature-category-title-figma { /* If you want to display category titles above items */
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.35rem;
+    /* text-transform: uppercase; */ /* Optional */
+}
+
+.feature-item-figma {
+  background-color: #f9fafb; /* Light background for each feature item */
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 0.875rem; /* 14px */
+  color: #374151;
+}
+.feature-item-figma:last-child {
+    margin-bottom: 0;
+}
+
+.feature-name-figma {
+  font-weight: 500;
+}

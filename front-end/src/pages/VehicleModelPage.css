@@ -1,0 +1,226 @@
+/* src/pages/VehicleModelPage.css */
+
+/* --- Main Page Content Area --- */
+.vehicle-model-page-content {
+  /* Using p-4 md:p-5 from JSX means Bootstrap handles padding,
+     but if you need custom overall padding for this page specifically: */
+  /* padding: 1.5rem; */ /* Example: 24px */
+}
+
+/* --- Page Header (Title and Create Button) --- */
+.page-header-custom { /* Applied to react-bootstrap Row */
+  margin-bottom: 1.75rem !important; /* Approx 28px */
+}
+
+.page-title-custom { /* Applied to h1 */
+  font-size: 1.75rem; /* Approx 28px, adjust to match Figma */
+  font-weight: 600; /* Semibold */
+  color: #111827; /* Dark slate gray */
+  margin: 0; /* Remove default h1 margin if any */
+}
+
+.create-button-custom { /* Applied to react-bootstrap Button */
+  background-color: #1f2937 !important; /* Dark gray/blue button from Figma */
+  border-color: #1f2937 !important;
+  color: #ffffff !important;
+  font-weight: 500; /* Medium */
+  border-radius: 0.5rem !important; /* 8px */
+  padding: 0.6rem 1.1rem !important; /* Adjust for visual balance */
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+  transition: background-color 0.15s ease-in-out;
+}
+.create-button-custom:hover,
+.create-button-custom:focus {
+  background-color: #374151 !important; /* Slightly lighter on hover/focus */
+  border-color: #374151 !important;
+  box-shadow: none !important; /* Remove Bootstrap default focus shadow if not desired */
+}
+.create-button-custom .fs-5 { /* For the '+' icon if using Bootstrap font size class */
+  line-height: 1;
+  vertical-align: middle;
+}
+
+
+/* --- Controls Bar (Search and Action Icons) --- */
+.controls-bar-figma {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 12px 20px; /* Padding inside the bar */
+  border-radius: 0.5rem; /* 8px */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0,0,0,0.05); /* Subtle shadow */
+  margin-bottom: 1.25rem; /* 20px */
+}
+
+.search-container-figma {
+  flex-grow: 1; /* Allows it to take space but input group inside has max-width */
+  margin-right: 1rem; /* 16px space before action icons */
+}
+
+.search-input-group-figma { /* This is the react-bootstrap InputGroup */
+  position: relative; /* For absolute positioning of the icon */
+  max-width: 380px; /* Control width of search input area */
+  border: 1px solid #e5e7eb; /* Border for the entire input group, Figma style */
+  border-radius: 6px; /* Rounded corners for the group */
+  background-color: #f3f4f6; /* Background for the group, matching input */
+  overflow: hidden; /* Ensures border-radius clips children */
+}
+/* Hide default Bootstrap InputGroup.Text if it's rendered and not needed */
+.search-input-group-figma .input-group-text {
+    display: none;
+}
+
+.search-icon-wrapper-figma { /* Wrapper for the search icon */
+  position: absolute;
+  left: 12px; /* Position icon from the left */
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none; /* Allows clicks to pass through to the input */
+}
+
+.search-icon-actual-figma { /* The LuSearch icon itself */
+  color: #9ca3af; /* Muted icon color (gray-400) */
+  width: 16px;
+  height: 16px;
+}
+
+.search-input-field-figma, /* The Form.Control input */
+.search-input-field-figma:focus {
+  background-color: transparent !important; /* Input is transparent; group has bg */
+  border: none !important; /* Group has the border */
+  border-radius: 0 !important; /* Group has the radius */
+  padding: 0.6rem 0.75rem !important; /* Approx 9-10px top/bottom, 12px right */
+  padding-left: 36px !important; /* Make space for the absolutely positioned icon */
+  font-size: 0.875rem; /* 14px */
+  color: #1f2937; /* Darker input text color */
+  box-shadow: none !important; /* Remove default focus glow from Bootstrap */
+  line-height: 1.5; /* Standard line height for inputs */
+  height: auto; /* Allow Bootstrap to determine height based on padding/font */
+}
+.search-input-field-figma::placeholder {
+    color: #9ca3af; /* Placeholder text color */
+    opacity: 1; /* Ensure placeholder is visible */
+}
+
+.action-icons-figma { /* Container for the right-side action icons */
+  display: flex;
+  align-items: center;
+}
+
+.icon-button-figma { /* Styling for LuPanelLeft, LuFilter buttons */
+  background-color: #ffffff !important; /* White background like Figma */
+  border: 1px solid #d1d5db !important; /* Light gray border */
+  color: #4b5563 !important; /* Icon color (gray-600) */
+  border-radius: 6px !important;
+  padding: 0.45rem !important; /* Makes it more square-ish (approx 7px) */
+  margin-left: 0.5rem; /* 8px space between icon buttons */
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+.icon-button-figma:hover {
+  background-color: #f3f4f6 !important; /* Very light gray hover */
+  border-color: #adb5bd !important;
+}
+.icon-button-figma:focus,
+.icon-button-figma:active {
+    box-shadow: 0 0 0 0.2rem rgba(209, 213, 219, 0.5) !important; /* Subtle focus ring */
+    outline: none !important;
+}
+
+
+/* --- Custom Pagination Styling (to match Figma) --- */
+.pagination-custom-figma {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px !important;
+  padding-bottom: 20px;
+}
+
+.pagination-custom-figma button.pagination-item,
+.pagination-custom-figma button.pagination-arrow {
+  margin: 0 3px; /* Small gap between items */
+  min-width: 36px; /* Consistent width */
+  height: 36px;  /* Consistent height */
+  padding: 0;    /* Content centered by flex */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db; /* Light gray border */
+  background-color: #ffffff; /* White background */
+  color: #374151; /* Dark gray text */
+  border-radius: 6px !important; /* Rounded corners from Figma */
+  cursor: pointer;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500; /* Medium weight */
+  line-height: 1;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.pagination-custom-figma button.pagination-item:hover,
+.pagination-custom-figma button.pagination-arrow:hover {
+  background-color: #f3f4f6; /* Light gray hover */
+  border-color: #adb5bd;
+}
+
+.pagination-custom-figma button.pagination-item:disabled,
+.pagination-custom-figma button.pagination-arrow:disabled {
+  color: #9ca3af !important; /* Muted text for disabled */
+  cursor: not-allowed;
+  background-color: #f9fafb !important; /* Slightly off-white disabled bg */
+  border-color: #e5e7eb !important;
+}
+.pagination-custom-figma button.pagination-arrow:disabled svg {
+    color: #9ca3af !important; /* Mute icon in disabled arrow */
+}
+
+.pagination-custom-figma button.pagination-item.active {
+  background-color: #1f2937 !important; /* Dark active page background */
+  border-color: #1f2937 !important;
+  color: white !important;
+  font-weight: 600; /* Bolder for active page */
+}
+
+.pagination-custom-figma span.pagination-ellipsis {
+  margin: 0 3px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent;
+  color: #6b7280; /* Ellipsis color */
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: default;
+}
+
+
+/* --- Message Card Styles --- */
+.loading-message-card,
+.no-data-card, /* This class is used in VehicleModelTable.js as well */
+.error-message-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem; /* 8px */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0,0,0,0.05);
+  padding: 2rem 2.5rem; /* Generous padding */
+  text-align: center;
+  color: #6b7280; /* Muted text color */
+  margin-top: 1.25rem; /* 20px */
+  font-size: 0.9rem;
+}
+.error-message-card {
+    color: #991b1b; /* Darker red for error text */
+    background-color: #fef2f2; /* Light red background for error */
+    /* border: 1px solid #fecaca; /* Optional: Red border for error */
+}

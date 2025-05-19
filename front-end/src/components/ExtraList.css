@@ -1,0 +1,74 @@
+/* src/components/ExtraList.css */
+
+.extra-list-container {
+    font-family: 'Poppins', sans-serif;
+}
+
+.no-items-text { /* Can be shared with FeatureList.css */
+    font-size: 0.875rem;
+    color: #6b7280;
+    padding: 10px 0;
+}
+
+.extra-item-figma {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9fafb; /* Light background */
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 0.875rem; /* 14px */
+}
+.extra-item-figma:last-child {
+  margin-bottom: 0;
+}
+
+.extra-item-main-content {
+  display: flex;
+  align-items: center;
+}
+
+.extra-icon-figma {
+  margin-right: 10px; /* Increased space */
+  color: #6b7280; /* Icon color */
+  flex-shrink: 0;
+}
+
+.extra-item-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.extra-name-figma {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* .extra-description-figma {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2px;
+} */
+
+.extra-item-details {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between price and expand icon */
+}
+
+.extra-price-figma {
+  font-size: 0.8rem;
+  color: #6b7280; /* Price label color */
+  white-space: nowrap;
+}
+.extra-price-figma strong {
+  color: #1d4ed8; /* Example blue for price, adjust to Figma */
+  font-weight: 600;
+}
+
+.extra-expand-icon-figma {
+  color: #9ca3af; /* Color for the simple expand icon */
+  cursor: pointer; /* If it becomes interactive */
+  flex-shrink: 0;
+}

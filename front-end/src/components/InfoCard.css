@@ -1,0 +1,42 @@
+/* src/components/InfoCard.css */
+
+.figma-card { /* This is our shared card style */
+  background-color: #ffffff;
+  border-radius: 12px; /* Figma's more rounded cards */
+  padding: 20px 24px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.06); /* Softer shadow */
+  font-family: 'Poppins', sans-serif;
+  /* margin-bottom is removed, will be handled by parent layout (e.g., gap in flex/grid) */
+}
+
+.info-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem; /* Space between title and card body */
+}
+
+.card-section-title-figma { /* For the title prop */
+  font-size: 1rem; /* 16px */
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0; /* Removed margin as .info-card-header handles it */
+  display: flex;
+  align-items: center;
+}
+
+.card-title-icon, /* Span wrapping the titleIcon prop */
+.card-section-title-figma .spec-icon-figma, /* If using spec-icon-figma class on passed icons */
+.card-section-title-figma svg { /* For react-icons/lucide-react */
+  margin-right: 0.5rem;
+  color: #4b5563; /* Default icon color in titles */
+  /* Size should be set on the icon component itself */
+}
+
+.info-card-title-right {
+    /* For content like dropdowns on the right of the title */
+}
+
+.info-card-body {
+  /* Styles for the content area if needed, usually direct children styling is enough */
+}

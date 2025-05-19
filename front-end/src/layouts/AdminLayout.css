@@ -1,0 +1,23 @@
+/* src/layouts/AdminLayout.css */
+body { /* Apply to body for consistent font and background */
+  font-family: 'Inter', sans-serif; /* Make sure 'Inter' is imported or use a fallback */
+  background-color: #f0f2f5; /* Figma page background for the whole page */
+  margin: 0; /* Reset default body margin */
+  padding: 0; /* Reset default body padding */
+}
+
+.admin-layout-wrapper {
+  display: flex; /* This is redundant if the div in JSX has d-flex, but harmless */
+  min-height: 100vh;
+}
+
+.admin-content-area {
+    background-color: #F5F5F5;
+  flex-grow: 1; /* This is crucial: it should take up space left by the sidebar */
+  /* background-color: #f0f2f5; /* Already on body, can remove if body bg is desired */
+  padding: 20px; /* Default padding, adjust as needed from Figma */
+  /* width: 100%; /* This can sometimes fight with flex-grow. Let flex-grow manage it. */
+  overflow-y: auto; /* If the main content itself needs to scroll */
+  /* Add a min-width to ensure it doesn't collapse to zero if something is wrong */
+  min-width: 0; /* Prevents content from overflowing its flex container in some cases */
+}
