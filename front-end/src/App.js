@@ -1,6 +1,13 @@
-import React, { useState, useEffect, createContext, useContext } from 'react'; // Assuming you might add AuthContext later
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+
+// Layouts
 import AdminLayout from './layouts/AdminLayout';
+
+// Pages
+import LoginPage from './pages/Auth/LoginPage';
+import DashboardPage from './pages/DashboardPage';
 import VehicleModelPage from './pages/VehicleModelPage';
 import VehicleModelDetailPage from './pages/VehicleModelDetailPage';
 import VehicleTypePage from './pages/VehicleTypePage';
@@ -10,103 +17,85 @@ import InsurancePlanPage from './pages/InsurancePlanPage';
 import VehiclePage from './pages/VehiclePage';
 import BookingPage from './pages/BookingPage';
 import OperationalHoldPage from './pages/OperationalHoldPage';
-// import LoginPage from './pages/LoginPage'; // You would create this
-// import DashboardPage from './pages/DashboardPage'; // Example
-
-// --- Authentication Context (Example - you might have this already or implement it) ---
-// For simplicity, using a basic isAuthenticated function for now.
-// In a real app, currentUser would come from context or state management.
-const AuthContext = createContext(null);
-export const useAuth = () => useContext(AuthContext);
-
-const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null); // Replace with your actual auth logic
-  const [authLoading, setAuthLoading] = useState(true);
-
-  // Mock effect to simulate checking auth status on load
-  useEffect(() => {
-    // Replace this with your actual API call to fetch current user
-    // For example: apiFetchCurrentUser().then(user => setCurrentUser(user.data)).catch(() => setCurrentUser(null)).finally(() => setAuthLoading(false));
-    const mockAuthCheck = setTimeout(() => {
-      // To test logged-in state:
-      setCurrentUser({ name: "Test Admin", email: "admin@example.com", roles: ["admin"] });
-      // To test logged-out state:
-      // setCurrentUser(null);
-      setAuthLoading(false);
-    }, 500);
-    return () => clearTimeout(mockAuthCheck);
-  }, []);
-
-  // Add login/logout functions here that update currentUser
-
-  if (authLoading) {
-    return <div>Loading Application...</div>; // Or a global spinner
-  }
-
-  return (
-    <AuthContext.Provider value={{ currentUser, /* login, logout, */ authLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+import DamageReportPage from './pages/DamageReportPage';
+import UserPage from './pages/UserPage';
+import RolePage from './pages/RolePage';
+import RentalAgreementPage from './pages/RentalAgreementPage';
+import PromotionCampaignPage from './pages/promotions/PromotionCampaignPage';
+import PromotionCodePage from './pages/promotions/PromotionCodePage';
+import PaymentPage from './pages/payments/PaymentsPage';
 
 // --- Protected Route Component ---
 const ProtectedRoute = () => {
-  const { currentUser, authLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  if (authLoading) {
-    return <div>Checking authentication...</div>; // Or a spinner
+  if (isLoading) {
+    return <div>Loading authentication status...</div>;
   }
-
-  return currentUser ? <AdminLayout /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <AdminLayout /> : <Navigate to="/login" replace />;
 };
 
+// --- Public Route Component ---
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  return isAuthenticated ? <Navigate to="/admin/dashboard" replace /> : children;
+};
+
+// --- Fallback Auth Redirect ---
+const AuthRedirect = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  return isAuthenticated ? <Navigate to="/admin/dashboard" replace /> : <Navigate to="/login" replace />;
+};
 
 function App() {
   return (
-    <AuthProvider> {/* Wrap with AuthProvider if using AuthContext */}
-      <Router>
+    <Router>
+      <AuthProvider>
         <Routes>
-          {/* --- Login Page Route (Example) --- */}
-          <Route path="/login" element={
-            <AuthConsumer>{({ currentUser }) => currentUser ? <Navigate to="/admin" /> : <div>Login Page Placeholder - Build LoginPage.jsx</div>}</AuthConsumer>
-          } />
-
-          {/* --- Admin Routes (Nested under AdminLayout) --- */}
-          <Route path="/admin" element={<ProtectedRoute />}> {/* Uses AdminLayout */}
-          
-            {/* Outlet in AdminLayout will render these nested routes */}
-            <Route path="/admin/inventory/vehicles" element={<VehiclePage />} /> 
-            <Route path="/admin/fleet/vehicle-models" element={<VehicleModelPage />} />
-            <Route path="/admin/fleet/vehicle-models/:modelId" element={<VehicleModelDetailPage />} />
-            <Route path="/admin/fleet/vehicle-types" element={<VehicleTypePage />} />
-            <Route path="/admin/fleet/features" element={<FeaturePage />} />
-            <Route path="/admin/fleet/extras" element={<ExtraPage />} /> 
-             <Route path="/admin/fleet/insurance-plans" element={<InsurancePlanPage />} />
-              <Route path="/admin/inventory/bookings" element={<BookingPage />} />
-              <Route path="/admin/inventory/operational-holds" element={<OperationalHoldPage/>} /> 
-            {/* <Route path="dashboard" element={<DashboardPage />} /> */}
-            {/* Add more admin routes as children here */}
-
-            {/* Default route for /admin - navigates to a specific dashboard or list */}
-            <Route index element={<Navigate to="/admin/fleet/vehicle-models" replace />} />
+          {/* Public Routes */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={<ProtectedRoute />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="inventory/vehicles" element={<VehiclePage />} />
+            <Route path="fleet/vehicle-models" element={<VehicleModelPage />} />
+            <Route path="fleet/vehicle-models/:modelId" element={<VehicleModelDetailPage />} />
+            <Route path="fleet/vehicle-types" element={<VehicleTypePage />} />
+            <Route path="fleet/features" element={<FeaturePage />} />
+            <Route path="fleet/extras" element={<ExtraPage />} />
+            <Route path="fleet/insurance-plans" element={<InsurancePlanPage />} />
+            <Route path="operations/bookings" element={<BookingPage />} />
+            <Route path="operations/damage-reports" element={<DamageReportPage />} />
+            <Route path="operations/operational-holds" element={<OperationalHoldPage />} />
+            <Route path="operations/rental-agreements" element={<RentalAgreementPage />} />
+            <Route path="users/customers" element={<UserPage />} />
+            <Route path="users/roles" element={<RolePage />} />
+            <Route path="marketing/promotion-campaigns" element={<PromotionCampaignPage />} />
+            <Route path="marketing/promotion-codes" element={<PromotionCodePage />} />
+            <Route path="financials/payments" element={<PaymentPage />} />
+            {/* Add other admin routes here */}
           </Route>
-
-          {/* --- Fallback Route --- */}
-          {/* Redirect to login if not authenticated, otherwise to admin dashboard/default */}
-          <Route path="*" element={
-             <AuthConsumer>{({ currentUser }) => currentUser ? <Navigate to="/admin" replace /> : <Navigate to="/login" replace />}</AuthConsumer>
-          } />
+          {/* Fallback Route */}
+          <Route path="*" element={<AuthRedirect />} />
         </Routes>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
-}
-
-// Helper component to consume AuthContext easily if not using useAuth hook everywhere
-const AuthConsumer = ({ children }) => {
-    const auth = useAuth();
-    return children(auth);
 }
 
 export default App;

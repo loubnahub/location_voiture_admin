@@ -31,7 +31,17 @@ class Address extends Model
     {
         return $this->hasMany(User::class, 'default_address_id');
     }
-
+public function getFullAddressStringAttribute(): string
+{
+    $parts = array_filter([
+        $this->street_line_1,
+        $this->street_line_2,
+        $this->city,
+        $this->postal_code,
+        $this->country
+    ]);
+    return implode(', ', $parts) ?: 'N/A'; // Return 'N/A' if all parts are empty
+}
     // An Address can be the current location for many Vehicles.
     public function vehiclesLocatedHere(): HasMany
     {

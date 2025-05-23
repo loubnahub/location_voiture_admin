@@ -1,35 +1,35 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import ResourcePage from '../components/ResourcePage'; // Your generic CRUD page layout
 import {
-  fetchAllExtras,   // API function to get all extras
-  createExtra,      // API function to create an extra
-  updateExtra,      // API function to update an extra
-  deleteExtra       // API function to delete an extra
-} from '../services/api';     // Your API service functions
-import { Form, Alert, InputGroup } from 'react-bootstrap'; // For rendering the modal form fields
-import { PlusSquare } from 'lucide-react'; // Example icon for "Extras" (a plus in a square)
-                                          // Alternatives: LuGift, LuPackage, LuStar
+  fetchAllExtras,
+  createExtra,
+  updateExtra,
+  deleteExtra
+} from '../services/api';
+import { Form, InputGroup } from 'react-bootstrap';
+import { PlusSquare } from 'lucide-react';
 
-// 1. Define Columns for the DynamicTable (specific to Extras)
+// 1. Define Columns for the DynamicTable
+// This should use 'default_price_per_day' as the key from your API/transformExtra
 const extraColumns = [
   {
     header: 'Name',
     key: 'name',
-    className: 'data-cell-name', // Re-use styling from DynamicTable.css
+    className: 'data-cell-name',
   },
   {
     header: 'Default Price/Day',
-    key: 'default_price_per_day',
-    textAlign: 'right', // Align price to the right
-    render: (item) => // Custom render to format as currency
+    key: 'default_price_per_day', // <<< REVERTED TO 'default_price_per_day'
+    textAlign: 'right',
+    render: (item) =>
       item.default_price_per_day !== null && item.default_price_per_day !== undefined
-        ? `${parseFloat(item.default_price_per_day).toFixed(2)} MAD` // Using MAD as per your earlier example
+        ? `${parseFloat(item.default_price_per_day).toFixed(2)} MAD`
         : <span className="text-muted-custom">N/A</span>,
   },
   {
     header: 'Description',
     key: 'description',
-    className: 'data-cell-description', // Re-use styling
+    className: 'data-cell-description',
     render: (item) =>
       item.description
         ? item.description.substring(0, 70) + (item.description.length > 70 ? '...' : '')
@@ -37,9 +37,9 @@ const extraColumns = [
   },
   {
     header: 'Created At',
-    key: 'created_at', // Assuming backend sends this directly (or created_at_formatted)
+    key: 'created_at',
     textAlign: 'center',
-    className: 'data-cell-date', // Re-use styling
+    className: 'data-cell-date',
     render: (item) =>
       item.created_at
         ? new Date(item.created_at).toLocaleDateString()
@@ -47,18 +47,22 @@ const extraColumns = [
   },
 ];
 
-// 2. Define the initial (empty) state for the form data used in the create/edit modal
+// 2. Define the initial (empty) state for the form data
 const initialExtraData = {
   id: null,
   name: '',
   description: '',
-  default_price_per_day: '', // Input type="number" handles string to number conversion
+  default_price_per_day: '', // <<< REVERTED TO 'default_price_per_day'
 };
 
 // 3. Define a function that renders the actual form fields inside the modal
-const renderExtraModalForm = (formData, handleInputChange, modalFormErrors, isEditMode) => (
+const renderExtraModalForm = (
+    formData,
+    handleInputChange,
+    modalFormErrors,
+    isEditMode
+) => (
   <>
-    {/* modalFormErrors are displayed by ResourcePage if general modalError is set */}
     <Form.Group className="mb-3" controlId="extraName">
       <Form.Label>Name <span className="text-danger">*</span></Form.Label>
       <Form.Control
@@ -76,24 +80,23 @@ const renderExtraModalForm = (formData, handleInputChange, modalFormErrors, isEd
       </Form.Control.Feedback>
     </Form.Group>
 
-    <Form.Group className="mb-3" controlId="extraDefaultPrice">
+    <Form.Group className="mb-3" controlId="extraDefaultPricePerDay"> {/* Updated controlId */}
       <Form.Label>Default Price Per Day <span className="text-danger">*</span></Form.Label>
       <InputGroup>
-        <InputGroup.Text>MAD</InputGroup.Text> {/* Currency Symbol */}
+        <InputGroup.Text>MAD</InputGroup.Text>
         <Form.Control
           type="number"
-          name="default_price_per_day"
-          value={formData.default_price_per_day || ''}
+          name="default_price_per_day" // <<< REVERTED NAME ATTRIBUTE
+          value={formData.default_price_per_day || ''} // <<< REVERTED FORMDATA KEY
           onChange={handleInputChange}
           required
           min="0"
-          step="0.01" // For decimal values (e.g., 15.00)
+          step="0.01"
           placeholder="e.g., 15.00"
-          isInvalid={!!modalFormErrors?.default_price_per_day}
+          isInvalid={!!modalFormErrors?.default_price_per_day} // <<< REVERTED ERROR KEY
         />
       </InputGroup>
-      {/* Custom display for InputGroup feedback because default doesn't always show well */}
-      {modalFormErrors?.default_price_per_day && (
+      {modalFormErrors?.default_price_per_day && ( // <<< REVERTED ERROR KEY
         <div className="invalid-feedback d-block">
           {modalFormErrors.default_price_per_day.join(', ')}
         </div>
@@ -121,31 +124,38 @@ const renderExtraModalForm = (formData, handleInputChange, modalFormErrors, isEd
 // The main page component for Extras
 const ExtraPage = () => {
   // Helper function to ensure price is sent as a number
-  const processFormData = (data) => {
-    return {
-      ...data,
-      default_price_per_day: data.default_price_per_day !== '' ? parseFloat(data.default_price_per_day) : null,
-    };
-  };
+  const processFormData = useCallback((data) => {
+    const processedData = { ...data };
+    // Process 'default_price_per_day'
+    if (processedData.hasOwnProperty('default_price_per_day')) {
+      processedData.default_price_per_day =
+        (processedData.default_price_per_day !== '' &&
+         processedData.default_price_per_day !== null &&
+         processedData.default_price_per_day !== undefined)
+          ? parseFloat(processedData.default_price_per_day)
+          : null; // Send null if empty, backend validation for 'required' will catch if needed
+    }
+    // Remove 'price' if it accidentally exists from previous attempts
+    if (processedData.hasOwnProperty('price')) {
+        delete processedData.price;
+    }
+    return processedData;
+  }, []);
 
   return (
     <ResourcePage
-      // --- Configuration Props ---
       resourceName="Extra"
       resourceNamePlural="Extras"
-      IconComponent={PlusSquare} // Icon for the page title
+      IconComponent={PlusSquare}
       columns={extraColumns}
       initialFormData={initialExtraData}
       renderModalForm={renderExtraModalForm}
 
-      // --- API Function Props ---
       fetchAllItems={fetchAllExtras}
-      // Wrap createItem and updateItem to process form data before sending
       createItem={(data) => createExtra(processFormData(data))}
       updateItem={(id, data) => updateExtra(id, processFormData(data))}
       deleteItem={deleteExtra}
 
-      // --- Optional Customization ---
       searchPlaceholder="Search by name or description..."
     />
   );

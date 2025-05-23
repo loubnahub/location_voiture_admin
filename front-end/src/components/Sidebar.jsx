@@ -4,9 +4,10 @@ import { Nav } from 'react-bootstrap';
 // Import icons from react-icons (still a good choice)
 import {
   LuLayoutDashboard, LuCar, LuListTree, LuSettings2, LuFileText, LuUsers,
-  LuBriefcase, LuWarehouse, LuShieldCheck, LuWrench, LuDollarSign, 
+  LuBriefcase, LuWarehouse, LuShieldCheck, LuWrench, LuDollarSign,
+  LuMegaphone, LuTicket // Added LuMegaphone for Campaigns, LuTicket for Codes
 } from 'react-icons/lu';
-import { AlertTriangle ,LineChart} from 'lucide-react'; 
+import { AlertTriangle ,LineChart} from 'lucide-react';
 import './Sidebar.css'; // Custom CSS for theming
 
 // Replace with your actual logo
@@ -19,7 +20,6 @@ const LogoPlaceholder = () => (
 
 const Sidebar = () => {
   const menuItems = [
-    // ... (menuItems array remains the same as the Tailwind example) ...
     { name: 'DASHBOARD', icon: <LuLayoutDashboard size={18} />, path: '/admin/dashboard', group: null },
     {
       group: 'FLEET CATALOG',
@@ -37,7 +37,6 @@ const Sidebar = () => {
         { name: 'Vehicles', icon: <LuWarehouse size={18} />, path: '/admin/inventory/vehicles' },
         { name: 'Bookings', icon: <LuFileText size={18} />, path: '/admin/inventory/bookings' },
         { name: 'Operational Holds', icon: <LuBriefcase size={18} />, path: '/admin/inventory/operational-holds' },
-        { name: 'Maintenance Log', icon: <LuWrench size={18} />, path: '/admin/inventory/maintenance-log' },
         { name: 'Damage Reports', icon: <AlertTriangle size={18} />, path: '/admin/inventory/damage-reports' },
       ],
     },
@@ -48,11 +47,19 @@ const Sidebar = () => {
         { name: 'Rental Agreements', icon: <LuFileText size={18} />, path: '/admin/customers/rental-agreements' },
       ],
     },
+    // --- NEW GROUP FOR PROMOTIONS ---
+    {
+        group: 'MARKETING & PROMOTIONS',
+        items: [
+            { name: 'Promotion Campaigns', icon: <LuMegaphone size={18} />, path: '/admin/promotions/campaigns' },
+            { name: 'Promotion Codes', icon: <LuTicket size={18} />, path: '/admin/promotions/codes' },
+        ]
+    },
+    // --- END NEW GROUP ---
     {
         group: 'FINANCIALS',
         items: [
             { name: 'Payments', icon: <LuDollarSign size={18} />, path: '/admin/financials/payments' },
-            { name: 'Reports', icon: <LineChart size={18} />, path: '/admin/financials/reports' },
         ]
     },
     {
@@ -78,13 +85,13 @@ const Sidebar = () => {
                 <h6 className="sidebar-heading-custom px-3 mt-2 mb-1 text-uppercase">
                   {groupItem.group}
                 </h6>
-                <Nav defaultActiveKey="/home" className="flex-column">
+                <Nav defaultActiveKey="/home" className="flex-column"> {/* Consider removing defaultActiveKey from group loops for better NavLink active state handling */}
                   {groupItem.items.map((item) => (
                     <Nav.Item key={item.name}>
                       <Nav.Link
                         as={NavLink}
                         to={item.path}
-                        className="sidebar-link-custom"
+                        className="sidebar-link-custom" // NavLink will automatically get 'active' class
                       >
                         <span className="sidebar-icon-custom me-2">{item.icon}</span>
                         {item.name}
@@ -94,8 +101,8 @@ const Sidebar = () => {
                 </Nav>
               </>
             ) : (
-              // Single item
-              <Nav defaultActiveKey="/home" className="flex-column">
+              // Single item (like Dashboard)
+              <Nav defaultActiveKey="/home" className="flex-column"> {/* Same consideration for defaultActiveKey */}
                 <Nav.Item key={groupItem.name}>
                   <Nav.Link
                     as={NavLink}

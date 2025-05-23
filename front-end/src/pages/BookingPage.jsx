@@ -123,76 +123,73 @@ const BookingPage = () => {
         } catch (e) { return ''; }
     };
 
-    const handleShowModal = (bookingToEdit = null) => {
-        console.log("BookingPage: handleShowModal triggered. Booking provided:", bookingToEdit ? `ID: ${bookingToEdit.id}` : "New Booking");
-        setModalFormErrors({});
-        setModalSubmissionError('');
-        setSuccessMessage('');
+  // In src/pages/Bookings/BookingPage.jsx
+const handleShowModal = (bookingToEdit = null) => {
+    console.log("BookingPage: handleShowModal triggered. Booking to edit:", bookingToEdit ? `ID: ${bookingToEdit.id}` : "New Booking");
+    setModalFormErrors({});
+    setModalSubmissionError('');
+    setSuccessMessage(''); // Clear previous success messages
 
-        if (bookingToEdit && bookingToEdit.id) { // EDIT mode
-            setIsEditMode(true);
-            console.log("BookingPage: handleShowModal (Edit) - Raw 'bookingToEdit' object from table/props:", JSON.stringify(bookingToEdit, null, 2));
+    if (bookingToEdit && bookingToEdit.id) { // EDIT mode
+        setIsEditMode(true);
+        console.log("BookingPage: handleShowModal (Edit) - Raw 'bookingToEdit' object from API/table:", JSON.stringify(bookingToEdit, null, 2));
 
-            const newFormData = { ...initialBookingData };
+        // Start with a clean slate based on initialBookingData structure,
+        // then overlay with values from bookingToEdit.
+        // This ensures all fields expected by the form are present.
+        const formDataForModal = {
+            ...initialBookingData, // Ensures all keys from initialBookingData are present
+            id: bookingToEdit.id, // Keep the ID
+            renter_user_id: bookingToEdit.renter_user_id || '',
+            vehicle_id: bookingToEdit.vehicle_id || '',
+            insurance_plan_id: bookingToEdit.insurance_plan_id || '',
 
-            for (const key in initialBookingData) {
-                if (bookingToEdit.hasOwnProperty(key)) {
-                    if (key === 'booking_extras') {
-                        let extraIds = [];
-                        console.log(`BookingPage: handleShowModal (Edit) - Processing 'booking_extras'. Raw bookingToEdit.booking_extras:`, bookingToEdit.booking_extras === undefined ? "undefined" : JSON.stringify(bookingToEdit.booking_extras, null, 2));
+            // Populate promotion_code_string from the booking data
+            // The backend transformBooking should provide promotion_code_string
+            promotion_code_string: bookingToEdit.promotion_code_string || '',
+            promotion_code_id: bookingToEdit.promotion_code_id || null, // Also pass the ID if available
 
-                        if (Array.isArray(bookingToEdit.booking_extras)) {
-                            extraIds = bookingToEdit.booking_extras.map(extraItem => {
-                                if (typeof extraItem === 'object' && extraItem !== null) {
-                                    const id = extraItem.id || extraItem.extra_id;
-                                    if (id === undefined || id === null || String(id).trim() === '') {
-                                        console.warn("BookingPage: Found extraItem object without a valid id/extra_id:", extraItem);
-                                        return null;
-                                    }
-                                    return String(id);
-                                } else if (typeof extraItem === 'string' || typeof extraItem === 'number') {
-                                    if (String(extraItem).trim() === '') return null;
-                                    return String(extraItem);
-                                }
-                                console.warn("BookingPage: Unexpected item format in booking_extras during ID extraction:", extraItem);
-                                return null;
-                            }).filter(id => id !== null); // Filter out any nulls from mapping
-                        } else if (bookingToEdit.booking_extras) {
-                             console.warn("BookingPage: bookingToEdit.booking_extras was not an array but existed:", bookingToEdit.booking_extras);
-                        }
-                        newFormData[key] = extraIds;
-                        console.log(`BookingPage: handleShowModal (Edit) - Processed 'extraIds' for newFormData.booking_extras:`, JSON.stringify(extraIds, null, 2));
+            start_date: formatDateForInput(bookingToEdit.start_date),
+            end_date: formatDateForInput(bookingToEdit.end_date),
+            status: bookingToEdit.status?.value || bookingToEdit.status || initialBookingData.status, // Handle if status is enum object or value
 
-                    } else if (key === 'discount_percentage') {
-                        newFormData[key] = (bookingToEdit[key] !== null && bookingToEdit[key] !== undefined) ? String(bookingToEdit[key]) : '';
-                    } else if (['calculated_base_price', 'calculated_extras_price', 'calculated_insurance_price', 'discount_amount_applied', 'final_price'].includes(key)) {
-                        newFormData[key] = (bookingToEdit[key] !== null && bookingToEdit[key] !== undefined) ? String(bookingToEdit[key]) : '0.00';
-                    } else if (key === 'start_date' || key === 'end_date') {
-                        newFormData[key] = formatDateForInput(bookingToEdit[key]);
-                    } else {
-                        newFormData[key] = bookingToEdit[key];
-                    }
-                }
-            }
-            // Explicitly set dates if they weren't part of initialBookingData keys (less common)
-            if (!initialBookingData.hasOwnProperty('start_date') && bookingToEdit.hasOwnProperty('start_date')) {
-                newFormData.start_date = formatDateForInput(bookingToEdit.start_date);
-            }
-            if (!initialBookingData.hasOwnProperty('end_date') && bookingToEdit.hasOwnProperty('end_date')) {
-                newFormData.end_date = formatDateForInput(bookingToEdit.end_date);
-            }
+            // --- KEY CHANGE: Pass the structured booking_extras array directly ---
+            // bookingToEdit.booking_extras comes from your API's transformBooking method
+            // and should be an array of objects like:
+            // [{ extra_id: '...', name: '...', quantity: X, price_at_booking: 'Y.YY', default_price_per_day: 'Z.ZZ' }, ...]
+            booking_extras: Array.isArray(bookingToEdit.booking_extras) ? bookingToEdit.booking_extras : [],
 
-            console.log("BookingPage: handleShowModal (Edit) - Final 'newFormData' for currentBooking:", JSON.stringify(newFormData, null, 2));
-            setCurrentBooking(newFormData);
+            // Calculated fields are usually strings from API, ensure they are strings for form consistency if needed
+            calculated_base_price: String(bookingToEdit.calculated_base_price || '0.00'),
+            calculated_extras_price: String(bookingToEdit.calculated_extras_price || '0.00'),
+            calculated_insurance_price: String(bookingToEdit.calculated_insurance_price || '0.00'),
+            discount_amount_applied: String(bookingToEdit.discount_amount_applied || '0.00'),
+            final_price: String(bookingToEdit.final_price || '0.00'),
 
-        } else { // CREATE mode
-            setIsEditMode(false);
-            const newBookingData = { ...initialBookingData, booking_extras: [], discount_percentage: '' };
-            console.log("BookingPage: handleShowModal (Create) - Initializing new booking data:", JSON.stringify(newBookingData, null, 2));
-            setCurrentBooking(newBookingData);
-        }
-        setShowModal(true);
-    };
+            // Include any other fields from bookingToEdit that are part of initialBookingData
+            // If bookingToEdit might have fields not in initialBookingData that you want in the form,
+            // you can spread bookingToEdit after initialBookingData, but be careful with overwriting types.
+            // For example:
+            // notes: bookingToEdit.notes || '', // If you have a notes field
+        };
+
+        // Remove discount_percentage if it's definitely not used in the form or submission logic anymore
+        // If initialBookingData still has it, but you don't want it from bookingToEdit:
+        // delete formDataForModal.discount_percentage; // Or ensure it's set to '' as per initialBookingData
+
+        console.log("BookingPage: handleShowModal (Edit) - Final 'formDataForModal' for currentBooking state:", JSON.stringify(formDataForModal, null, 2));
+        setCurrentBooking(formDataForModal);
+
+    } else { // CREATE mode
+        setIsEditMode(false);
+        // For new booking, ensure booking_extras is an empty array and other fields are from initialBookingData
+        const newBookingData = { ...initialBookingData, booking_extras: [] };
+        // delete newBookingData.discount_percentage; // If not used
+        console.log("BookingPage: handleShowModal (Create) - Initializing currentBooking for new booking:", JSON.stringify(newBookingData, null, 2));
+        setCurrentBooking(newBookingData);
+    }
+    setShowModal(true);
+};
 
     const handleCloseModal = () => {
         setShowModal(false);
@@ -205,7 +202,11 @@ const BookingPage = () => {
         // Accommodate both standard event objects and synthetic ones for calculated fields
         const target = e.target || e; // If e is already the target-like object
         const { name, value, type, checked } = target;
-
+if (name === 'booking_extras') {
+        console.log(`BOOKING_PAGE_handleModalDataChange: Attempting to update 'booking_extras'. New value:`, JSON.stringify(value, null, 2));
+    } else if (name === 'calculated_extras_price') {
+        console.log(`BOOKING_PAGE_handleModalDataChange: Attempting to update 'calculated_extras_price'. New value:`, value);
+    }
         // console.log("BookingPage: handleModalInputChange received:", { name, value, type, checked });
         setCurrentBooking(prev => {
             const updatedBooking = { ...prev, [name]: type === 'checkbox' ? checked : value };
@@ -220,50 +221,74 @@ const BookingPage = () => {
         if (modalSubmissionError) setModalSubmissionError('');
     };
 
-    const processBookingDataForAPI = (data) => {
-        const processed = { ...data };
-        const numericKeys = ['calculated_base_price', 'calculated_extras_price', 'calculated_insurance_price', 'discount_amount_applied', 'final_price', 'discount_percentage'];
-        numericKeys.forEach(key => {
-            if (key === 'discount_percentage') {
-                 processed[key] = (processed[key] === '' || processed[key] === null || isNaN(parseFloat(processed[key]))) ? null : parseFloat(processed[key]);
-            } else if (processed[key] === '' || processed[key] === null || isNaN(parseFloat(processed[key]))) {
-                 // Ensure final_price is not 0 if it's supposed to be null due to invalid calculation,
-                 // but allow 0.00 if it's a valid calculated zero.
-                 // Backend might prefer null for "not yet calculated" vs 0 for "calculated as zero".
-                 processed[key] = (key === 'final_price' && (processed[key] === '' || isNaN(parseFloat(processed[key])))) ? null : parseFloat(processed[key] || 0);
-            } else {
-                processed[key] = parseFloat(processed[key]);
-            }
-        });
-        ['renter_user_id', 'vehicle_id', 'insurance_plan_id', 'promotion_code_id'].forEach(key => {
-            if (processed[key] === '') processed[key] = null;
-        });
+  const processBookingDataForAPI = (dataFromForm) => {
+    const processed = { ...dataFromForm }; // dataFromForm.booking_extras IS ALREADY the structured array
 
-        // Ensure booking_extras are clean IDs
-        if (Array.isArray(processed.booking_extras)) {
-            processed.booking_extras = processed.booking_extras
-                .map(extra => (typeof extra === 'object' && extra !== null ? String(extra.id) : String(extra)))
-                .filter(id => id && id !== 'null' && id !== 'undefined'); // Ensure valid IDs
-        } else {
-            processed.booking_extras = [];
-        }
-        // console.log("BookingPage: Data processed for API submission:", JSON.stringify(processed, null, 2));
-        return processed;
-    };
+    // Process numeric fields (ensure they are numbers or null/0.00)
+    const numericKeys = ['calculated_base_price', 'calculated_extras_price', 'calculated_insurance_price', 'discount_amount_applied', 'final_price'];
+    numericKeys.forEach(key => {
+        processed[key] = (processed[key] === '' || processed[key] === null || isNaN(parseFloat(processed[key])))
+            ? 0.00 // Default to 0.00 for these calculated fields if not set
+            : parseFloat(processed[key]);
+    });
+
+    // Handle optional foreign keys (set to null if empty string)
+    ['insurance_plan_id', 'promotion_code_id'].forEach(key => {
+        if (processed[key] === '') processed[key] = null;
+    });
+
+    // Handle promotion_code_string
+    if (processed.promotion_code_string === '') {
+        processed.promotion_code_string = null;
+    }
+    // If you decide to ONLY send promotion_code_id if a code is successfully applied:
+    // if (!processed.promotion_code_id) { // If no ID from successful apply
+    //     delete processed.promotion_code_string; // Don't send string if not applied
+    // }
+
+    // --- CORRECTED LOGIC FOR booking_extras ---
+    if (Array.isArray(processed.booking_extras)) {
+        // The data should already be structured as [{extra_id, quantity, price_at_booking}, ...]
+        // We just ensure the values are of the correct type and clean.
+        processed.booking_extras = processed.booking_extras
+            .filter(extra =>
+                extra &&
+                extra.extra_id &&
+                extra.hasOwnProperty('quantity') &&
+                extra.hasOwnProperty('price_at_booking')
+            )
+            .map(extra => ({
+                extra_id: String(extra.extra_id),
+                quantity: parseInt(extra.quantity, 10) || 1,
+                price_at_booking: parseFloat(extra.price_at_booking || 0).toFixed(2)
+            }));
+    } else {
+        processed.booking_extras = [];
+    }
+    // --- END CORRECTION ---
+
+    // Remove discount_percentage if you're not storing it on the backend's Booking model
+    delete processed.discount_percentage;
+
+    return processed;
+};
 
     const handleModalSubmit = async (e) => {
         e.preventDefault();
+        
         setModalFormErrors({}); setModalSubmissionError(''); setModalSubmitting(true);
         console.log("BookingPage: Submitting currentBooking (before processing):", JSON.stringify(currentBooking, null, 2));
         const dataToSubmit = processBookingDataForAPI(currentBooking);
         console.log("BookingPage: Submitting dataToSubmit (after processing):", JSON.stringify(dataToSubmit, null, 2));
-
-        try {
+    console.log("BOOKING_PAGE_SUBMIT: FINAL booking_extras being sent to API:", JSON.stringify(dataToSubmit.booking_extras, null, 2));
+    console.log("BOOKING_PAGE_SUBMIT: FULL dataToSubmit payload:", JSON.stringify(dataToSubmit, null, 2));
+         try {
             if (isEditMode && currentBooking.id) {
                 await updateBooking(currentBooking.id, dataToSubmit);
                 setSuccessMessage('Booking updated successfully!');
             } else {
                 await createBooking(dataToSubmit);
+                
                 setSuccessMessage('Booking created successfully!');
             }
             loadBookings(isEditMode ? currentPage : 1, isEditMode ? searchTerm : ''); // Reload relevant page
@@ -288,7 +313,7 @@ const BookingPage = () => {
         setError(null);
         setSuccessMessage('');
         try {
-            await deleteBooking(itemId);
+            await deleteBooking(itemId.id);
             setSuccessMessage('Booking deleted successfully!');
             // Smarter page handling after delete
             const newTotalItems = (apiPaginationMeta?.total || 1) - 1;

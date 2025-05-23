@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\BookingCompleted;             // <<< ADD THIS IMPORT
+use App\Listeners\CheckCampaignEligibility;   // <<< ADD THIS IMPORT
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -18,6 +20,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        BookingCompleted::class => [           // <<< ADD THIS MAPPING
+            CheckCampaignEligibility::class,
+        ],
     ];
 
     /**
@@ -33,6 +38,6 @@ class EventServiceProvider extends ServiceProvider
      */
     public function shouldDiscoverEvents(): bool
     {
-        return false;
+        return false; // Or true if you prefer auto-discovery, but explicit mapping is fine
     }
 }

@@ -4,13 +4,15 @@ namespace App\Enums;
 
 enum DamageReportStatus: string
 {
-    case REPORTED = 'reported';           
-    case UNDER_INVESTIGATION = 'under_investigation'; 
-    case AWAITING_REPAIR_QUOTE = 'awaiting_repair_quote';
-    case REPAIR_PENDING = 'repair_pending';   
-    case IN_REPAIR = 'in_repair';
-    case REPAIRED = 'repaired';
-    case RESOLVED_NO_REPAIR = 'resolved_no_repair'; 
-    case CLOSED_WITH_CHARGE = 'closed_with_charge'; 
-    case CLOSED_NO_CHARGE = 'closed_no_charge';   
+    case PENDING_ASSESSMENT = 'pending_assessment';
+    case UNDER_ASSESSMENT = 'under_assessment';
+    case ASSESSMENT_COMPLETE = 'assessment_complete';
+    case REPAIR_IN_PROGRESS = 'repair_in_progress';
+    case REPAIR_PENDING_PARTS = 'repair_pending_parts';
+    case REPAIRED_PENDING_QC = 'repaired_pending_qc';
+    case RESOLVED_NO_COST = 'resolved_no_cost';
+    case RESOLVED_AWAITING_PAYMENT = 'resolved_awaiting_payment';
+    case RESOLVED_PAID = 'resolved_paid';
+    case DISPUTED = 'disputed';
+    case CLOSED = 'closed'; // General closed status
 }

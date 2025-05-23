@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\PromotionRewardType; // <<< ADD THIS IMPORT
 
 class PromotionCampaign extends Model
 {
     use HasFactory, HasUuid;
 
-    protected $primaryKey = 'id'; // was campaignID
+    protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -20,6 +21,8 @@ class PromotionCampaign extends Model
         'description',
         'required_rental_count',
         'reward_value',
+        'reward_type',          // <<< ADDED
+        'code_validity_days',   // <<< ADDED
         'is_active',
         'start_date',
         'end_date',
@@ -28,6 +31,8 @@ class PromotionCampaign extends Model
     protected $casts = [
         'required_rental_count' => 'integer',
         'reward_value' => 'decimal:2',
+        'reward_type' => PromotionRewardType::class, // <<< ADDED (Cast to Enum)
+        'code_validity_days' => 'integer',         // <<< ADDED
         'is_active' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',

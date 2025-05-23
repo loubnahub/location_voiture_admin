@@ -1,26 +1,59 @@
 /* src/components/Sidebar.css */
+
 .sidebar_custom_bg {
-  background-color: #322F35 !important; /* Figma sidebar dark blue/gray */
+  background-color: #322F35 !important;
   min-height: 100vh;
-  width: 260px; /* Fixed width from Figma */
-  flex-shrink: 0; /* Prevent sidebar from shrinking */
+  width: 260px;
+  flex-shrink: 0;
 }
 
 .sidebar-sticky {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto; /* Allow sidebar content to scroll if it's too long */
+  position: sticky;
+  top: 0;
+  height: 100vh; /* This makes the container have a fixed viewport height */
+  overflow-y: auto; /* This enables scrolling on this element if content overflows */
+
+  /* --- Hide Scrollbar for WebKit browsers (Chrome, Safari, Edge, Opera) --- */
+  &::-webkit-scrollbar {
+    width: 0px; /* Make the scrollbar take no space */
+    /* Alternatively, to just make it invisible but reserve space: */
+    /* width: 8px;
+       background: transparent; */
+  }
+  /* If width is 0px, styling thumb might not be necessary, but doesn't hurt */
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+
+  /* --- Hide Scrollbar for Firefox --- */
+  scrollbar-width: none; /* This is the most direct way to hide it in Firefox */
+  /* If 'none' doesn't work as expected in an older Firefox, try:
+     scrollbar-color: transparent transparent;
+     or match sidebar background: scrollbar-color: #322F35 #322F35;
+  */
+
+  /* --- Hide Scrollbar for IE/Edge (Older versions) --- */
+  -ms-overflow-style: none;
 }
 
+/* If .sidebar-nav-custom is just a container for links and doesn't scroll independently,
+   it doesn't need overflow-y: auto or scrollbar styles.
+   It will simply be part of the content that makes .sidebar-sticky scroll.
+*/
+.sidebar-nav-custom {
+  /* Remove overflow-y: auto; from here if .sidebar-sticky is the scroller */
+  /* The padding/margin for links is fine */
+}
+
+
 .sidebar-header-custom {
-  border-bottom: 1px solid #322F35; /* Separator from Figma */
+  border-bottom: 1px solid #322F35;
 }
 
 .sidebar-logo-container {
   width: 50px;
   height: 50px;
-  background-color: #475569; /* Placeholder logo background */
+  background-color: #475569;
   color: white;
   display: flex;
   align-items: center;
@@ -32,22 +65,22 @@
 
 .sidebar-title-custom {
   color: #ffffff !important;
-  font-weight: 600; /* Semibold */
+  font-weight: 600;
 }
 
 .sidebar-subtitle-custom {
-  color: #dedede !important; /* Lighter subtitle text */
+  color: #dedede !important;
 }
 
 .sidebar-heading-custom {
-  font-size: 0.75rem; /* Small group heading */
-  color: rgb(118, 118, 118) !important; /* Muted group title */
+  font-size: 0.75rem;
+  color: rgb(118, 118, 118) !important;
   letter-spacing: 0.5px;
 }
 
 .sidebar-nav-custom .nav-link.sidebar-link-custom {
-  color: #cbd5e1 !important; /* Light gray text for links */
-  padding: 0.6rem 1.25rem; /* Adjust padding to match Figma */
+  color: #cbd5e1 !important;
+  padding: 0.6rem 1.25rem;
   border-radius: 6px;
   margin: 2px 10px;
   font-size: 0.9rem;
@@ -56,44 +89,19 @@
 }
 
 .sidebar-nav-custom .nav-link.sidebar-link-custom:hover {
-  background-color: #444246 !important; /* Hover background */
+  background-color: #444246 !important;
   color: #ffffff !important;
-    border-radius: 50px;
-
+  border-radius: 50px;
 }
 
 .sidebar-nav-custom .nav-link.sidebar-link-custom.active {
-  background-color: #ffffff !important; /* Active item background */
+  background-color: #ffffff !important;
   color: #322F35 !important;
   font-weight: 500;
   border-radius: 50px;
 }
 
 .sidebar-icon-custom {
-  /* Icons by default in react-icons will inherit color. */
-  /* If using bootstrap-icons via <i> tags, you might need: */
-  /* color: inherit; */
   display: inline-flex;
   align-items: center;
 }
-/* src/components/Sidebar.css */
-
-/* ... your existing sidebar styles ... */
-
-/* Custom Scrollbar for WebKit browsers (Chrome, Safari, Edge, Opera) */
-.sidebar-nav-custom::-webkit-scrollbar {
-  width: 8px; /* Width of the vertical scrollbar */
-  /* height: 8px; */ /* Height of the horizontal scrollbar - usually not needed for vertical scroll */
-}
-
-.sidebar-nav-custom::-webkit-scrollbar-track {
-  background: #2c3a50; /* Color of the tracking area - should be slightly darker or different from sidebar bg */
-  border-radius: 10px; /* Optional: roundness of the track */
-}
-
-.sidebar-nav-custom::-webkit-scrollbar-thumb {
-  background-color: #4a5568; /* Color of the scrollbar thumb itself */
-  border-radius: 10px; /* Roundness of the scrollbar thumb */
-  border: 2px solid #2c3a50; /* Optional: creates padding around thumb, using track color */
-}
-

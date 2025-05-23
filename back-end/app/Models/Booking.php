@@ -48,8 +48,7 @@ class Booking extends Model
 public function bookingExtras()
 {
     return $this->belongsToMany(Extra::class, 'booking_extra', 'booking_id', 'extra_id')
-                ->withPivot('quantity', 'price_at_booking'); // Include any pivot data you need/have
-    // If no pivot data, ->withPivot(...) is not needed.
+                ->withPivot('quantity', 'price_at_booking');
 }
     // Relationships:
     public function renter(): BelongsTo

@@ -10,6 +10,13 @@ body { /* Apply to body for consistent font and background */
   display: flex; /* This is redundant if the div in JSX has d-flex, but harmless */
   min-height: 100vh;
 }
+.app-header-transparent {
+  background-color: #F5F5F5 !important; /* Use !important if Bootstrap styles are hard to override */
+}
+/* Or more generally target the navbar inside your specific header structure if needed */
+.admin-main-panel .app-header {
+     background-color: #F5F5F5 !important;
+}
 
 .admin-content-area {
     background-color: #F5F5F5;
