@@ -79,7 +79,7 @@ function App() {
             <Route path="fleet/features" element={<FeaturePage />} />
             <Route path="fleet/extras" element={<ExtraPage />} />
             <Route path="fleet/insurance-plans" element={<InsurancePlanPage />} />
-            <Route path="operations/bookings" element={<BookingPage />} />
+            <Route path="/admin/inventory/bookings" element={<BookingPage />} />
             <Route path="operations/damage-reports" element={<DamageReportPage />} />
             <Route path="operations/operational-holds" element={<OperationalHoldPage />} />
             <Route path="operations/rental-agreements" element={<RentalAgreementPage />} />

@@ -36,36 +36,36 @@ const Sidebar = () => {
       items: [
         { name: 'Vehicles', icon: <LuWarehouse size={18} />, path: '/admin/inventory/vehicles' },
         { name: 'Bookings', icon: <LuFileText size={18} />, path: '/admin/inventory/bookings' },
-        { name: 'Operational Holds', icon: <LuBriefcase size={18} />, path: '/admin/inventory/operational-holds' },
-        { name: 'Damage Reports', icon: <AlertTriangle size={18} />, path: '/admin/inventory/damage-reports' },
+        { name: 'Operational Holds', icon: <LuBriefcase size={18} />, path: 'operations/operational-holds' },
+        { name: 'Damage Reports', icon: <AlertTriangle size={18} />, path: 'operations/damage-reports' },
       ],
     },
     {
       group: 'CUSTOMER RELATIONS',
       items: [
-        { name: 'Users', icon: <LuUsers size={18} />, path: '/admin/customers/users' },
-        { name: 'Rental Agreements', icon: <LuFileText size={18} />, path: '/admin/customers/rental-agreements' },
+        { name: 'Users', icon: <LuUsers size={18} />, path: 'users/customers' },
+        { name: 'Rental Agreements', icon: <LuFileText size={18} />, path: 'operations/rental-agreements' },
       ],
     },
     // --- NEW GROUP FOR PROMOTIONS ---
     {
         group: 'MARKETING & PROMOTIONS',
         items: [
-            { name: 'Promotion Campaigns', icon: <LuMegaphone size={18} />, path: '/admin/promotions/campaigns' },
-            { name: 'Promotion Codes', icon: <LuTicket size={18} />, path: '/admin/promotions/codes' },
+            { name: 'Promotion Campaigns', icon: <LuMegaphone size={18} />, path: 'marketing/promotion-campaigns' },
+            { name: 'Promotion Codes', icon: <LuTicket size={18} />, path: 'marketing/promotion-codes' },
         ]
     },
     // --- END NEW GROUP ---
     {
         group: 'FINANCIALS',
         items: [
-            { name: 'Payments', icon: <LuDollarSign size={18} />, path: '/admin/financials/payments' },
+            { name: 'Payments', icon: <LuDollarSign size={18} />, path: 'financials/payments' },
         ]
     },
     {
         group: 'SYSTEM CONFIGURATION',
         items: [
-            { name: 'User Roles', icon: <LuUsers size={18} />, path: '/admin/system/user-roles' },
+            { name: 'User Roles', icon: <LuUsers size={18} />, path: 'users/roles' },
         ]
     }
   ];
