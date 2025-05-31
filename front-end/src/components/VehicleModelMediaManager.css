@@ -1,0 +1,19 @@
+/* VehicleModelMediaManager.css */
+.media-manage-item .reorder-controls button {
+  color: #6c757d; /* Muted color for reorder arrows */
+}
+.media-manage-item .reorder-controls button:hover {
+  color: #0d6efd; /* Primary color on hover */
+}
+.media-manage-item .media-caption-display {
+  font-size: 0.9rem;
+  word-break: break-word; /* Prevent long captions from breaking layout */
+}
+.media-manage-item .media-item-actions button {
+  margin-left: 0.25rem;
+}
+
+/* Style for the upload preview section */
+.upload-preview-item {
+  /* Add some padding and border if needed */
+}

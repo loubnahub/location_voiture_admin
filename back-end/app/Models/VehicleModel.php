@@ -30,7 +30,7 @@ class VehicleModel extends Model
         'number_of_doors',
         'base_price_per_day',
         'description',
-        'is_available', // Model availability (e.g., is this model generally offered)
+        'is_available',
     ];
 
     protected $casts = [
@@ -50,7 +50,7 @@ class VehicleModel extends Model
         return $this->belongsTo(VehicleType::class);
     }
 
-    public function vehicles(): HasMany // Instances of this model
+    public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class);
     }
@@ -63,7 +63,6 @@ class VehicleModel extends Model
     public function extras(): BelongsToMany
     {
         return $this->belongsToMany(Extra::class, 'extra_vehicle_model');
-                        // ->withPivot('custom_price_if_any'); // If pivot had extra data
     }
 
     public function features(): BelongsToMany

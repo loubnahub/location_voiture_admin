@@ -22,7 +22,9 @@ class VehicleModelMedia extends Model
         'caption',
         'is_cover',
         'order',
+        'media_type',
         'uploaded_at',
+        'color_hex',
     ];
 
     protected $casts = [

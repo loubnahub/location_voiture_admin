@@ -1,250 +1,288 @@
 <?php
 
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\VehicleModel;        
+use App\Models\VehicleModel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class VehicleModelController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-     public function index(Request $request)
+    public function index(Request $request)
     {
-        // --- Permission Check (Placeholder - uncomment and implement when auth is ready) ---
-        // if (!auth()->user()->can('view vehicle models')) {
-        //     return response()->json(['message' => 'Forbidden: You do not have permission to view vehicle models.'], 403);
-        // }
-
         $query = VehicleModel::query();
+        $query->with(['vehicleType', 'media' => function ($query) {
+            $query->where('is_cover', true)->orWhere(function ($q) {
+                $q->orderBy('order', 'asc')->limit(1);
+            });
+        }]);
 
-        // --- Eager load the 'vehicleType' relationship ---
-        $query->with('vehicleType'); // Make sure 'vehicleType' relationship exists on VehicleModel
-
-        // --- Search Functionality (with column-specific targeting) ---
+        if ($request->filled('filter_brand')) { $query->where('brand', 'LIKE', '%' . $request->input('filter_brand') . '%'); }
+        if ($request->filled('filter_vehicle_type_id')) { $query->where('vehicle_type_id', $request->input('filter_vehicle_type_id')); }
+        if ($request->filled('filter_year_from')) { $query->where('year', '>=', $request->input('filter_year_from')); }
+        if ($request->filled('filter_year_to')) { $query->where('year', '<=', $request->input('filter_year_to')); }
+        if ($request->filled('filter_status')) {
+            $statusValue = strtolower($request->input('filter_status'));
+            if ($statusValue === 'available') { $query->where('is_available', true); }
+            elseif ($statusValue === 'unavailable') { $query->where('is_available', false); }
+        }
+        if ($request->filled('filter_fuel_type')) { $query->where('fuel_type', $request->input('filter_fuel_type')); }
         if ($request->filled('search') && $request->input('search') !== '') {
             $searchTerm = $request->input('search');
-            $searchIn = $request->input('search_in', 'all'); // Default to 'all' fields if not specified
-
-            // Whitelist of columns allowed for targeted search to prevent misuse
-            $allowedSearchableFields = ['title', 'brand', 'model', 'id'];
-
-            $query->where(function ($q) use ($searchTerm, $searchIn, $allowedSearchableFields) {
-                if ($searchIn === 'all') {
-                    // Search across multiple general fields
-                    $q->where('title', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('brand', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('model', 'LIKE', "%{$searchTerm}%")
-                      // For ID, a partial match from the beginning might be more useful
-                      // but ensure your client-side search logic for ID also aligns (e.g. startsWith)
-                      ->orWhere('id', 'LIKE', "{$searchTerm}%");
-                } elseif (in_array($searchIn, $allowedSearchableFields)) {
-                    // Search in a specific allowed field
-                    if ($searchIn === 'id') {
-                        // For UUIDs, partial match from start is often best if users type it
-                        $q->where($searchIn, 'LIKE', "{$searchTerm}%");
-                    } else {
-                        $q->where($searchIn, 'LIKE', "%{$searchTerm}%");
-                    }
-                }
-                // If $searchIn is something else not allowed, the query won't add a WHERE clause for search,
-                // effectively ignoring an invalid search_in parameter.
+            $query->where(function (Builder $q) use ($searchTerm) {
+                $q->where('title', 'LIKE', "%{$searchTerm}%")->orWhere('brand', 'LIKE', "%{$searchTerm}%")->orWhere('model', 'LIKE', "%{$searchTerm}%")->orWhere('id', 'LIKE', "{$searchTerm}%");
             });
         }
-
-        // --- Sorting ---
-        $sortBy = $request->input('sort_by', 'created_at'); // Default sort column
-        $sortDirection = $request->input('sort_direction', 'desc'); // Default sort direction
-
-        // Whitelist of columns allowed for sorting
-        $allowedSortColumns = ['title', 'brand', 'model', 'year', 'base_price_per_day', 'created_at'];
-        if (in_array($sortBy, $allowedSortColumns)) {
-            $query->orderBy($sortBy, $sortDirection);
-        } else {
-            $query->orderBy('created_at', 'desc'); // Fallback to default sort
-        }
-
-        // --- Get ALL matching records (NO backend pagination) ---
-        $allVehicleModels = $query->get();
-
-        // --- Manually transform ALL data for the JSON response ---
-        $transformedData = $allVehicleModels->map(function ($model) {
-            // $model is an instance of App\Models\VehicleModel
-            return [
-                'id' => $model->id,
-                'title' => $model->title,
-                'brand' => $model->brand,
-                'model' => $model->model,
-                'year' => $model->year,
-                'base_price_per_day' => (float) $model->base_price_per_day,
-                'description' => $model->description, // Consider truncating if very long for list views
-                'is_available' => (bool) $model->is_available,
-                'vehicle_type_name' => $model->vehicleType ? $model->vehicleType->name : null, // Access eager loaded relationship
-                'created_at_formatted' => $model->created_at ? $model->created_at->toDateTimeString() : null,
-                // Add other fields your frontend list might need directly
-            ];
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+        $allowedSortColumns = ['title', 'brand', 'model', 'year', 'fuel_type', 'transmission', 'number_of_seats', 'number_of_doors', 'base_price_per_day', 'is_available', 'created_at', 'updated_at'];
+        if (in_array($sortBy, $allowedSortColumns)) { $query->orderBy($sortBy, $sortDirection); } else { $query->orderBy('created_at', 'desc'); }
+        $perPage = $request->input('per_page', 10);
+        $vehicleModelsPage = $query->paginate($perPage);
+        $vehicleModelsPage->getCollection()->transform(function ($model) {
+            $attributes = $model->toArray();
+            $thumbnail_url = null;
+            if ($model->media->isNotEmpty()) { $cover = $model->media->firstWhere('is_cover', true); $thumbnail_url = $cover ? $cover->url : $model->media->first()->url; }
+            $attributes['vehicle_type_name'] = $model->vehicleType ? $model->vehicleType->name : null;
+            $attributes['thumbnail_url'] = $thumbnail_url;
+            $attributes['base_price_per_day'] = (float) $model->base_price_per_day; $attributes['is_available'] = (bool) $model->is_available;
+            $attributes['year'] = (int) $model->year; $attributes['number_of_seats'] = (int) $model->number_of_seats; $attributes['number_of_doors'] = (int) $model->number_of_doors;
+            unset($attributes['media']); unset($attributes['vehicle_type']);
+            return $attributes;
         });
-
-        // Return the transformed data as a simple array under a 'data' key.
-        return response()->json(['data' => $transformedData]);
+        return response()->json($vehicleModelsPage);
     }
-   
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\VehicleModel  $vehicleModel  (Route Model Binding)
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function show(VehicleModel $vehicleModel)
     {
-        // Eager load all necessary relationships for the model detail view
         $vehicleModel->load([
             'vehicleType',
-            'media' => function ($query) {
-                $query->orderBy('is_cover', 'desc')->orderBy('order', 'asc');
-            },
-            'features' => function ($query) {
-                $query->orderBy('category')->orderBy('name');
-            },
-            'extras' => function ($query) {
-                $query->orderBy('name');
-            },
-            'vehicles:id,license_plate,status,vehicle_model_id' // Load associated vehicle instances (specific columns)
+            'media' => function ($query) { $query->orderBy('is_cover', 'desc')->orderBy('order', 'asc'); },
+            'features' => function ($query) { $query->withPivot('notes')->orderBy('features.category')->orderBy('features.name'); },
+            'extras' => function ($query) { $query->orderBy('name'); },
+            'insurancePlans' => function ($query) { $query->orderBy('name'); },
+            'vehicles:id,license_plate,status,vehicle_model_id'
         ]);
 
         $vehicleType = $vehicleModel->vehicleType;
-
         $mainImage = null;
         if ($vehicleModel->media->isNotEmpty()) {
             $coverImage = $vehicleModel->media->firstWhere('is_cover', true);
             $mainImage = $coverImage ? $coverImage->url : $vehicleModel->media->first()->url;
         }
-
-        $headerSubtitle = trim(ucfirst($vehicleModel->transmission) . ' ' . ($vehicleType ? strtolower($vehicleType->name) : ''));
+        $headerSubtitle = trim(ucfirst($vehicleModel->transmission ?? '') . ' ' . ($vehicleType ? strtolower($vehicleType->name) : ''));
 
         $featuresGrouped = $vehicleModel->features->groupBy('category')->map(function ($categoryFeatures, $categoryName) {
             return [
                 'category_name' => $categoryName ?: 'General',
                 'items' => $categoryFeatures->map(function ($feature) {
-                    return ['id' => $feature->id, 'name' => $feature->name, 'description' => $feature->description];
+                    return ['id' => $feature->id, 'name' => $feature->name, 'description' => $feature->description, 'pivot' => $feature->pivot ? ['notes' => $feature->pivot->notes] : null ];
                 })->values()
             ];
         })->values();
 
         $extrasFormatted = $vehicleModel->extras->map(function ($extra) {
+            return ['id' => $extra->id, 'name' => $extra->name, 'description' => $extra->description, 'default_price_per_day' => isset($extra->default_price_per_day) ? (float) $extra->default_price_per_day : null, 'icon_identifier' => $extra->icon_identifier ?? null];
+        })->values();
+
+        $insurancePlansAssociated = $vehicleModel->insurancePlans->map(function ($plan) {
             return [
-                'id' => $extra->id,
-                'name' => $extra->name,
-                'description' => $extra->description,
-                'default_price_per_day' => (float) $extra->default_price_per_day,
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'provider' => $plan->provider,
+                'coverage_details' => $plan->coverage_details,
+                'price_per_day' => (float) $plan->price_per_day,
+                'is_active' => (bool) $plan->is_active,
             ];
         })->values();
 
-        // Format the list of vehicle instances (license plates) for the dropdown
-        $vehicleInstances = $vehicleModel->vehicles->map(function ($vehicleInstance) {
-            return [
-                'id' => $vehicleInstance->id, // Vehicle instance ID
-                'license_plate' => $vehicleInstance->license_plate,
-                'status' => $vehicleInstance->status, // Status of this specific instance
-            ];
-        });
+        $vehicleInstances = $vehicleModel->vehicles->map(function ($vehicleInstance) { return ['id' => $vehicleInstance->id, 'license_plate' => $vehicleInstance->license_plate, 'status' => $vehicleInstance->status,]; });
 
-        return response()->json([
-            'data' => [
-                'id' => $vehicleModel->id,
-                'title' => $vehicleModel->title, // e.g., "TOYOTA CAMRY XLE 2022"
-                'header_subtitle' => $headerSubtitle, // e.g., "Automatic sedan"
-                'brand' => $vehicleModel->brand,
-                'model_name' => $vehicleModel->model,
-                'year' => (int) $vehicleModel->year,
-                'fuel_type' => $vehicleModel->fuel_type,
-                'transmission' => $vehicleModel->transmission,
-                'number_of_seats' => (int) $vehicleModel->number_of_seats,
-                'number_of_doors' => (int) $vehicleModel->number_of_doors,
-                'base_price_per_day' => (float) $vehicleModel->base_price_per_day,
-                'description' => $vehicleModel->description,
-                'is_generally_available' => (bool) $vehicleModel->is_available, // Model's offering status
-                'main_image_url' => $mainImage,
-                'all_media' => $vehicleModel->media->map(function($media){ // For image gallery on media tab
-                    return ['id' => $media->id, 'url' => $media->url, 'caption' => $media->caption, 'is_cover' => (bool)$media->is_cover, 'order' => $media->order];
-                }),
-                'available_colors_from_model' => $vehicleModel->available_colors, // For color swatches
-
-                'vehicle_type' => $vehicleType ? [
-                    'id' => $vehicleType->id,
-                    'name' => $vehicleType->name,
-                ] : null,
-
-                'features_grouped' => $featuresGrouped,
-                'extras_available' => $extrasFormatted,
-
-                'vehicle_instances' => $vehicleInstances, // List of specific cars of this model
-
-                'created_at' => $vehicleModel->created_at ? $vehicleModel->created_at->toDateTimeString() : null,
-                'updated_at' => $vehicleModel->updated_at ? $vehicleModel->updated_at->toDateTimeString() : null,
-            ]
-        ]);
+        return response()->json(['data' => [
+            'id' => $vehicleModel->id, 'title' => $vehicleModel->title, 'header_subtitle' => $headerSubtitle,
+            'brand' => $vehicleModel->brand, 'model_name' => $vehicleModel->model,
+            'year' => (int) $vehicleModel->year, 'fuel_type' => $vehicleModel->fuel_type,
+            'transmission' => $vehicleModel->transmission, 'number_of_seats' => (int) $vehicleModel->number_of_seats,
+            'number_of_doors' => (int) $vehicleModel->number_of_doors, 'base_price_per_day' => (float) $vehicleModel->base_price_per_day,
+            'description' => $vehicleModel->description, 'is_generally_available' => (bool) $vehicleModel->is_available,
+            'main_image_url' => $mainImage, 'all_media' => $vehicleModel->media->map(fn($m) => ['id' => $m->id, 'url' => $m->url, 'caption' => $m->caption, 'is_cover' => (bool)$m->is_cover, 'order' => $m->order]),
+            'available_colors_from_model' => $vehicleModel->available_colors,
+            'vehicle_type' => $vehicleType ? ['id' => $vehicleType->id, 'name' => $vehicleType->name] : null,
+            'features_grouped' => $featuresGrouped,
+            'extras_available' => $extrasFormatted,
+            'insurance_plans_associated' => $insurancePlansAssociated,
+            'vehicle_instances' => $vehicleInstances,
+            'created_at' => $vehicleModel->created_at?->toIso8601String(), 'updated_at' => $vehicleModel->updated_at?->toIso8601String(),
+            'quantity_placeholder' => 25,
+        ]]);
     }
 
-    // ... store, update, destroy methods for VehicleModel ...
-    // (The store method we worked on previously for creating models is good)
     public function store(Request $request)
     {
-        // ... (existing store method) ...
-        if (!auth()->user()->can('manage vehicles')) { /* ... */ }
-        $validator = Validator::make($request->all(), [ /* ... */ ]);
-        if ($validator->fails()) { /* ... */ }
-        $vehicleModelData = $validator->validated();
-        if (isset($vehicleModelData['available_colors']) && is_array($vehicleModelData['available_colors'])) {
-            $vehicleModelData['available_colors'] = json_encode($vehicleModelData['available_colors']);
-        } else if (!isset($vehicleModelData['available_colors'])) {
-            $vehicleModelData['available_colors'] = null; // Or an empty JSON array '[]'
+        $validator = Validator::make($request->all(), [
+            'vehicle_type_id' => 'required|exists:vehicle_types,id',
+            'title' => 'required|string|max:255|unique:vehicle_models,title',
+            'brand' => 'required|string|max:100',
+            'model' => 'required|string|max:100',
+            'year' => 'required|integer|min:1900|max:' . (date('Y') + 2),
+            'fuel_type' => 'required|string|max:50',
+            'transmission' => 'required|string|max:50',
+            'available_colors' => 'nullable|array',
+            'available_colors.*' => 'string|max:50',
+            'number_of_seats' => 'required|integer|min:1',
+            'number_of_doors' => 'required|integer|min:1',
+            'base_price_per_day' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'is_generally_available' => 'sometimes|boolean',
+            'features' => 'nullable|array',
+            'features.*.feature_id' => 'required_with:features|exists:features,id',
+            'features.*.notes' => 'nullable|string|max:1000',
+            'extras' => 'nullable|array',
+            'extras.*' => 'required_with:extras|exists:extras,id',
+            'insurance_plans' => 'nullable|array',
+            'insurance_plans.*' => 'required_with:insurance_plans|exists:insurance_plans,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
-        $vehicleModel = VehicleModel::create($vehicleModelData);
-        // Transform and return created model (simplified for brevity)
-        $vehicleModel->load('vehicleType'); // Load type for response consistency
-        return response()->json([
-            'id' => $vehicleModel->id,
-            'title' => $vehicleModel->title,
-            'vehicle_type_name' => $vehicleModel->vehicleType ? $vehicleModel->vehicleType->name : null,
-        ], 201);
+
+        $validatedData = $validator->validated();
+
+        if (isset($validatedData['model_name'])) {
+            $validatedData['model'] = $validatedData['model_name'];
+            unset($validatedData['model_name']);
+        }
+        if (isset($validatedData['is_generally_available'])) {
+            $validatedData['is_available'] = $validatedData['is_generally_available'];
+            unset($validatedData['is_generally_available']);
+        }
+
+        $featureDataForSync = [];
+        if (!empty($validatedData['features'])) {
+            foreach ($validatedData['features'] as $featureInput) {
+                $featureDataForSync[$featureInput['feature_id']] = ['notes' => $featureInput['notes'] ?? null];
+            }
+        }
+        $extraIds = $validatedData['extras'] ?? [];
+        $insurancePlanIds = $validatedData['insurance_plans'] ?? [];
+
+        unset($validatedData['features'], $validatedData['extras'], $validatedData['insurance_plans']);
+
+        if (isset($validatedData['available_colors'])) {
+            $validatedData['available_colors'] = json_encode($validatedData['available_colors']);
+        } else {
+            $validatedData['available_colors'] = null;
+        }
+
+        $vehicleModel = VehicleModel::create($validatedData);
+
+        if (!empty($featureDataForSync)) {
+            $vehicleModel->features()->sync($featureDataForSync);
+        }
+        if (!empty($extraIds)) {
+            $vehicleModel->extras()->sync($extraIds);
+        }
+        if (!empty($insurancePlanIds)) {
+            $vehicleModel->insurancePlans()->sync($insurancePlanIds);
+        }
+        
+        return $this->show($vehicleModel->fresh());
     }
 
-    /**
-     * Update the specified resource in storage.
-     * (Stub - to be implemented later)
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\VehicleModel  $vehicleModel
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function update(Request $request, VehicleModel $vehicleModel)
     {
-        // Logic for updating an existing VehicleModel will go here later.
-        // Remember validation, permission checks, transforming the updated model for response.
-        return response()->json(['message' => 'VehicleModel update endpoint not fully implemented yet.'], 501);
+        $validator = Validator::make($request->all(), [
+            'vehicle_type_id' => 'sometimes|required|exists:vehicle_types,id',
+            'title' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('vehicle_models', 'title')->ignore($vehicleModel->id)],
+            'brand' => 'sometimes|required|string|max:100',
+            'model_name' => 'sometimes|required|string|max:100',
+            'year' => 'sometimes|required|integer|min:1900|max:' . (date('Y') + 2),
+            'fuel_type' => 'sometimes|required|string|max:50',
+            'transmission' => 'sometimes|required|string|max:50',
+            'available_colors' => 'nullable|array',
+            'available_colors.*' => 'string|max:50',
+            'number_of_seats' => 'sometimes|required|integer|min:1',
+            'number_of_doors' => 'sometimes|required|integer|min:1',
+            'base_price_per_day' => 'sometimes|required|numeric|min:0',
+            'description' => 'nullable|string',
+            'is_generally_available' => 'sometimes|boolean',
+            'features' => 'nullable|array',
+            'features.*.feature_id' => 'required_with:features|exists:features,id',
+            'features.*.notes' => 'nullable|string|max:1000',
+            'extras' => 'nullable|array',
+            'extras.*' => 'required_with:extras|exists:extras,id',
+            'insurance_plans' => 'nullable|array',
+            'insurance_plans.*' => 'required_with:insurance_plans|exists:insurance_plans,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $validatedData = $validator->validated();
+
+        if (isset($validatedData['model_name'])) {
+            $validatedData['model'] = $validatedData['model_name'];
+            unset($validatedData['model_name']);
+        }
+        if (isset($validatedData['is_generally_available'])) {
+            $validatedData['is_available'] = $validatedData['is_generally_available'];
+            unset($validatedData['is_generally_available']);
+        }
+
+        $featureDataForSync = [];
+        if ($request->has('features')) {
+            $featuresInput = $request->input('features', []);
+            if(is_array($featuresInput)) {
+                foreach ($featuresInput as $featureInput) {
+                    if (isset($featureInput['feature_id'])) {
+                        $featureDataForSync[$featureInput['feature_id']] = ['notes' => $featureInput['notes'] ?? null];
+                    }
+                }
+            }
+        }
+
+        $extraIdsToSync = null;
+        if ($request->has('extras')) {
+            $extraIdsToSync = $request->input('extras', []);
+            if (!is_array($extraIdsToSync)) $extraIdsToSync = [];
+        }
+
+        $insurancePlanIdsToSync = null;
+        if ($request->has('insurance_plans')) {
+            $insurancePlanIdsToSync = $request->input('insurance_plans', []);
+            if (!is_array($insurancePlanIdsToSync)) $insurancePlanIdsToSync = [];
+        }
+
+        $coreModelData = collect($validatedData)->except(['features', 'extras', 'insurance_plans'])->toArray();
+        if ($request->has('available_colors')) {
+            $colors = $request->input('available_colors');
+            $coreModelData['available_colors'] = is_array($colors) ? json_encode($colors) : null;
+        }
+
+        if (!empty($coreModelData)) {
+            $vehicleModel->update($coreModelData);
+        }
+
+        if ($request->has('features')) { $vehicleModel->features()->sync($featureDataForSync); }
+        if ($extraIdsToSync !== null) { $vehicleModel->extras()->sync($extraIdsToSync); }
+        if ($insurancePlanIdsToSync !== null) { $vehicleModel->insurancePlans()->sync($insurancePlanIdsToSync); }
+
+        return $this->show($vehicleModel->fresh());
     }
 
-    /**
-     * Remove the specified resource from storage.
-     * (Stub - to be implemented later)
-     * @param  \App\Models\VehicleModel  $vehicleModel
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function destroy(VehicleModel $vehicleModel)
     {
-        // Logic for deleting a VehicleModel will go here later.
-        // Remember permission checks.
-        //
-        // $vehicleModel->delete();
-        // return response()->json(null, 204); // 204 No Content is common for successful deletes
+        if (method_exists($vehicleModel, 'features')) { $vehicleModel->features()->detach(); }
+        if (method_exists($vehicleModel, 'extras')) { $vehicleModel->extras()->detach(); }
+        if (method_exists($vehicleModel, 'insurancePlans')) { $vehicleModel->insurancePlans()->detach(); }
 
-        return response()->json(['message' => 'VehicleModel destroy endpoint not fully implemented yet.'], 501);
+        $vehicleModel->delete();
+        return response()->json(['message' => 'Vehicle model deleted successfully.'], 200);
     }
 }

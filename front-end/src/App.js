@@ -9,7 +9,6 @@ import AdminLayout from './layouts/AdminLayout';
 import LoginPage from './pages/Auth/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import VehicleModelPage from './pages/VehicleModelPage';
-import VehicleModelDetailPage from './pages/VehicleModelDetailPage';
 import VehicleTypePage from './pages/VehicleTypePage';
 import FeaturePage from './pages/FeaturePage';
 import ExtraPage from './pages/ExtraPage';
@@ -24,6 +23,7 @@ import RentalAgreementPage from './pages/RentalAgreementPage';
 import PromotionCampaignPage from './pages/promotions/PromotionCampaignPage';
 import PromotionCodePage from './pages/promotions/PromotionCodePage';
 import PaymentPage from './pages/payments/PaymentsPage';
+import VehicleModelDetailView from './components/VehicleModelDetailView';
 
 // --- Protected Route Component ---
 const ProtectedRoute = () => {
@@ -74,7 +74,7 @@ function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="inventory/vehicles" element={<VehiclePage />} />
             <Route path="fleet/vehicle-models" element={<VehicleModelPage />} />
-            <Route path="fleet/vehicle-models/:modelId" element={<VehicleModelDetailPage />} />
+            <Route path="fleet/vehicle-models/:modelId" element={<VehicleModelDetailView />} />
             <Route path="fleet/vehicle-types" element={<VehicleTypePage />} />
             <Route path="fleet/features" element={<FeaturePage />} />
             <Route path="fleet/extras" element={<ExtraPage />} />

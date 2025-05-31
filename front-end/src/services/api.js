@@ -1,3 +1,4 @@
+// src/services/api.js
 import axios from 'axios';
 
 // Configure an Axios instance
@@ -34,8 +35,8 @@ export const fetchAllUsersForAdmin = (params = {}) => apiClient.get('/admin/user
 export const createUserAdmin = (userData) => apiClient.post('/admin/users', userData);
 export const fetchUserAdmin = (id) => apiClient.get(`/admin/users/${id}`);
 export const updateUserAdmin = (id, userData) => {
-  if (userData instanceof FormData) { // Handle FormData for potential file uploads like profile pics
-    return apiClient.post(`/admin/users/${id}`, userData); // POST with _method=PUT for FormData
+  if (userData instanceof FormData) {
+    return apiClient.post(`/admin/users/${id}`, userData); // Laravel handles _method for POST
   }
   return apiClient.put(`/admin/users/${id}`, userData);
 };
@@ -58,7 +59,20 @@ export const deleteVehicle = (id) => apiClient.delete(`/vehicles/${id}`);
 
 // --- Vehicle Model Functions ---
 export const fetchAllVehicleModels = (params = {}) => apiClient.get('/vehicle-models', { params });
-// Add CUD for Vehicle Models if needed
+export const fetchVehicleModelById = (id) => apiClient.get(`/vehicle-models/${id}`);
+export const createVehicleModel = (data) => apiClient.post('/vehicle-models', data); // Added for completeness
+export const updateVehicleModel = (id, modelData) => {
+  // If modelData could include file uploads and becomes FormData:
+  if (modelData instanceof FormData) {
+    // For FormData with Laravel, often you POST and spoof PUT/PATCH.
+    // Ensure your backend route for update accepts POST if you do this.
+    // Example: modelData.append('_method', 'PUT'); // If not handled by a global interceptor or backend directly
+    return apiClient.post(`/vehicle-models/${id}`, modelData);
+  }
+  // For regular JSON updates:
+  return apiClient.put(`/vehicle-models/${id}`, modelData);
+};
+export const deleteVehicleModel = (id) => apiClient.delete(`/vehicle-models/${id}`); // Added for completeness
 
 // --- Vehicle Type Functions ---
 export const fetchAllVehicleTypes = (params = {}) => apiClient.get('/vehicle-types', { params });
@@ -89,12 +103,14 @@ export const deleteOperationalHold = (id) => apiClient.delete(`/operational-hold
 export const fetchOperationalHold = (id) => apiClient.get(`/operational-holds/${id}`);
 
 // --- Feature Functions ---
+// Expects ?all=true for fetching all features for modals
 export const fetchAllFeatures = (params = {}) => apiClient.get('/features', { params });
 export const createFeature = (data) => apiClient.post('/features', data);
 export const updateFeature = (id, data) => apiClient.put(`/features/${id}`, data);
 export const deleteFeature = (id) => apiClient.delete(`/features/${id}`);
 
 // --- Extra Functions ---
+// Expects ?all=true for fetching all extras for modals
 export const fetchAllExtras = (params = {}) => apiClient.get('/extras', { params });
 export const createExtra = (data) => apiClient.post('/extras', data);
 export const updateExtra = (id, data) => apiClient.put(`/extras/${id}`, data);
@@ -108,7 +124,6 @@ export const deleteInsurancePlan = (id) => apiClient.delete(`/insurance-plans/${
 
 // --- Address Functions ---
 export const fetchAllAddresses = (params = {}) => apiClient.get('/addresses', { params });
-// Add CUD for Addresses if managed globally, or use user-specific address endpoints
 
 // --- Damage Report Functions ---
 export const fetchAllDamageReports = (params = {}) => apiClient.get('/damage-reports', { params });
@@ -116,137 +131,102 @@ export const createDamageReport = (data) => apiClient.post('/damage-reports', da
 export const fetchDamageReport = (id) => apiClient.get(`/damage-reports/${id}`);
 export const updateDamageReport = (id, data) => {
   if (data instanceof FormData) {
-    return apiClient.post(`/damage-reports/${id}`, data); // POST with _method=PUT
+    return apiClient.post(`/damage-reports/${id}`, data); // POST with _method=PUT or rely on Laravel to handle POST for update with FormData
   }
   return apiClient.put(`/damage-reports/${id}`, data);
 };
 export const deleteDamageReport = (id) => apiClient.delete(`/damage-reports/${id}`);
 
 // --- Rental Agreement Functions ---
-export const fetchAllRentalAgreements = (params = {}) => {
-  return apiClient.get('/rental-agreements', { params });
-};
-
-/**
- * Generates a new rental agreement.
- * @param {object} agreementData - Object containing booking_id, notes (optional),
- *                                signed_by_renter_at (optional), signed_by_platform_at (optional).
- */
-export const generateRentalAgreement = async (agreementData) => {
-  return apiClient.post('/rental-agreements/generate', agreementData);
-};
-
-export const fetchRentalAgreement = async (id) => {
-  return apiClient.get(`/rental-agreements/${id}`);
-};
-
-// Updates notes or signing status of an existing agreement
-export const updateRentalAgreement = async (id, agreementData) => {
-  return apiClient.put(`/rental-agreements/${id}`, agreementData);
-};
-
-export const deleteRentalAgreement = async (id) => {
-  return apiClient.delete(`/rental-agreements/${id}`);
-};
-
+export const fetchAllRentalAgreements = (params = {}) => apiClient.get('/rental-agreements', { params });
+export const generateRentalAgreement = async (agreementData) => apiClient.post('/rental-agreements/generate', agreementData);
+export const fetchRentalAgreement = async (id) => apiClient.get(`/rental-agreements/${id}`);
+export const updateRentalAgreement = async (id, agreementData) => apiClient.put(`/rental-agreements/${id}`, agreementData);
+export const deleteRentalAgreement = async (id) => apiClient.delete(`/rental-agreements/${id}`);
 export const getRentalAgreementDownloadUrl = (agreementId) => {
   const baseUrl = apiClient.defaults.baseURL || 'http://localhost:8000/api';
   return `${baseUrl}/rental-agreements/${agreementId}/download`;
 };
-
-/**
- * Triggers sending an in-app rental agreement notification to the customer.
- * @param {string} agreementId - The ID of the rental agreement.
- */
-export const sendRentalAgreementNotification = async (agreementId) => {
-  return apiClient.post(`/rental-agreements/${agreementId}/send-notification`);
-};
-// ... (other imports and apiClient setup) ...
+export const sendRentalAgreementNotification = async (agreementId) => apiClient.post(`/rental-agreements/${agreementId}/send-notification`);
 
 // --- Promotion Campaign Functions ---
-export const fetchAllPromotionCampaigns = (params = {}) => {
-  return apiClient.get('/promotion-campaigns', { params });
-};
-
-export const fetchPromotionCampaign = async (id) => {
-  return apiClient.get(`/promotion-campaigns/${id}`);
-};
-
-// MODIFIED: Ensure campaignData can include reward_type and code_validity_days
-export const createPromotionCampaign = async (campaignData) => {
-  // campaignData might look like:
-  // { name: "...", description: "...", required_rental_count: 5, reward_value: 10,
-  //   reward_type: "percentage", code_validity_days: 30, is_active: true, ... }
-  return apiClient.post('/promotion-campaigns', campaignData);
-};
-
-// MODIFIED: Ensure campaignData can include reward_type and code_validity_days
-export const updatePromotionCampaign = async (id, campaignData) => {
-  return apiClient.put(`/promotion-campaigns/${id}`, campaignData);
-};
-
-export const deletePromotionCampaign = async (id) => {
-  return apiClient.delete(`/promotion-campaigns/${id}`);
-};
-// ... (other imports and apiClient setup) ...
-
+export const fetchAllPromotionCampaigns = (params = {}) => apiClient.get('/promotion-campaigns', { params });
+export const fetchPromotionCampaign = async (id) => apiClient.get(`/promotion-campaigns/${id}`);
+export const createPromotionCampaign = async (campaignData) => apiClient.post('/promotion-campaigns', campaignData);
+export const updatePromotionCampaign = async (id, campaignData) => apiClient.put(`/promotion-campaigns/${id}`, campaignData);
+export const deletePromotionCampaign = async (id) => apiClient.delete(`/promotion-campaigns/${id}`);
 
 // --- Promotion Code Functions ---
-export const fetchAllPromotionCodes = (params = {}) => {
-  return apiClient.get('/promotion-codes', { params });
-};
+export const fetchAllPromotionCodes = (params = {}) => apiClient.get('/promotion-codes', { params });
+export const fetchPromotionCode = async (id) => apiClient.get(`/promotion-codes/${id}`);
+export const createPromotionCode = async (codeData) => apiClient.post('/promotion-codes', codeData);
+export const updatePromotionCode = async (id, codeData) => apiClient.put(`/promotion-codes/${id}`, codeData);
+export const deletePromotionCode = async (id) => apiClient.delete(`/promotion-codes/${id}`);
+export const fetchUsersForPromotionCodeDropdown = (params = {}) => apiClient.get('/promotion-codes/lov/users', { params });
+export const fetchCampaignsForPromotionCodeDropdown = (params = {}) => apiClient.get('/promotion-codes/lov/campaigns', { params });
+export const validatePromotionCode = async (codeString, context = {}) => apiClient.post('/promotion-codes/validate-apply', { code_string: codeString, ...context });
 
-export const fetchPromotionCode = async (id) => {
-  return apiClient.get(`/promotion-codes/${id}`);
-};
-
-// For manually creating a code (if you decide to add this button)
-export const createPromotionCode = async (codeData) => {
-  // codeData would include: promotion_campaign_id, user_id (optional), code_string, expires_at, status
-  return apiClient.post('/promotion-codes', codeData);
-};
-
-// For updating a code (e.g., status, expires_at)
-export const updatePromotionCode = async (id, codeData) => {
-  return apiClient.put(`/promotion-codes/${id}`, codeData);
-};
-
-export const deletePromotionCode = async (id) => {
-  return apiClient.delete(`/promotion-codes/${id}`);
-};
-
-// --- Helper functions to fetch lists for dropdowns in the modal form ---
-export const fetchUsersForPromotionCodeDropdown = (params = {}) => {
-    // This route was defined as 'promotion-codes/lov/users'
-    return apiClient.get('/promotion-codes/lov/users', { params });
-};
-
-export const fetchCampaignsForPromotionCodeDropdown = (params = {}) => {
-    // This route was defined as 'promotion-codes/lov/campaigns'
-    return apiClient.get('/promotion-codes/lov/campaigns', { params });
-};
-
-export const validatePromotionCode = async (codeString, context = {}) => {
-  // context might include: booking_subtotal, user_id, vehicle_id
-  return apiClient.post('/promotion-codes/validate-apply', {
-    code_string: codeString,
-    ...context
-  });
-};
-
-// In src/services/api.js
-
-// ... (axios instance and other functions) ...
-
+// --- Payment Functions ---
 export const fetchAllPayments = (params) => apiClient.get('/payments', { params });
 export const createPayment = (data) => apiClient.post('/payments', data);
 export const updatePayment = (id, data) => apiClient.put(`/payments/${id}`, data);
 export const deletePayment = (id) => apiClient.delete(`/payments/${id}`);
+export const fetchBookingsForDropdown = () => apiClient.get('/bookings-for-dropdown'); // Example
+export const fetchPaymentStatusOptions = () => apiClient.get('/payment-status-options'); // Example
+export const fetchVehicleModelMediaList = (vehicleModelId) => {
+  return apiClient.get(`/vehicle-models/${vehicleModelId}/media`);
+};
 
-// Example for fetching bookings for dropdown
-export const fetchBookingsForDropdown = () => apiClient.get('/bookings-for-dropdown'); // You need to implement this endpoint
+/**
+ * Uploads one or more media files for a specific vehicle model.
+ * Corresponds to VehicleModelMediaController@store
+ * POST /api/vehicle-models/{vehicleModelId}/media
+ * @param {string} vehicleModelId - The ID of the vehicle model.
+ * @param {FormData} formData - FormData object containing 'media_files[]' and optional 'captions[]', 'is_cover_flags[]', 'media_types[]'.
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export const uploadVehicleModelMedia = (vehicleModelId, formData) => {
+  // Axios will set the Content-Type to multipart/form-data due to the interceptor
+  return apiClient.post(`/vehicle-models/${vehicleModelId}/media`, formData);
+};
 
-// Example for fetching payment statuses if not hardcoded on frontend
-export const fetchPaymentStatusOptions = () => apiClient.get('/payment-status-options');
-// Export the apiClient instance if it's used directly elsewhere (e.g., for interceptors in app setup)
+/**
+ * Updates a specific media item (e.g., caption, is_cover).
+ * Corresponds to VehicleModelMediaController@update
+ * PUT /api/media/{mediaId}
+ * @param {string} mediaId - The ID of the media item to update.
+ * @param {object} dataToUpdate - Object containing fields to update (e.g., { caption: "New Caption", is_cover: true }).
+ * @returns {Promise<AxiosResponse<any>>}
+ */
+export const updateVehicleModelMediaItem = (mediaId, dataToUpdate) => {
+  return apiClient.put(`/media/${mediaId}`, dataToUpdate);
+  // Or use POST with _method if your server requires it for PUT with complex data,
+  // but for simple JSON like this, PUT is standard.
+  // If sending FormData for update (e.g. replacing file, less common for this partial update):
+  // if (dataToUpdate instanceof FormData) {
+  //   dataToUpdate.append('_method', 'PUT');
+  //   return apiClient.post(`/media/${mediaId}`, dataToUpdate);
+  // }
+};
+export const deleteVehicleModelMediaItem = (mediaId) => {
+  return apiClient.delete(`/media/${mediaId}`);
+};
+export const reorderVehicleModelMedia = (vehicleModelId, orderedMediaIds) => {
+  return apiClient.post(`/vehicle-models/${vehicleModelId}/media/reorder`, {
+    ordered_media_ids: orderedMediaIds,
+  });
+};
+
+// Fetch all colors for a vehicle model
+// Fetch all colors for a vehicle model
+export const fetchVehicleModelColors = (vehicleModelId) =>
+  apiClient.get(`/vehicle-models/${vehicleModelId}/colors`);
+
+// Add a color to a vehicle model
+export const addVehicleModelColor = (vehicleModelId, colorData) =>
+  apiClient.post(`/vehicle-models/${vehicleModelId}/colors`, colorData);
+export const updateVehicleModelColors = (vehicleModelId, colors) =>
+  apiClient.put(`/vehicle-models/${vehicleModelId}/colors`, { colors });
+export const deleteVehicleModelColor = (vehicleModelId, colorHex) =>
+  apiClient.delete(`/vehicle-models/${vehicleModelId}/colors/${encodeURIComponent(colorHex)}`);
 export default apiClient;

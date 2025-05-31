@@ -1,0 +1,190 @@
+/* VehicleDisplayGallery.css or part of VehicleModelDetailView.css */
+
+.vehicle-display-gallery-container {
+  /* background-color: #f0f2f5; /* Optional distinct background for gallery view */
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  /* border: 1px solid #e0e0e0; */ /* Optional border for the whole gallery section */
+}
+
+.gallery-back-button.btn-sm {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+}
+.gallery-back-button .lucide { /* Ensure this class or direct styling for icon */
+    margin-right: 0.3rem;
+}
+
+
+.three-d-column .three-d-spin-card {
+  background-color: #f8f9fa;
+  border-radius: 0.375rem; /* Bootstrap default rounded */
+  height: 300px; /* Adjusted height to match maquette's proportions better */
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Bootstrap shadow-sm */
+}
+.three-d-caption {
+  font-size: 0.75rem; /* Smaller caption */
+}
+
+/* Main Image Area on the Right */
+.main-image-display-area {
+  width: 100%;
+  aspect-ratio: 16 / 10; /* Or adjust to match maquette */
+  max-height: 300px; /* Aligning with 3D spin area height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+}
+.main-gallery-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 0.25rem; /* Small rounding */
+}
+.main-gallery-image-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 250px; /* Consistent minimum height */
+  background-color: #f0f0f0;
+  border-radius: 0.25rem;
+  border: 1px dashed #ced4da;
+}
+
+/* Color Swatches */
+.color-swatches-container {
+  gap: 0.5rem; /* Slightly less gap for smaller swatches */
+  margin-bottom: 0.75rem !important; /* Reduced margin */
+}
+.color-swatch {
+  width: 24px; /* Smaller swatches */
+  height: 24px;
+  border-radius: 50%;
+  border-width: 2px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  padding: 0 !important;
+}
+.color-swatch.active {
+  transform: scale(1.1); /* Slightly less pronounced active scale */
+  box-shadow: 0 0 0 2.5px var(--bs-primary-border-subtle), 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* Thumbnail Gallery Strip */
+.thumbnail-gallery-strip {
+  padding: 0.25rem 0;
+}
+.thumbnails-container {
+  display: flex;
+  gap: 0.35rem; /* Smaller gap for smaller thumbnails */
+  overflow: hidden;
+  /* Max width for thumbnails container to control how many are visible before needing arrows */
+  /* For 5 thumbnails of 50px width + 0.35rem gap: */
+  /* max-width: calc(5 * (50px + 0.35rem)); */
+  /* Let's make it flexible for THUMBNAILS_PER_VIEW */
+}
+.thumbnail-item {
+  width: 50px;  /* MAQUETTE THUMBNAILS ARE SMALLER */
+  height: 38px; /* Adjust aspect ratio */
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 0.2rem; /* Smaller radius */
+  overflow: hidden;
+  padding: 1px; /* Minimal padding */
+  background-color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.thumbnail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.thumbnail-item:hover {
+  border-color: #adb5bd;
+}
+.thumbnail-item.active {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 2px var(--bs-primary-border-subtle); /* Softer active shadow */
+}
+.thumbnail-nav-arrow.btn-sm {
+    padding: 0.15rem 0.35rem; /* Smaller padding for smaller arrows */
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+.thumbnail-nav-arrow.btn-sm:hover {
+    background-color: #e9ecef;
+}
+/* VehicleDisplayGallery.css */
+.gallery-header {
+  /* Styles for the container of Back and Manage Media buttons if needed */
+}
+
+.gallery-manage-media-button.btn-sm {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+.gallery-manage-media-button .lucide, /* For PlusCircle etc. from lucide-react */
+.gallery-manage-media-button .lu { /* For LuCamera etc. from react-icons/lu */
+  margin-right: 0.3rem;
+}
+/* VehicleDisplayGallery.css */
+
+/* ... (other styles for .vehicle-display-gallery-container, 3D area, main image, thumbnails from previous response) ... */
+
+/* Color Swatches Styling to Match Maquette */
+.color-swatches-container {
+  gap: 0.75rem; /* Space between swatches (adjust as needed, maquette was ~10-12px) */
+  flex-wrap: wrap; /* Allow swatches to wrap if many */
+}
+
+.color-swatch {
+  width: 32px;  /* Maquette's swatches were fairly distinct, adjust size */
+  height: 32px;
+  border-radius: 50%; /* Circular */
+  border-width: 2px !important; /* Visible border */
+  padding: 0 !important; /* Remove Bootstrap button default padding */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0,0,0,0.06); /* Subtle shadow from maquette */
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  cursor: pointer;
+  /* The inline style in JSX will set backgroundColor and initial borderColor */
+}
+
+.color-swatch:hover {
+  transform: scale(1.1); /* Slight hover effect */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.color-swatch.active {
+  transform: scale(1.1); /* Can be same as hover or slightly more */
+  /* The maquette showed a distinct, thicker, and sometimes glowing border for the active white swatch.
+     The inline style handles the primary border color. This CSS can enhance the active state. */
+  box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.35), 0 3px 8px rgba(0,0,0,0.2); /* Example: Bootstrap primary focus ring, more prominent shadow */
+  /* If you want a white outer ring for dark active colors, or dark for light active: */
+  /* outline: 2px solid white; */
+  /* outline-offset: 2px; */
+}
+
+/* Specific handling for white swatch when active to ensure visibility of active state */
+.color-swatch[style*="background-color: rgb(255, 255, 255);"].active,
+.color-swatch[style*="background-color: #ffffff;"].active,
+.color-swatch[style*="background-color: #fff;"].active {
+  /* The inline style already sets a blue border for active white.
+     You can add more distinct shadow here if needed. */
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.45), 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Ensure the buttons are actually empty and rely on background-color for display */
+.color-swatch::before,
+.color-swatch::after {
+  content: none !important;
+}

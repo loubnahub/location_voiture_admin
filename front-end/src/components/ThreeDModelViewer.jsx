@@ -1,0 +1,51 @@
+import React, { useRef, useState,Suspense } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
+
+function SpinningModel({ url, spinning }) {
+  const { scene } = useGLTF(url);
+  const ref = useRef();
+  useFrame(() => {
+    if (ref.current && spinning) {
+      ref.current.rotation.y += 0.01;
+    }
+  });
+  return <primitive ref={ref} object={scene} scale={1.2} />;
+}
+
+const ThreeDModelViewer = ({ src, alt = "3D Model", style }) => {
+  const [spinning, setSpinning] = useState(true);
+
+  if (!src) {
+    return (
+      <div
+        className="d-flex align-items-center justify-content-center text-muted three-d-placeholder"
+        style={style}
+      >
+        3D Model not available.
+      </div>
+    );
+  }
+
+  return (
+    <div style={style}>
+      <Suspense fallback={<div style={{ color: '#fff', textAlign: 'center', padding: '2rem' }}>Loading 3D model...</div>}>
+        <Canvas camera={{ position: [0, 0, 1] }}>
+          <ambientLight intensity={0.7} />
+          <directionalLight position={[2, 2, 2]} />
+          <SpinningModel url={src} spinning={spinning} />
+          <Environment preset="city" />
+          <OrbitControls
+            enablePan
+            enableZoom
+            enableRotate
+            onStart={() => setSpinning(false)}
+            onEnd={() => setSpinning(true)}
+          />
+        </Canvas>
+      </Suspense>
+    </div>
+  );
+};
+
+export default ThreeDModelViewer;
