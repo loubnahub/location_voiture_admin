@@ -36,8 +36,6 @@ const VehicleDisplayGallery = ({
   const [mediaItems, setMediaItems] = useState([]);
   const [availableColors, setAvailableColors] = useState([]);
   const [images, setImages] = useState([]);
-  const [threeDModel, setThreeDModel] = useState(null);
-
   const [selectedColorHex, setSelectedColorHex] = useState(null);
   const [activeMainImageUrl, setActiveMainImageUrl] = useState('');
   const [activeMainImageCaption, setActiveMainImageCaption] = useState('');
@@ -80,10 +78,8 @@ const VehicleDisplayGallery = ({
 
   useEffect(() => {
     const currentImageItems = (mediaItems || []).filter(item => item.media_type === 'image' || !item.media_type);
-    const currentModel3DItem = (mediaItems || []).find(item => item.media_type === '3d_model_glb');
     const sortedImages = currentImageItems.sort((a, b) => (a.order || 0) - (b.order || 0));
     setImages(sortedImages);
-    setThreeDModel(currentModel3DItem || null);
 
     const coverImage = sortedImages.find(img => img.is_cover);
     const firstImage = sortedImages[0];
@@ -112,8 +108,13 @@ const VehicleDisplayGallery = ({
   const filteredImagesByColor = useMemo(() => {
     if (!selectedColorHex) return images;
     const colorFiltered = images.filter(img => img.color_hex === selectedColorHex);
-    return colorFiltered.length > 0 ? colorFiltered : images;
+    return colorFiltered.length > 0 ? colorFiltered : [];
   }, [images, selectedColorHex]);
+
+  // Only reset thumbnail index when color or images change, NOT when main image changes
+  useEffect(() => {
+    setCurrentThumbnailStartIndex(0);
+  }, [selectedColorHex, images]);
 
   useEffect(() => {
     if (filteredImagesByColor.length > 0) {
@@ -121,11 +122,11 @@ const VehicleDisplayGallery = ({
         setActiveMainImageUrl(filteredImagesByColor[0].url);
         setActiveMainImageCaption(filteredImagesByColor[0].caption || '');
       }
-      setCurrentThumbnailStartIndex(0);
+      // Do NOT reset currentThumbnailStartIndex here!
     } else if (images.length > 0 && !activeMainImageUrl) {
       setActiveMainImageUrl(images[0].url);
       setActiveMainImageCaption(images[0].caption || '');
-      setCurrentThumbnailStartIndex(0);
+      // Do NOT reset currentThumbnailStartIndex here!
     } else if (images.length === 0) {
       setActiveMainImageUrl('');
       setActiveMainImageCaption('');
@@ -138,6 +139,7 @@ const VehicleDisplayGallery = ({
   const handleThumbnailClick = (imageUrl, caption) => {
     setActiveMainImageUrl(imageUrl);
     setActiveMainImageCaption(caption || '');
+    // Do NOT reset currentThumbnailStartIndex here!
   };
 
   // --- Improved thumbnail navigation logic ---
@@ -178,6 +180,16 @@ const VehicleDisplayGallery = ({
     if (onMediaManaged) onMediaManaged();
   };
 
+  // --- 3D Model selection logic ---
+  const threeDModelForColor = (mediaItems || []).find(
+    item => item.media_type === '3d_model_glb' && item.color_hex === selectedColorHex
+  );
+  const defaultThreeDModel = (mediaItems || []).find(
+    item => item.media_type === '3d_model_glb' && !item.color_hex
+  );
+  const threeDModelToShow = threeDModelForColor || defaultThreeDModel;
+  const threeDModelColor = threeDModelForColor ? null : selectedColorHex;
+
   if (isLoading && mediaItems.length === 0 && availableColors.length === 0) {
     return (
       <div className="vehicle-display-gallery-container my-3 my-md-4 text-center p-5">
@@ -197,11 +209,6 @@ const VehicleDisplayGallery = ({
     )
   }
 
-  // Debug log for 3D model
-  // console.log("3D Model raw url:", threeDModel?.url, "Resolved:", resolveStorageUrl(threeDModel?.url));
-  // console.log("threeDModel:", threeDModel);
-  // console.log("threeDModel.url:", threeDModel?.url);
-
   return (
     <>
       <div className="vehicle-display-gallery-container my-3 my-md-4">
@@ -217,13 +224,13 @@ const VehicleDisplayGallery = ({
         <Row className="g-3 g-lg-4">
           <Col lg={5} md={5} className="three-d-column">
             <div className="three-d-spin-card">
-              {threeDModel?.url ? (
+              {threeDModelToShow?.url ? (
                 <ThreeDModelViewer
-  src={resolveStorageUrl(threeDModel.url)}
-  alt={threeDModel.caption || `${vehicleTitle} 3D Model`}
-  style={{ width: '100%', height: '100%', minHeight: '300px' }}
-  color={selectedColorHex}
-/>
+                  src={resolveStorageUrl(threeDModelToShow.url)}
+                  alt={threeDModelToShow.caption || `${vehicleTitle} 3D Model`}
+                  style={{ width: '100%', height: '100%', minHeight: '300px' }}
+                  color={threeDModelColor}
+                />
               ) : (
                 <div
                   className="d-flex align-items-center justify-content-center text-muted three-d-placeholder"
@@ -234,7 +241,7 @@ const VehicleDisplayGallery = ({
               )}
             </div>
             <p className="text-center text-muted small mt-2 mb-0 three-d-caption">
-              {threeDModel?.caption || "3D car presentation 360 spin"}
+              {threeDModelToShow?.caption || "3D car presentation 360 spin"}
             </p>
           </Col>
 
@@ -252,17 +259,27 @@ const VehicleDisplayGallery = ({
             )}
             <div className="main-image-display-area mb-3 shadow-sm rounded-3 overflow-hidden">
               {activeMainImageUrl ? (
-                <Image src={resolveStorageUrl(activeMainImageUrl)} alt={activeMainImageCaption || `${vehicleTitle} Image`} fluid className="main-gallery-image" />
+                <Image
+                  src={resolveStorageUrl(activeMainImageUrl)}
+                  alt={activeMainImageCaption || `${vehicleTitle} Image`}
+                  fluid
+                  className="main-gallery-image"
+                />
               ) : (
                 <div className="main-gallery-image-placeholder d-flex flex-column align-items-center justify-content-center text-muted" style={{ minHeight: 220 }}>
                   {isLoading && mediaItems.length === 0 ? (
                     <>
                       <Spinner animation="border" className="mb-2" /><div>Loading...</div>
                     </>
+                  ) : filteredImagesByColor.length === 0 && selectedColorHex ? (
+                    <>
+                      <Image size={38} className="mb-2" />
+                      <div>No images for this color</div>
+                    </>
                   ) : (
                     <>
                       <Image size={38} className="mb-2" />
-                      <div>{filteredImagesByColor.length === 0 && selectedColorHex ? "No images for this color" : "No image available"}</div>
+                      <div>No image available</div>
                     </>
                   )}
                 </div>
@@ -309,15 +326,15 @@ const VehicleDisplayGallery = ({
 
       {vehicleModelId && (
         <Modal show={showMediaManagerModal} onHide={() => setShowMediaManagerModal(false)} size="xl" centered backdrop="static" keyboard={false} dialogClassName="media-manager-modal">
-          <Modal.Body style={{ padding: 0, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
-            <VehicleModelMediaManager
-              onHide={handleMediaManagerDidUpdate}
-              vehicleModelId={vehicleModelId}
-              vehicleModelTitle={vehicleTitle}
-              onMediaUpdate={handleMediaManagerDidUpdate}
-              currentModelColors={availableColors}
-            />
-          </Modal.Body>
+          <Modal.Body className="media-manager-modal-body" style={{ padding: 0, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+  <VehicleModelMediaManager
+    onHide={handleMediaManagerDidUpdate}
+    vehicleModelId={vehicleModelId}
+    vehicleModelTitle={vehicleTitle}
+    onMediaUpdate={handleMediaManagerDidUpdate}
+    currentModelColors={availableColors}
+  />
+</Modal.Body>
         </Modal>
       )}
     </>

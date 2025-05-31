@@ -188,3 +188,9 @@
 .color-swatch::after {
   content: none !important;
 }
+.media-manager-modal-body {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 0;
+  /* Optional: If you want the header/footer always visible, use flex layout in Modal.Body and set overflow on the content area inside */
+}

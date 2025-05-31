@@ -4,7 +4,7 @@ import {
   LuTrash2, LuArrowUp, LuArrowDown, LuImage, LuBox, LuPlus, LuX, LuPalette,
   LuCheck, LuEye, LuGripVertical
 } from 'react-icons/lu';
-import { resolveStorageUrl } from './VehicleDisplayGallery'; // Make sure to import this at the top
+import { resolveStorageUrl } from './VehicleDisplayGallery';
 
 import { UploadCloud, Save, Edit3, CheckCircle as IconCheckCircleLucide } from 'lucide-react';
 import { ChromePicker } from 'react-color';
@@ -55,6 +55,10 @@ const VehicleModelMediaManager = ({
   const [isSubmittingAll, setIsSubmittingAll] = useState(false);
   const [globalSuccessMessage, setGlobalSuccessMessage] = useState('');
   const [globalError, setGlobalError] = useState('');
+
+  // Split media items into images and 3D models
+  const imageMediaItems = mediaItems.filter(item => !item._toBeDeleted && item.media_type === 'image');
+  const model3DMediaItems = mediaItems.filter(item => !item._toBeDeleted && item.media_type === '3d_model_glb');
 
   // Combined load function
   const loadInitialData = useCallback(async () => {
@@ -249,7 +253,7 @@ const VehicleModelMediaManager = ({
   };
 
   return (
-    <div className="vehicle-model-media-manager-content p-3">
+    <div className="vehicle-model-media-manager-content p-5">
       <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <h4 className="mb-0">Manage Media & Colors: {vehicleModelTitle || "Vehicle Model"}</h4>
         <Button variant="outline-secondary" size="sm" onClick={onHide}>
@@ -358,63 +362,60 @@ const VehicleModelMediaManager = ({
       {/* Existing Media List Section */}
       <Card className="mb-4">
         <Card.Header><LuImage className="me-2"/>Existing Media</Card.Header>
-        <Card.Body>
-          {isLoadingMedia && <div className="text-center p-3"><Spinner animation="border" size="sm" /> Loading...</div>}
-          {!isLoadingMedia && mediaError && <Alert variant="warning" size="sm">{mediaError}</Alert>}
-          {!isLoadingMedia && !mediaError && mediaItems.filter(item => !item._toBeDeleted).length === 0 && <p className="text-muted small mb-0">No existing media items.</p>}
-          {!isLoadingMedia && !mediaError && mediaItems.filter(item => !item._toBeDeleted).length > 0 && (
-            <ListGroup variant="flush">
-              {mediaItems.filter(item => !item._toBeDeleted).map((item, index, arr) => (
-                <ListGroup.Item key={item.id || item._temp_id} className="p-2 media-manage-item existing-media-item">
-                  <Row className="g-2 align-items-center">
-                    <Col xs="auto" className="d-flex flex-column justify-content-center reorder-controls">
-                      <Button variant="link" size="sm" className="p-0 text-muted" onClick={() => handleMoveMediaItem(arr.findIndex(i=>i.id===item.id), -1)} disabled={index === 0} title="Move Up"><LuArrowUp size={14}/></Button>
-                      <LuGripVertical size={16} className="text-muted my-1 reorder-grip-icon" title="Reorder (drag-drop placeholder)"/>
-                      <Button variant="link" size="sm" className="p-0 text-muted" onClick={() => handleMoveMediaItem(arr.findIndex(i=>i.id===item.id), 1)} disabled={index === arr.length - 1} title="Move Down"><LuArrowDown size={14}/></Button>
-                    </Col>
-                    <Col xs={2} sm={1} className="text-center">
-{item.media_type === 'image' ? (
-  <Image src={resolveStorageUrl(item.url)} alt={item.caption || 'Media'} thumbnail style={{ maxHeight: '40px', maxWidth: '60px' }} />
-) : item.media_type === '3d_model_glb' ? (
-  <div style={{ width: 100, height: 80 }}>
-    <ThreeDModelViewer src={resolveStorageUrl(item.url)} style={{ width: '100%', height: '100%' }} />
-  </div>
-) : (
-  <LuBox size={24} className="text-secondary"/>
-)}                </Col>
-                    <Col>
-  {editingCaptionItem?.id === item.id ? (
-    <InputGroup size="sm" className="mb-1">
-      <Form.Control
-        type="text"
-        value={newCaption}
-        onChange={e => setNewCaption(e.target.value)}
-        autoFocus
-        placeholder="Edit caption"
-      />
-      <Button variant="outline-success" onClick={handleSaveCaptionAndColorLocal}>
-        <Save size={16} />
-      </Button>
-      <Button variant="outline-secondary" onClick={() => setEditingCaptionItem(null)}>
-        <LuX size={16} />
-      </Button>
-    </InputGroup>
-  ) : (
-    <span
-      className="media-caption-display clickable"
-      onClick={() => handleOpenEditCaptionModal(item)}
-      title="Click to edit caption"
-      style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
-    >
-      {item.caption || <em className="text-muted">No caption</em>}
-      <Edit3 size={16} className="ms-2 text-primary" />
-    </span>
-  )}
-  {item.is_cover && <Badge bg="success" pill className="ms-2">Cover</Badge>}
-  <small className="text-muted d-block">Order: {item.order} | Type: {item.media_type}</small>
-</Col>
+        <Card.Body style={{ position: 'relative', minHeight: 220, overflow: 'visible', background: '#fafbfc' }}>
+          <div style={{ opacity: isLoadingMedia ? 0.5 : 1, pointerEvents: isLoadingMedia ? 'none' : 'auto' }}>
+            {!isLoadingMedia && mediaError && <Alert variant="warning" size="sm">{mediaError}</Alert>}
 
-                     <Col xs={12} md="auto" className="mt-1 mt-md-0">
+            {/* 3D Models Section */}
+            <h6 className="mb-2 mt-2"><LuBox className="me-2" />3D Models</h6>
+            {model3DMediaItems.length === 0 ? (
+              <p className="text-muted small mb-2">No 3D models.</p>
+            ) : (
+              <ListGroup variant="flush" className="mb-3">
+                {model3DMediaItems.map((item, index, arr) => (
+                  <ListGroup.Item key={item.id || item._temp_id} className="p-2 media-manage-item existing-media-item">
+                    <Row className="g-2 align-items-center">
+                      <Col xs="auto" className="d-flex flex-column justify-content-center reorder-controls">
+                        <Button variant="link" size="sm" className="p-0 text-muted" onClick={() => handleMoveMediaItem(arr.findIndex(i=>i.id===item.id), -1)} disabled={index === 0} title="Move Up"><LuArrowUp size={14}/></Button>
+                        <LuGripVertical size={16} className="text-muted my-1 reorder-grip-icon" title="Reorder (drag-drop placeholder)"/>
+                        <Button variant="link" size="sm" className="p-0 text-muted" onClick={() => handleMoveMediaItem(arr.findIndex(i=>i.id===item.id), 1)} disabled={index === arr.length - 1} title="Move Down"><LuArrowDown size={14}/></Button>
+                      </Col>
+                      <Col xs={2} sm={1} className="text-center d-flex align-items-center justify-content-center">
+                        <div style={{ width: 100, height: 80 }}>
+                          <ThreeDModelViewer src={resolveStorageUrl(item.url)} style={{ width: '100%', height: '100%' }} />
+                        </div>
+                      </Col>
+                      <Col>
+                        {editingCaptionItem?.id === item.id ? (
+                          <InputGroup size="sm" className="mb-1 px-5">
+                            <Form.Control
+                              type="text"
+                              value={newCaption}
+                              onChange={e => setNewCaption(e.target.value)}
+                              autoFocus
+                              placeholder="Edit caption"
+                            />
+                            <Button variant="outline-success" onClick={handleSaveCaptionAndColorLocal}>
+                              <Save size={16} />
+                            </Button>
+                            <Button variant="outline-secondary" onClick={() => setEditingCaptionItem(null)}>
+                              <LuX size={16} />
+                            </Button>
+                          </InputGroup>
+                        ) : (
+                          <span
+                            className="media-caption-display clickable"
+                            onClick={() => handleOpenEditCaptionModal(item)}
+                            title="Click to edit caption"
+                            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                          >
+                            {item.caption || <em className="text-muted">No caption</em>}
+                            <Edit3 size={16} className="ms-2 text-primary" />
+                          </span>
+                        )}
+                        <small className="text-muted d-block">Order: {item.order} | Type: {item.media_type}</small>
+                      </Col>
+                      <Col xs={12} md="auto" className="mt-1 mt-md-0">
                         {editingCaptionItem?.id === item.id ? null : (
                           <Form.Select size="sm" value={item.color_hex || ''} 
                               onChange={e => handleColorChangeForMedia(item.id, e.target.value)}
@@ -426,31 +427,113 @@ const VehicleModelMediaManager = ({
                               {colors.map(c=><option key={c.hex} value={c.hex}>{c.name} ({c.hex})</option>)}
                           </Form.Select>
                         )}
-                    </Col>
-                    <Col xs="auto" className="text-end media-item-actions">
-                      {item.media_type === 'image' && !item.is_cover && (
-                        <Button variant="link" size="sm" className="p-1 text-success" onClick={() => handleSetCoverLocal(item.id)} title="Set as Cover"><IconCheckCircleLucide size={16}/></Button>
-                      )}
-                      <Button variant="link" size="sm" className="p-1 text-danger" onClick={() => handleDeleteMediaItemLocal(item.id)} title="Mark for Delete"><LuTrash2 size={16}/></Button>
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          )}
-           {mediaItems.filter(item => item._toBeDeleted).length > 0 && (
-                <Alert variant="warning" className="mt-3 small">
-                    <p className="mb-1">The following media items are marked for deletion upon submitting all changes:</p>
-                    <ListGroup variant="flush" bsPrefix="list-group-sm">
-                        {mediaItems.filter(item => item._toBeDeleted).map(item => (
-                            <ListGroup.Item key={item.id} className="d-flex justify-content-between align-items-center p-1 bg-transparent border-0">
-                                <span>{item.caption || item.url.split('/').pop()}</span>
-                                <Button variant="link" size="sm" className="text-info p-0" onClick={() => handleUndeleteMediaItemLocal(item.id)}>Undo</Button>
-                            </ListGroup.Item>
-                        ))}
-                    </ListGroup>
-                </Alert>
+                      </Col>
+                      <Col xs="auto" className="text-end media-item-actions">
+                        <Button variant="link" size="sm" className="p-1 text-danger" onClick={() => handleDeleteMediaItemLocal(item.id)} title="Mark for Delete"><LuTrash2 size={16}/></Button>
+                      </Col>
+                    </Row>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
             )}
+
+            {/* Images Section */}
+            <h6 className="mb-2 mt-3"><LuImage className="me-2" />Images</h6>
+            {imageMediaItems.length === 0 ? (
+              <p className="text-muted small mb-0">No images.</p>
+            ) : (
+              <ListGroup variant="flush">
+                {imageMediaItems.map((item, index, arr) => (
+                  <ListGroup.Item key={item.id || item._temp_id} className="p-2 media-manage-item existing-media-item">
+                    <Row className="g-2 align-items-center">
+                      <Col xs="auto" className="d-flex flex-column justify-content-center reorder-controls">
+                        <Button variant="link" size="sm" className="p-0 text-muted" onClick={() => handleMoveMediaItem(arr.findIndex(i=>i.id===item.id), -1)} disabled={index === 0} title="Move Up"><LuArrowUp size={14}/></Button>
+                        <LuGripVertical size={16} className="text-muted my-1 reorder-grip-icon" title="Reorder (drag-drop placeholder)"/>
+                        <Button variant="link" size="sm" className="p-0 text-muted" onClick={() => handleMoveMediaItem(arr.findIndex(i=>i.id===item.id), 1)} disabled={index === arr.length - 1} title="Move Down"><LuArrowDown size={14}/></Button>
+                      </Col>
+                      <Col xs={2} sm={1} className="text-center">
+                        <Image src={resolveStorageUrl(item.url)} alt={item.caption || 'Media'} thumbnail style={{ maxHeight: '40px', maxWidth: '60px' }} />
+                      </Col>
+                      <Col>
+                        {editingCaptionItem?.id === item.id ? (
+                          <InputGroup size="sm" className="mb-1">
+                            <Form.Control
+                              type="text"
+                              value={newCaption}
+                              onChange={e => setNewCaption(e.target.value)}
+                              autoFocus
+                              placeholder="Edit caption"
+                            />
+                            <Button variant="outline-success" onClick={handleSaveCaptionAndColorLocal}>
+                              <Save size={16} />
+                            </Button>
+                            <Button variant="outline-secondary" onClick={() => setEditingCaptionItem(null)}>
+                              <LuX size={16} />
+                            </Button>
+                          </InputGroup>
+                        ) : (
+                          <span
+                            className="media-caption-display clickable"
+                            onClick={() => handleOpenEditCaptionModal(item)}
+                            title="Click to edit caption"
+                            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                          >
+                            {item.caption || <em className="text-muted">No caption</em>}
+                            <Edit3 size={16} className="ms-2 text-primary" />
+                          </span>
+                        )}
+                        {item.is_cover && <Badge bg="success" pill className="ms-2">Cover</Badge>}
+                        <small className="text-muted d-block">Order: {item.order} | Type: {item.media_type}</small>
+                      </Col>
+                      <Col xs={12} md="auto" className="mt-1 mt-md-0">
+                        {editingCaptionItem?.id === item.id ? null : (
+                          <Form.Select size="sm" value={item.color_hex || ''} 
+                              onChange={e => handleColorChangeForMedia(item.id, e.target.value)}
+                              disabled={colors.length === 0}
+                              style={{ minWidth: '120px' }}
+                              title="Assign Color from Palette"
+                          >
+                              <option value="">No Color</option>
+                              {colors.map(c=><option key={c.hex} value={c.hex}>{c.name} ({c.hex})</option>)}
+                          </Form.Select>
+                        )}
+                      </Col>
+                      <Col xs="auto" className="text-end media-item-actions">
+                        {item.media_type === 'image' && !item.is_cover && (
+                          <Button variant="link" size="sm" className="p-1 text-success" onClick={() => handleSetCoverLocal(item.id)} title="Set as Cover"><IconCheckCircleLucide size={16}/></Button>
+                        )}
+                        <Button variant="link" size="sm" className="p-1 text-danger" onClick={() => handleDeleteMediaItemLocal(item.id)} title="Mark for Delete"><LuTrash2 size={16}/></Button>
+                      </Col>
+                    </Row>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            )}
+
+            {/* Deleted Items Alert */}
+            {mediaItems.filter(item => item._toBeDeleted).length > 0 && (
+              <Alert variant="warning" className="mt-3 small">
+                <p className="mb-1">The following media items are marked for deletion upon submitting all changes:</p>
+                <ListGroup variant="flush" bsPrefix="list-group-sm">
+                  {mediaItems.filter(item => item._toBeDeleted).map(item => (
+                    <ListGroup.Item key={item.id} className="d-flex justify-content-between align-items-center p-1 bg-transparent border-0">
+                      <span>{item.caption || item.url.split('/').pop()}</span>
+                      <Button variant="link" size="sm" className="text-info p-0" onClick={() => handleUndeleteMediaItemLocal(item.id)}>Undo</Button>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              </Alert>
+            )}
+          </div>
+          {isLoadingMedia && (
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(255,255,255,0.7)', zIndex: 10
+            }}>
+              <Spinner animation="border" size="sm" /> <span className="ms-2">Loading...</span>
+            </div>
+          )}
         </Card.Body>
       </Card>
 

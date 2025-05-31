@@ -19,7 +19,7 @@ function SpinningModel({ url, spinning, color }) {
 
   useFrame(() => {
     if (ref.current && spinning) {
-      ref.current.rotation.y += 0.01;
+      ref.current.rotation.y += 0.005;
     }
   });
 
