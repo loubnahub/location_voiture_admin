@@ -8,7 +8,7 @@ import './VehicleDisplayGallery.css';
 
 const THUMBNAILS_PER_VIEW = 5;
 
-const  resolveStorageUrl = (relativePath) => {
+const resolveStorageUrl = (relativePath) => {
   if (!relativePath) return '';
   let cleanedPath = relativePath
     .replace(/^http:\/\/localhost:8000\/storage\//, '')
@@ -18,7 +18,6 @@ const  resolveStorageUrl = (relativePath) => {
   if (cleanedPath.toLowerCase().endsWith('.glb')) {
     return `http://localhost:8000/api/stream-glb/${cleanedPath}`;
   }
-  // Always rewrite .glb files, even if full URL
   if (relativePath.toLowerCase().endsWith('.glb')) {
     return `http://localhost:8000/api/stream-glb/${cleanedPath}`;
   }
@@ -141,26 +140,23 @@ const VehicleDisplayGallery = ({
     setActiveMainImageCaption(caption || '');
   };
 
+  // --- Improved thumbnail navigation logic ---
+  const sourceImages = filteredImagesByColor.length > 0 ? filteredImagesByColor : images;
+  const maxStart = Math.max(0, sourceImages.length - THUMBNAILS_PER_VIEW);
+
   const navigateThumbnails = (direction) => {
-    const sourceImages = filteredImagesByColor.length > 0 ? filteredImagesByColor : images;
-    const newStartIndex = currentThumbnailStartIndex + direction;
-    if (newStartIndex >= 0 && newStartIndex <= sourceImages.length - THUMBNAILS_PER_VIEW + (THUMBNAILS_PER_VIEW > sourceImages.length ? THUMBNAILS_PER_VIEW - sourceImages.length : 0)) {
-      if (sourceImages.length <= THUMBNAILS_PER_VIEW && newStartIndex > 0) { }
-      else if (newStartIndex > sourceImages.length - THUMBNAILS_PER_VIEW && sourceImages.length > THUMBNAILS_PER_VIEW) {
-        setCurrentThumbnailStartIndex(sourceImages.length - THUMBNAILS_PER_VIEW);
-      } else {
-        setCurrentThumbnailStartIndex(newStartIndex);
-      }
-    } else if (direction < 0 && newStartIndex < 0) {
-      setCurrentThumbnailStartIndex(0);
-    }
+    setCurrentThumbnailStartIndex((prev) => {
+      let next = prev + direction;
+      if (next < 0) next = 0;
+      if (next > maxStart) next = maxStart;
+      return next;
+    });
   };
 
   const visibleThumbnails = useMemo(() => {
-    const sourceImages = filteredImagesByColor.length > 0 ? filteredImagesByColor : images;
     if (!sourceImages || sourceImages.length === 0) return [];
     return sourceImages.slice(currentThumbnailStartIndex, currentThumbnailStartIndex + THUMBNAILS_PER_VIEW);
-  }, [filteredImagesByColor, images, currentThumbnailStartIndex]);
+  }, [sourceImages, currentThumbnailStartIndex]);
 
   const handleOpenMediaManager = () => setShowMediaManagerModal(true);
   const handleMediaManagerDidUpdate = () => {
@@ -202,7 +198,9 @@ const VehicleDisplayGallery = ({
   }
 
   // Debug log for 3D model
-  console.log("3D Model raw url:", threeDModel?.url, "Resolved:", resolveStorageUrl(threeDModel?.url));
+  // console.log("3D Model raw url:", threeDModel?.url, "Resolved:", resolveStorageUrl(threeDModel?.url));
+  // console.log("threeDModel:", threeDModel);
+  // console.log("threeDModel.url:", threeDModel?.url);
 
   return (
     <>
@@ -219,11 +217,21 @@ const VehicleDisplayGallery = ({
         <Row className="g-3 g-lg-4">
           <Col lg={5} md={5} className="three-d-column">
             <div className="three-d-spin-card">
-              <ThreeDModelViewer
-                src={resolveStorageUrl(threeDModel?.url)}
-                alt={threeDModel?.caption || `${vehicleTitle} 3D Model`}
-                style={{ width: '100%', height: '100%', minHeight: '300px' }}
-              />
+              {threeDModel?.url ? (
+                <ThreeDModelViewer
+  src={resolveStorageUrl(threeDModel.url)}
+  alt={threeDModel.caption || `${vehicleTitle} 3D Model`}
+  style={{ width: '100%', height: '100%', minHeight: '300px' }}
+  color={selectedColorHex}
+/>
+              ) : (
+                <div
+                  className="d-flex align-items-center justify-content-center text-muted three-d-placeholder"
+                  style={{ width: '100%', height: '100%', minHeight: '300px' }}
+                >
+                  3D Model not available.
+                </div>
+              )}
             </div>
             <p className="text-center text-muted small mt-2 mb-0 three-d-caption">
               {threeDModel?.caption || "3D car presentation 360 spin"}
@@ -262,15 +270,37 @@ const VehicleDisplayGallery = ({
             </div>
             {filteredImagesByColor && filteredImagesByColor.length > 0 && (
               <div className="thumbnail-gallery-strip d-flex align-items-center justify-content-center">
-                <Button variant="light" size="sm" onClick={() => navigateThumbnails(-1)} disabled={currentThumbnailStartIndex === 0} className="thumbnail-nav-arrow"> <LuChevronLeft /> </Button>
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={() => navigateThumbnails(-1)}
+                  disabled={currentThumbnailStartIndex === 0}
+                  className="thumbnail-nav-arrow"
+                >
+                  <LuChevronLeft />
+                </Button>
                 <div className="thumbnails-container d-flex mx-2">
                   {visibleThumbnails.map((thumb) => (
-                    <div key={thumb.id || thumb.url} className={`thumbnail-item mx-1 ${activeMainImageUrl === thumb.url ? 'active' : ''}`} onClick={() => handleThumbnailClick(thumb.url, thumb.caption)} role="button" tabIndex={0}>
+                    <div
+                      key={thumb.id || thumb.url}
+                      className={`thumbnail-item mx-1 ${activeMainImageUrl === thumb.url ? 'active' : ''}`}
+                      onClick={() => handleThumbnailClick(thumb.url, thumb.caption)}
+                      role="button"
+                      tabIndex={0}
+                    >
                       <Image src={resolveStorageUrl(thumb.url)} alt={thumb.caption || `Thumbnail`} className="thumbnail-image" />
                     </div>
                   ))}
                 </div>
-                <Button variant="light" size="sm" onClick={() => navigateThumbnails(1)} disabled={currentThumbnailStartIndex + THUMBNAILS_PER_VIEW >= filteredImagesByColor.length && filteredImagesByColor.length > THUMBNAILS_PER_VIEW} className="thumbnail-nav-arrow"> <LuChevronRight /> </Button>
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={() => navigateThumbnails(1)}
+                  disabled={currentThumbnailStartIndex + THUMBNAILS_PER_VIEW >= sourceImages.length}
+                  className="thumbnail-nav-arrow"
+                >
+                  <LuChevronRight />
+                </Button>
               </div>
             )}
           </Col>
