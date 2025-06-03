@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate,Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Layouts
@@ -24,6 +24,8 @@ import PromotionCampaignPage from './pages/promotions/PromotionCampaignPage';
 import PromotionCodePage from './pages/promotions/PromotionCodePage';
 import PaymentPage from './pages/payments/PaymentsPage';
 import VehicleModelDetailView from './components/VehicleModelDetailView';
+import VehicleInstanceDetailView from './components/VehicleInstanceDetailView';
+import VehicleDisplayGallery from './components/VehicleDisplayGallery';
 
 // --- Protected Route Component ---
 const ProtectedRoute = () => {
@@ -32,7 +34,14 @@ const ProtectedRoute = () => {
   if (isLoading) {
     return <div>Loading authentication status...</div>;
   }
-  return isAuthenticated ? <AdminLayout /> : <Navigate to="/login" replace />;
+  // Render AdminLayout with Outlet for nested routes!
+  return isAuthenticated ? (
+    <AdminLayout>
+      <Outlet />
+    </AdminLayout>
+  ) : (
+    <Navigate to="/login" replace />
+  );
 };
 
 // --- Public Route Component ---
@@ -75,6 +84,7 @@ function App() {
             <Route path="inventory/vehicles" element={<VehiclePage />} />
             <Route path="fleet/vehicle-models" element={<VehicleModelPage />} />
             <Route path="fleet/vehicle-models/:modelId" element={<VehicleModelDetailView />} />
+            <Route path="fleet/vehicle-models/:modelId/gallery" element={<VehicleDisplayGallery />} />
             <Route path="fleet/vehicle-types" element={<VehicleTypePage />} />
             <Route path="fleet/features" element={<FeaturePage />} />
             <Route path="fleet/extras" element={<ExtraPage />} />
@@ -88,6 +98,8 @@ function App() {
             <Route path="marketing/promotion-campaigns" element={<PromotionCampaignPage />} />
             <Route path="marketing/promotion-codes" element={<PromotionCodePage />} />
             <Route path="financials/payments" element={<PaymentPage />} />
+            <Route path="vehicle-instance/:instanceId" element={<VehicleInstanceDetailView />} />
+
             {/* Add other admin routes here */}
           </Route>
           {/* Fallback Route */}

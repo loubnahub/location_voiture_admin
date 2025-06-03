@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Enums\VehicleStatus; // Your enum for status
 use Illuminate\Support\Str;  // For Str::uuid() if creating Address on the fly
-
+use Illuminate\Support\Facades\Storage;
 class VehicleController extends Controller
 {
     /**
@@ -158,53 +158,230 @@ class VehicleController extends Controller
      * Display the specified resource.
      * This is the method we worked on for the detail page with multiple tabs.
      */
-    public function show(Request $request, Vehicle $vehicle)
+public function show(Request $request, Vehicle $vehicle)
     {
-        // if (!auth()->user()->can('view vehicles')) { /* ... */ }
-
         $vehicle->load([
             'vehicleModel.vehicleType',
             'vehicleModel.media' => fn($q) => $q->orderBy('is_cover', 'desc')->orderBy('order', 'asc'),
             'vehicleModel.features' => fn($q) => $q->orderBy('category')->orderBy('name'),
             'vehicleModel.extras' => fn($q) => $q->orderBy('name'),
-            'vehicleModel.insurancePlans',
+            // 'vehicleModel.insurancePlans', // Load if you need it in model_details
             'currentLocationAddress',
-            'bookings' => fn($q) => $q->select(['id', 'vehicle_id', 'renter_user_id', 'start_date', 'end_date', 'status'])->with('renter:id,full_name')->orderBy('start_date', 'asc'),
-            'operationalHolds' => fn($q) => $q->select(['id', 'vehicle_id', 'start_date', 'end_date', 'reason', 'created_by_user_id'])->with('createdByUser:id,full_name')->orderBy('start_date', 'asc'),
-            'maintenanceRecords' => fn($q) => $q->select(['id', 'vehicle_id', 'description', 'cost', 'created_at'])->orderBy('created_at', 'desc')->limit(5),
-            'damageReports.images'
+            'bookings' => fn($q) => $q->select(['id', 'vehicle_id', 'renter_user_id', 'start_date', 'end_date', 'status', 'created_at'])->with([ // Added created_at for sorting if needed
+                'renter:id,full_name',
+                'damageReports.images', // Assuming DamageReport has 'images'
+            ])->orderBy('start_date', 'asc'),
+            'operationalHolds.maintenanceRecord' => fn($q) => $q->select(['id', 'operational_hold_id', 'description', 'cost', 'created_at']),
         ]);
 
         $vehicleModel = $vehicle->vehicleModel;
-        // ... (rest of the detailed data transformation from your previous VehicleController@show for detail page)
-        // For brevity, I'm not repeating the entire transformation here, but it would include:
-        // $headerSubtitle, $mainImage, $featuresGrouped, $extrasFormatted,
-        // $formattedBookings, $formattedOperationalHolds, $scheduleEvents,
-        // $formattedMaintenanceRecords, $formattedDamageReports, $alerts
 
-        // Simplified transformation for this example, assuming you have helper methods
+        // --- गैदर ALL DAMAGE REPORTS (THIS SEEMS FINE FOR A SEPARATE LIST, NOT FOR CALENDAR DIRECTLY UNLESS MODIFIED) ---
+        $allDamageReportsForListing = $vehicle->bookings->flatMap(function ($booking) {
+            return $booking->damageReports->map(function ($report) use ($booking) {
+                return [
+                    'id' => $report->id,
+                    'booking_id' => $booking->id,
+                    'description' => $report->description,
+                    'status' => $report->status,
+                    'reported_at' => $report->reported_at?->toIso8601String(),
+                    'images' => $report->images->map(function ($img) {
+                        return [
+                            'id' => $img->id,
+                            'url' => $img->url ? Storage::url($img->url) : null, // Ensure full URL
+                        ];
+                    }),
+                ];
+            });
+        })->values();
+
+        // --- AGGREGATE SCHEDULE EVENTS FOR CALENDAR ---
+        $scheduleEvents = [];
+
+        // Bookings for Calendar
+        foreach ($vehicle->bookings as $booking) {
+            $scheduleEvents[] = [
+                'id' => 'booking_' . $booking->id,
+                'type' => 'booking',
+                'title' => 'Booking: ' . ($booking->renter?->full_name ?? 'Unknown Renter'),
+                'start' => $booking->start_date?->toIso8601String(),
+                'end' => $booking->end_date?->toIso8601String(),
+            ];
+        }
+
+        // Operational Holds for Calendar (Maintenance, Cleaning, other Holds)
+        foreach ($vehicle->operationalHolds as $hold) {
+            $eventTitle = $hold->reason ?? 'Operational Hold'; // Default title
+            $eventType = 'operational_hold'; // Default type
+
+            if ($hold->maintenanceRecord) {
+                $eventType = 'maintenance'; // Specific type for maintenance
+                $eventTitle = 'Maintenance: ' . ($hold->maintenanceRecord->description ?? $hold->reason);
+            } elseif (strtolower(trim($hold->reason ?? '')) === 'cleaning') {
+                $eventType = 'cleaning'; // Specific type for cleaning
+                $eventTitle = 'Cleaning: ' . ($hold->notes ?? $hold->reason);
+            }
+            // Add more elseif conditions here if other operational hold reasons
+            // should map to different 'types' for calendar display.
+
+            $scheduleEvents[] = [
+                'id' => 'hold_' . $hold->id,
+                'type' => $eventType,
+                'title' => $eventTitle,
+                'start' => $hold->start_date?->toIso8601String(),
+                'end' => $hold->end_date?->toIso8601String(),
+            ];
+        }
+
+        // **** ADD DAMAGE REPORTS AS SINGLE-DAY EVENTS TO SCHEDULE_EVENTS ****
+        foreach ($vehicle->bookings as $booking) {
+            foreach ($booking->damageReports as $report) {
+                if ($report->reported_at) { // Ensure there's a date
+                    $scheduleEvents[] = [
+                        'id' => 'damage_event_' . $report->id, // Unique ID prefix for calendar event
+                        'type' => 'damage',                   // Type for frontend matching
+                        'title' => 'Damage Reported',         // Simple title for tooltip
+                        // More detailed title: 'Damage: ' . Str::limit($report->description, 25),
+                        'start' => $report->reported_at->toIso8601String(), // Single day event
+                        'end' => $report->reported_at->toIso8601String(),   // Start and end are the same
+                        // You can include original_report_id or other details if needed by frontend
+                        // 'original_report_id' => $report->id, 
+                    ];
+                }
+            }
+        }
+        // **** END OF DAMAGE REPORT ADDITION TO SCHEDULE_EVENTS ****
+
+        // Sort all schedule events by start date (optional)
+        usort($scheduleEvents, function ($a, $b) {
+            return strtotime($a['start'] ?? 'now') <=> strtotime($b['start'] ?? 'now');
+        });
+
+
+        // --- AGGREGATE ALERTS & HEALTH (FOR THE LIST CARD) ---
+        $alertsAndHealth = [];
+
+        // Damage reports for Alerts List
+        foreach ($vehicle->bookings as $booking) {
+            foreach ($booking->damageReports as $report) {
+                $alertsAndHealth[] = [
+                    'id' => 'damage_alert_' . $report->id, // Different ID for alert list item
+                    'type' => 'damage',
+                    'title' => 'Damage Report',
+                    'details' => Str::limit($report->description, 50), // Limit details for list view
+                    'date' => $report->reported_at?->toIso8601String(),
+                    'action_label' => 'View Report', // Changed from "Install Report"
+                ];
+            }
+        }
+
+        // Maintenance for Alerts List (from Operational Holds)
+        foreach ($vehicle->operationalHolds as $hold) {
+            if ($hold->maintenanceRecord) {
+                $alertsAndHealth[] = [
+                    'id' => 'maintenance_alert_' . $hold->maintenanceRecord->id,
+                    'type' => 'maintenance',
+                    'title' => 'Maintenance Scheduled',
+                    'details' => Str::limit($hold->maintenanceRecord->description ?? $hold->reason, 50),
+                    'date' => $hold->start_date?->toIso8601String(), // Use hold's start date or maintenance record's due_date if available
+                    'action_label' => 'View Log',
+                ];
+            }
+        }
+
+        // Cleaning for Alerts List (from Operational Holds)
+        foreach ($vehicle->operationalHolds as $hold) {
+            if (strtolower(trim($hold->reason ?? '')) === 'cleaning') {
+                $alertsAndHealth[] = [
+                    'id' => 'cleaning_alert_' . $hold->id,
+                    'type' => 'cleaning',
+                    'title' => 'Cleaning Scheduled',
+                    'details' => Str::limit($hold->notes ?? $hold->reason, 50),
+                    'date' => $hold->start_date?->toIso8601String(),
+                    'action_label' => 'View Details',
+                ];
+            }
+        }
+        // You might want to sort alertsAndHealth by date too
+
+
+        $modelDetailsPayload = $vehicleModel ? $this->transformVehicleModelForDetail($vehicleModel) : null;
+
         return response()->json([
             'data' => [
                 'id' => $vehicle->id,
                 'license_plate' => $vehicle->license_plate,
-                'status' => $vehicle->status,
-                'status_display' => $vehicle->status ? ucfirst(str_replace('_', ' ', $vehicle->status->value)) : null,
+                'vin' => $vehicle->vin,
                 'color' => $vehicle->color,
+                'hexa_color_code' => $vehicle->hexa_color_code,
                 'mileage' => (int) $vehicle->mileage,
-                'model_details' => $vehicleModel ? $this->transformVehicleModelForDetail($vehicleModel) : null, // New helper
-                'current_location' => $vehicle->currentLocationAddress ? $this->transformAddressForDetail($vehicle->currentLocationAddress) : null, // New helper
-                // Add transformed schedule_events and alerts_and_health here
-                // 'schedule_events' => $this->transformScheduleEvents($vehicle->bookings, $vehicle->operationalHolds),
-                // 'alerts_and_health' => $this->transformAlerts($vehicle->maintenanceRecords, $vehicle->damageReports),
-                'created_at' => $vehicle->created_at?->toDateTimeString(),
-                'updated_at' => $vehicle->updated_at?->toDateTimeString(),
+                'status' => $vehicle->status, // This is the VehicleStatus Enum instance
+                'status_display' => $vehicle->status ? ucfirst(str_replace('_', ' ', $vehicle->status->value)) : null, // For convenience
+                'acquisition_date' => $vehicle->acquisition_date?->toDateString(),
+                
+                'model_details' => $modelDetailsPayload,
+                'current_location' => $vehicle->currentLocationAddress ? $this->transformAddressForDetail($vehicle->currentLocationAddress) : null,
+                
+                'schedule_events' => $scheduleEvents, // This NOW INCLUDES damage and correctly typed cleaning/maintenance
+                'alerts_and_health' => $alertsAndHealth,
+                
+                'damage_reports_listing' => $allDamageReportsForListing, // Keep original if needed for a separate detailed list of damages
+
+                'created_at' => $vehicle->created_at?->toIso8601String(),
+                'updated_at' => $vehicle->updated_at?->toIso8601String(),
             ]
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    // Ensure your transformVehicleModelForDetail includes full URLs and color_hex for media
+    private function transformVehicleModelForDetail(VehicleModel $model): ?array
+    {
+        if (!$model) return null;
+        $model->loadMissing(['vehicleType', 'media' => fn($q) => $q->orderBy('is_cover', 'desc')->orderBy('order', 'asc'), 'features', 'extras']);
+
+        $mainImageUrl = null;
+        if ($model->media && $model->media->isNotEmpty()) {
+            $coverMedia = $model->media->firstWhere('is_cover', true);
+            if ($coverMedia && $coverMedia->url) {
+                $mainImageUrl = Storage::url($coverMedia->url); 
+            } else {
+                $firstMedia = $model->media->first();
+                if ($firstMedia && $firstMedia->url) {
+                    $mainImageUrl = Storage::url($firstMedia->url);
+                }
+            }
+        }
+
+        return [
+            'id' => $model->id,
+            'title' => $model->title,
+            'header_subtitle' => trim(ucfirst($model->transmission ?? '') . ' ' . ($model->vehicleType ? strtolower($model->vehicleType->name) : '')),
+            'brand' => $model->brand, 
+            'model_name' => $model->model, 
+            'year' => (int) $model->year,
+            'fuel_type' => $model->fuel_type, 
+            'transmission' => $model->transmission,
+            'number_of_seats' => (int) $model->number_of_seats, 
+            'number_of_doors' => (int) $model->number_of_doors,
+            'base_price_per_day' => (float) $model->base_price_per_day,
+            'description' => $model->description,
+            'main_image_url' => $mainImageUrl,
+            'all_media' => $model->media ? $model->media->map(fn($m) => ([
+                'id' => $m->id, 
+                'url' => $m->url ? Storage::url($m->url) : null,
+                'caption' => $m->caption ?? null,
+                'is_cover' => (bool)$m->is_cover,
+                'order' => $m->order ?? null,
+                'color_hex' => $m->color_hex ?? null, 
+                'media_type' => $m->media_type ?? 'image'
+            ]))->values() : [],
+            'available_colors_from_model' => $model->available_colors,
+            'vehicle_type_name' => $model->vehicleType?->name,
+            'features_grouped' => $model->features->isNotEmpty() ? $model->features->groupBy('category')->map(fn($catFeat, $catName) => ['category_name' => $catName?:'General', 'items' => $catFeat->map(fn($f) => ['id'=>$f->id, 'name'=>$f->name, 'description' => $f->description ?? null])->values()])->values() : [], // Added description to features
+            'extras_available' => $model->extras->isNotEmpty() ? $model->extras->map(fn($e)=>(['id'=>$e->id, 'name'=>$e->name, 'description' => $e->description ?? null, 'default_price_per_day'=>(float)($e->default_price_per_day ?? 0)]))->values() : [], // Added description to extras
+        ];
+    }
+     
     public function update(Request $request, Vehicle $vehicle)
     {
         // if (!auth()->user()->can('edit vehicles')) { /* ... */ }
@@ -253,27 +430,24 @@ class VehicleController extends Controller
 
     // --- Example Helper methods for the show() method's complex transformation ---
     // You would move the transformation logic from the previous show() method here
-    private function transformVehicleModelForDetail(VehicleModel $model) {
-        $model->load(['vehicleType', 'media', 'features', 'extras']);
+   
+      private function transformAddressForDetail(?Address $address): ?array // Allow $address to be nullable
+    {
+        if (!$address) {
+            return null; // Return null if no address is provided
+        }
+
         return [
-            'id' => $model->id,
-            'title' => $model->title,
-            'header_subtitle' => trim(ucfirst($model->transmission) . ' ' . ($model->vehicleType ? strtolower($model->vehicleType->name) : '')),
-            'brand' => $model->brand, 'model_name' => $model->model, 'year' => (int) $model->year,
-            'fuel_type' => $model->fuel_type, 'transmission' => $model->transmission,
-            'number_of_seats' => (int) $model->number_of_seats, 'number_of_doors' => (int) $model->number_of_doors,
-            'base_price_per_day' => (float) $model->base_price_per_day,
-            'description' => $model->description,
-            'main_image_url' => $model->media->firstWhere('is_cover', true)->url ?? $model->media->first()->url ?? null,
-            'all_media' => $model->media->map(fn($m)=>(['id'=>$m->id, 'url'=>$m->url, 'is_cover'=>(bool)$m->is_cover]))->values(),
-            'available_colors_from_model' => $model->available_colors,
-            'vehicle_type_name' => $model->vehicleType?->name,
-            'features_grouped' => $model->features->groupBy('category')->map(fn($catFeat, $catName) => ['category_name' => $catName?:'General', 'items' => $catFeat->map(fn($f) => ['id'=>$f->id, 'name'=>$f->name])->values()])->values(),
-            'extras_available' => $model->extras->map(fn($e)=>(['id'=>$e->id, 'name'=>$e->name, 'default_price_per_day'=>(float)$e->default_price_per_day]))->values(),
+            'id' => $address->id,
+            'street_line_1' => $address->street_line_1,
+            'street_line_2' => $address->street_line_2, // Now included
+            'city' => $address->city,                   // Now included
+            'postal_code' => $address->postal_code,     // Now included
+            'country' => $address->country,             // Now included
+            'notes' => $address->notes,
+            // You could also include the accessor if needed on frontend, though frontend can construct it too
+            // 'full_address_string' => $address->full_address_string, 
         ];
-    }
-    private function transformAddressForDetail(Address $address) {
-        return ['id' => $address->id, 'street_line_1' => $address->street_line_1, /* ..., */ 'notes' => $address->notes];
     }
     // You'd also need transformScheduleEvents and transformAlerts helpers
 }

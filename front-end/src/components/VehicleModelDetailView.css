@@ -441,3 +441,6 @@
 #feature-category-dropdown-btn::after {
   display: none !important;
 }
+.dropdown-menu-maquette {
+  z-index: 9999 !important;
+}

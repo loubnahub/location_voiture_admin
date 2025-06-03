@@ -68,10 +68,10 @@ return $response;// If withCredentials is true on frontend
 
 
     // --- User Self-Service Routes ---
-    Route::apiResource('my-addresses', AddressController::class)->parameters(['my-addresses' => 'address'])->except(['store', 'update', 'destroy']);
-    Route::post('my-addresses', [AddressController::class, 'storeForCurrentUser'])->name('my-addresses.store');
-    Route::put('my-addresses/{address}', [AddressController::class, 'updateForCurrentUser'])->name('my-addresses.update');
-    Route::delete('my-addresses/{address}', [AddressController::class, 'destroyForCurrentUser'])->name('my-addresses.destroy');
+    Route::apiResource('addresses', AddressController::class)->parameters(['my-addresses' => 'address'])->except(['store', 'update', 'destroy']);
+    Route::post('addresses', [AddressController::class, 'storeForCurrentUser'])->name('my-addresses.store');
+    Route::put('addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
+    Route::delete('addresses/{address}', [AddressController::class, 'destroyForCurrentUser'])->name('my-addresses.destroy');
     Route::patch('user/default-address/{address}', [UserController::class, 'setDefaultAddress'])->name('user.default-address.update');
 
     // Route::get('/my-bookings', [UserBookingController::class, 'index'])->name('my-bookings.index');

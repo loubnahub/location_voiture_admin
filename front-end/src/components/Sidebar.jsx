@@ -8,7 +8,7 @@ import {
   LuMegaphone, LuTicket // Added LuMegaphone for Campaigns, LuTicket for Codes
 } from 'react-icons/lu';
 import { AlertTriangle ,LineChart} from 'lucide-react';
-import './Sidebar.css'; // Custom CSS for theming
+import './Sidebar.css'; // Caustom CSS for theming
 
 // Replace with your actual logo
 const LogoPlaceholder = () => (

@@ -82,5 +82,33 @@ class AddressController extends Controller
 
         return response()->json(['data' => $this->transformAddress($address), 'message' => 'Address created.'], 201);
     }
+    public function update(Request $request, Address $address)
+{
+    $validatedData = $request->validate([
+        'street_line_1' => 'nullable|string|max:255',
+        'street_line_2' => 'nullable|string|max:255',
+        'city' => 'nullable|string|max:100',
+        'postal_code' => 'nullable|string|max:20',
+        'country' => 'nullable|string|max:100',
+        'notes' => 'nullable|string',
+    ]);
+
+    $address->update($validatedData);
+    return response()->json(['data' => $address, 'message' => 'Address updated successfully.']);
+}
+public function store(Request $request)
+{
+    $validatedData = $request->validate([
+        'street_line_1' => 'nullable|string|max:255',
+        'street_line_2' => 'nullable|string|max:255',
+        'city' => 'nullable|string|max:100',
+        'postal_code' => 'nullable|string|max:20',
+        'country' => 'nullable|string|max:100',
+        'notes' => 'nullable|string',
+    ]);
+
+    Address::create($validatedData);
+    return response()->json(['data' => $address, 'message' => 'Address updated successfully.']);
+}
     // Add updateForCurrentUser, destroyForCurrentUser, etc.
 }

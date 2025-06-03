@@ -56,7 +56,7 @@ export const fetchVehicle = (id) => apiClient.get(`/vehicles/${id}`);
 export const createVehicle = (vehicleData) => apiClient.post('/vehicles', vehicleData);
 export const updateVehicle = (id, vehicleData) => apiClient.put(`/vehicles/${id}`, vehicleData);
 export const deleteVehicle = (id) => apiClient.delete(`/vehicles/${id}`);
-
+export const updateAddress = (id, addressData) => apiClient.put(`/addresses/${id}`, addressData);
 // --- Vehicle Model Functions ---
 export const fetchAllVehicleModels = (params = {}) => apiClient.get('/vehicle-models', { params });
 export const fetchVehicleModelById = (id) => apiClient.get(`/vehicle-models/${id}`);
@@ -71,6 +71,9 @@ export const updateVehicleModel = (id, modelData) => {
   }
   // For regular JSON updates:
   return apiClient.put(`/vehicle-models/${id}`, modelData);
+};
+export const createAddress = (addressData) => {
+  return apiClient.post('/addresses', addressData); // Ensure your API endpoint for creating addresses is correct
 };
 export const deleteVehicleModel = (id) => apiClient.delete(`/vehicle-models/${id}`); // Added for completeness
 
