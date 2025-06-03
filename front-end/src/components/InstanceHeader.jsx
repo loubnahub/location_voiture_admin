@@ -92,7 +92,7 @@ const InstanceHeader = ({
       )}
       
       {mainImageUrl ? (
-        <Image src={mainImageUrl} alt={modelTitle || 'Vehicle image'} fluid rounded className="mb-3 shadow-sm instance-main-image" />
+        <Image src={mainImageUrl} alt={modelTitle || 'Vehicle image'} fluid rounded className="mb-3  instance-main-image" />
       ) : (
         <div className="no-image-placeholder-maquette instance-main-image mb-3">
             No Image Available

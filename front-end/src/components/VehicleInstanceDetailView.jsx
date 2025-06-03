@@ -41,17 +41,16 @@ const VehicleInstanceDetailView = () => {
   if (isLoading && !vehicleInstanceData) return <Container className="py-5 text-center"><Spinner animation="border" /><p className="mt-2">Loading...</p></Container>;
   if (error && !vehicleInstanceData) return <Container className="py-5"><BootstrapAlert variant="danger"><BootstrapAlert.Heading>Error Loading Vehicle</BootstrapAlert.Heading><p>{error}</p><Button onClick={() => loadVehicleInstance(activeInstanceId)} variant="outline-danger">Try Again</Button></BootstrapAlert></Container>;
   if (!vehicleInstanceData && !isLoading) { return <Container className="py-5 text-center"><p>No vehicle data available.</p><Button onClick={() => navigate(-1)} variant="primary">Back</Button></Container>; }
-  const { model_details, alerts_and_health, schedule_events, vin, status: vehicleStatusObject } = vehicleInstanceData || {};
+  const { model_details, alerts_and_health, schedule_events, vin } = vehicleInstanceData || {};
   const processedScheduleEventsForCalendar = schedule_events || [];
   const processedAlertsAndHealth = alerts_and_health || [];
   // --- End of unchanged parts ---
 
   return (
     <div className="vehicle-instance-detail-view">
-      <Container fluid className="py-4">
+      <Container className='container-xl'>
         {/* The main card's relative positioning is no longer needed for these specific FABs */}
-        <div className="p-3 p-md-4 p-lg-5 detail-card-instance"> 
-          {/* REMOVED: Absolutely positioned FAB container from here */}
+        <div className="detail-card-instance"> 
 
           <div className="mb-4">
             <Button variant="link" onClick={handleBack} className="back-link-maquette bg-light text-dark p-2 shadow-sm">
@@ -59,9 +58,9 @@ const VehicleInstanceDetailView = () => {
             </Button>
           </div>
 
-          <Row>
+          <Row >
             {/* --- Main Content Column (Left Side) --- */}
-            <Col lg={8} md={6} className="mb-4 mb-md-0">
+            <Col lg={7} md={7} className="mb-4 mb-md-0">
               {vehicleInstanceData && model_details && (
                 <InstanceHeader 
                   modelTitle={model_details.title} 
@@ -84,10 +83,10 @@ const VehicleInstanceDetailView = () => {
             </Col>
 
             {/* --- Sidebar Column (Right Side) --- NOW CONTAINS A NESTED ROW */}
-            <Col lg={4} md={6}>
+            <Col lg={5} md={5}>
               <Row className="h-100"> {/* Make nested row take full height of parent Col if needed for centering */}
                 {/* Column for StatusLocationCard & Specs */}
-                <Col xs={10} sm={9} md={8} lg={9} className="d-flex flex-column"> 
+                <Col xs={10}  className="d-flex flex-column"> 
                   {vehicleInstanceData && (
                     <StatusLocationCard 
                       instance={vehicleInstanceData} 
@@ -100,14 +99,14 @@ const VehicleInstanceDetailView = () => {
                     {model_details && vehicleInstanceData && (
                       <InstanceSpecificationsCard 
                         model={model_details} 
-                        instanceStatus={vehicleStatusObject?.value} 
+                        instanceStatus={model_details?.is_available} 
                       />
                     )}
                   </div>
                 </Col>
 
                 {/* NEW Column for the FAB-like buttons */}
-                <Col xs={2} sm={3} md={4} lg={3} className="d-flex flex-column align-items-center justify-content-center ps-2 ps-md-3">
+                <Col xs={2}  className="d-flex flex-column align-items-center justify-content-center ps-2 ps-md-3">
                   {/* Button to view the VEHICLE MODEL'S details page */}
                   {model_details && model_details.id && (
                     <Button 
@@ -119,7 +118,7 @@ const VehicleInstanceDetailView = () => {
                         navigate(`/admin/fleet/vehicle-models/${model_details.id}`);
                       }}
                     >
-                      <LuModelDetailsIcon size={30} /> 
+                      <LuModelDetailsIcon size={22} /> 
                     </Button>
                   )}
 
@@ -134,12 +133,14 @@ const VehicleInstanceDetailView = () => {
                         navigate(`/admin/fleet/vehicle-models/${model_details.id}/gallery`);
                       }}
                     >
-                      <LuModelImagesIcon size={30} />
+                      <LuModelImagesIcon size={22} />
                     </Button>
                   )}
                 </Col>
+                
               </Row>
             </Col>
+
           </Row>
         </div>
       </Container>

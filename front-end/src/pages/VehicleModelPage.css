@@ -1,191 +1,266 @@
-/* src/pages/VehicleModelPage.css */
+/* SharedPageStyles.css (or update ResourcePage.css) */
 
-/* --- Main Page Content Area --- */
-.vehicle-model-page-content {
-  /* Using p-4 md:p-5 from JSX means Bootstrap handles padding,
-     but if you need custom overall padding for this page specifically: */
-  /* padding: 1.5rem; */ /* Example: 24px */
+/* --- Main Page Container (Optional - Bootstrap usually handles this with p-x classes) --- */
+.resource-page-container { /* Applied to the main div in both ResourcePage and VehicleModelPage */
+  /* background-color: #f9fafb; */ /* Example: Very light gray page background if desired */
 }
 
 /* --- Page Header (Title and Create Button) --- */
 .page-header-custom { /* Applied to react-bootstrap Row */
-  margin-bottom: 1.75rem !important; /* Approx 28px */
+  margin-bottom: 1.75rem !important; /* Approx 28px, consistent */
 }
 
 .page-title-custom { /* Applied to h1 */
-  font-size: 1.75rem; /* Approx 28px, adjust to match Figma */
+  font-size: 1.75rem; /* Approx 28px */
   font-weight: 600; /* Semibold */
   color: #111827; /* Dark slate gray */
-  margin: 0; /* Remove default h1 margin if any */
+  margin: 0;
 }
 
-.create-button-custom { /* Applied to react-bootstrap Button */
-  background-color: #1f2937 !important; /* Dark gray/blue button from Figma */
+.create-button-custom { /* Applied to react-bootstrap Button for "Create" */
+  background-color: #1f2937 !important; /* Dark gray/blue button */
   border-color: #1f2937 !important;
   color: #ffffff !important;
   font-weight: 500; /* Medium */
   border-radius: 0.5rem !important; /* 8px */
-  padding: 0.6rem 1.1rem !important; /* Adjust for visual balance */
+  padding: 0.55rem 1rem !important; /* Adjusted for icon + text */
   font-size: 0.875rem; /* 14px */
   line-height: 1.5;
+  display: inline-flex; /* To align icon and text */
+  align-items: center;
   transition: background-color 0.15s ease-in-out;
 }
 .create-button-custom:hover,
 .create-button-custom:focus {
   background-color: #374151 !important; /* Slightly lighter on hover/focus */
   border-color: #374151 !important;
-  box-shadow: none !important; /* Remove Bootstrap default focus shadow if not desired */
+  box-shadow: none !important;
 }
-.create-button-custom .fs-5 { /* For the '+' icon if using Bootstrap font size class */
-  line-height: 1;
-  vertical-align: middle;
+.create-button-custom svg { /* For icons like LuPlus inside the button */
+  margin-right: 0.4rem; /* Space between icon and text */
+  width: 16px; /* Consistent icon size */
+  height: 16px;
 }
 
 
 /* --- Controls Bar (Search and Action Icons) --- */
+/* This now applies to the Row within the main 'controls-bar-figma' div if using VehicleModelPage structure */
+/* If ResourcePage has 'controls-bar-figma' directly on the flex container, it's fine */
 .controls-bar-figma {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #ffffff;
-  padding: 12px 20px; /* Padding inside the bar */
-  border-radius: 0.5rem; /* 8px */
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0,0,0,0.05); /* Subtle shadow */
-  margin-bottom: 1.25rem; /* 20px */
+  /* The outer wrapper from VehicleModelPage JSX:
+     <div className="controls-bar-figma mb-4 p-3 bg-light rounded shadow-sm">
+     This div already gets Bootstrap styling. We can enhance or override.
+  */
+  background-color: #ffffff !important; /* Override Bootstrap bg-light if Figma is white */
+  padding: 12px 20px !important; /* Override Bootstrap p-3 if needed */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0,0,0,0.05) !important; /* Override Bootstrap shadow-sm */
+  border-radius: 0.5rem !important; /* 8px */
 }
 
-.search-container-figma {
-  flex-grow: 1; /* Allows it to take space but input group inside has max-width */
-  margin-right: 1rem; /* 16px space before action icons */
+
+/* Search Input Styling - Targets the <InputGroup className="search-input-group-figma"> */
+.search-input-group-figma {
+  position: relative;
+  max-width: 420px; /* Max width for the search bar */
+  /* The border and background are now on the InputGroup itself */
+  border: 1px solid #e5e7eb; /* Figma border: gray-200 */
+  border-radius: 6px; /* Figma radius */
+  background-color: #f9fafb; /* Figma background: gray-50 */
+  overflow: hidden; /* To clip the input field's default borders/radius */
 }
 
-.search-input-group-figma { /* This is the react-bootstrap InputGroup */
-  position: relative; /* For absolute positioning of the icon */
-  max-width: 380px; /* Control width of search input area */
-  border: 1px solid #e5e7eb; /* Border for the entire input group, Figma style */
-  border-radius: 6px; /* Rounded corners for the group */
-  background-color: #f3f4f6; /* Background for the group, matching input */
-  overflow: hidden; /* Ensures border-radius clips children */
-}
-/* Hide default Bootstrap InputGroup.Text if it's rendered and not needed */
-.search-input-group-figma .input-group-text {
-    display: none;
-}
-
-.search-icon-wrapper-figma { /* Wrapper for the search icon */
+.search-input-group-figma .search-icon-wrapper-figma { /* The <span> holding the icon */
   position: absolute;
-  left: 12px; /* Position icon from the left */
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  pointer-events: none; /* Allows clicks to pass through to the input */
+  pointer-events: none; /* Click through */
+  z-index: 3; /* Above input field */
 }
 
-.search-icon-actual-figma { /* The LuSearch icon itself */
-  color: #9ca3af; /* Muted icon color (gray-400) */
+.search-input-group-figma .search-icon-actual-figma { /* The <LuSearch> icon */
+  color: #9ca3af; /* gray-400 */
   width: 16px;
   height: 16px;
 }
 
-.search-input-field-figma, /* The Form.Control input */
-.search-input-field-figma:focus {
-  background-color: transparent !important; /* Input is transparent; group has bg */
-  border: none !important; /* Group has the border */
-  border-radius: 0 !important; /* Group has the radius */
-  padding: 0.6rem 0.75rem !important; /* Approx 9-10px top/bottom, 12px right */
-  padding-left: 36px !important; /* Make space for the absolutely positioned icon */
+.search-input-group-figma .search-input-field-figma, /* The Form.Control */
+.search-input-group-figma .search-input-field-figma:focus {
+  background-color: transparent !important; /* Input background is transparent */
+  border: none !important; /* No border on the input itself */
+  box-shadow: none !important; /* No focus shadow on the input itself */
+  border-radius: 0 !important; /* No radius on the input itself */
+  padding: 0.55rem 0.75rem !important; /* Approx 9-10px top/bottom */
+  padding-left: 38px !important; /* Space for the icon */
   font-size: 0.875rem; /* 14px */
-  color: #1f2937; /* Darker input text color */
-  box-shadow: none !important; /* Remove default focus glow from Bootstrap */
-  line-height: 1.5; /* Standard line height for inputs */
-  height: auto; /* Allow Bootstrap to determine height based on padding/font */
+  color: #1f2937; /* Darker text */
+  height: auto; /* Let padding define height */
+  line-height: 1.5;
 }
-.search-input-field-figma::placeholder {
-    color: #9ca3af; /* Placeholder text color */
-    opacity: 1; /* Ensure placeholder is visible */
+.search-input-group-figma .search-input-field-figma::placeholder {
+  color: #9ca3af; /* gray-400 */
+  opacity: 1;
 }
 
-.action-icons-figma { /* Container for the right-side action icons */
+/* Buttons within the search InputGroup (Clear, Apply Search) */
+.search-input-group-figma .btn { /* General styling for buttons in this group */
+  background-color: transparent !important;
+  border: none !important;
+  color: #6b7280 !important; /* gray-500 for icons */
+  padding: 0.55rem 0.75rem !important;
+  box-shadow: none !important;
   display: flex;
   align-items: center;
+  height: 100%; /* Match input height */
+}
+.search-input-group-figma .btn:hover {
+  color: #374151 !important; /* gray-700 on hover */
 }
 
-.icon-button-figma { /* Styling for LuPanelLeft, LuFilter buttons */
-  background-color: #ffffff !important; /* White background like Figma */
-  border: 1px solid #d1d5db !important; /* Light gray border */
-  color: #4b5563 !important; /* Icon color (gray-600) */
+/* Specific for the 'Apply Search' button if it uses input-group-text class */
+.search-input-group-figma .input-group-text.btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+/* Specific for the 'Clear Search' button */
+.search-input-group-figma .clear-search-btn {
+  /* No specific style needed if general .btn style is good */
+}
+
+
+/* Icon Buttons (Filter, etc.) */
+.icon-button-figma { /* Styling for LuFilter, etc. */
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important; /* gray-300 */
+  color: #4b5563 !important; /* gray-600 */
   border-radius: 6px !important;
-  padding: 0.45rem !important; /* Makes it more square-ish (approx 7px) */
-  margin-left: 0.5rem; /* 8px space between icon buttons */
+  padding: 0.5rem 0.75rem !important; /* Padding for icon + optional text */
+  /* margin-left: 0.5rem; Provided by me-2 in JSX */
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.875rem; /* 14px for text like "Filters" */
+  font-weight: 500;
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 .icon-button-figma:hover {
-  background-color: #f3f4f6 !important; /* Very light gray hover */
-  border-color: #adb5bd !important;
+  background-color: #f3f4f6 !important; /* gray-100 */
+  border-color: #adb5bd !important; /* gray-400 */
 }
 .icon-button-figma:focus,
 .icon-button-figma:active {
-    box-shadow: 0 0 0 0.2rem rgba(209, 213, 219, 0.5) !important; /* Subtle focus ring */
-    outline: none !important;
+  box-shadow: 0 0 0 0.2rem rgba(209, 213, 219, 0.5) !important; /* gray-300 focus */
+  outline: none !important;
+}
+.icon-button-figma svg { /* Icon within the button */
+  width: 18px;
+  height: 18px;
+  /* margin-right will be handled by 'ms-1' on span in JSX if text is present */
+}
+.icon-button-figma .badge { /* Badge for filter count */
+  font-size: 0.7em;
+  font-weight: 600;
+  /* ms-2 in JSX handles margin */
 }
 
 
-/* --- Custom Pagination Styling (to match Figma) --- */
+/* --- Filter Panel --- */
+.filter-panel {
+  /* Already has p-3 mt-3 border rounded bg-white shadow-sm from JSX */
+  /* You can add more specific styles if needed */
+}
+.filter-panel .form-label {
+  font-size: 0.8rem; /* Smaller labels in filter panel */
+  font-weight: 500;
+  color: #374151; /* gray-700 */
+  margin-bottom: 0.25rem;
+}
+.filter-panel .form-control,
+.filter-panel .form-select {
+  font-size: 0.875rem; /* 14px */
+  border-radius: 6px;
+  border-color: #d1d5db; /* gray-300 */
+}
+.filter-panel .form-control:focus,
+.filter-panel .form-select:focus {
+  border-color: #6366f1; /* Indigo-500 or your primary color */
+  box-shadow: 0 0 0 0.1rem rgba(99, 102, 241, 0.25); /* Lighter indigo focus */
+}
+.filter-panel .btn-link { /* Reset Filters button */
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+.filter-panel .submit-button-figma { /* Apply Filters button */
+  background-color: #1f2937 !important; /* Dark gray/blue, same as create */
+  border-color: #1f2937 !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  border-radius: 6px !important;
+  padding: 0.45rem 1rem !important;
+  font-size: 0.875rem;
+}
+.filter-panel .submit-button-figma:hover {
+  background-color: #374151 !important;
+  border-color: #374151 !important;
+}
+
+
+/* --- Custom Pagination Styling --- */
+/* Using styles from your old CSS as they are detailed for Figma */
 .pagination-custom-figma {
   display: flex;
-  justify-content: center;
+  justify-content: center; /* Default, can be overridden by parent div */
   align-items: center;
-  margin-top: 30px !important;
-  padding-bottom: 20px;
+  margin-top: 1.5rem !important; /* Adjusted margin */
+  /* padding-bottom: 1rem; No padding-bottom needed if parent handles spacing */
 }
 
 .pagination-custom-figma button.pagination-item,
 .pagination-custom-figma button.pagination-arrow {
-  margin: 0 3px; /* Small gap between items */
-  min-width: 36px; /* Consistent width */
-  height: 36px;  /* Consistent height */
-  padding: 0;    /* Content centered by flex */
+  margin: 0 3px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #d1d5db; /* Light gray border */
-  background-color: #ffffff; /* White background */
-  color: #374151; /* Dark gray text */
-  border-radius: 6px !important; /* Rounded corners from Figma */
+  border: 1px solid #d1d5db; /* gray-300 */
+  background-color: #ffffff;
+  color: #374151; /* gray-700 */
+  border-radius: 6px !important;
   cursor: pointer;
   font-size: 0.875rem; /* 14px */
-  font-weight: 500; /* Medium weight */
+  font-weight: 500;
   line-height: 1;
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
 }
 
 .pagination-custom-figma button.pagination-item:hover,
 .pagination-custom-figma button.pagination-arrow:hover {
-  background-color: #f3f4f6; /* Light gray hover */
-  border-color: #adb5bd;
+  background-color: #1f1f1f !important; /* gray-100 */
+  color:white !important;
+  border-color: #1f2937 !important;
+}
+
+.pagination-custom-figma button.pagination-item.active { /* For current page */
+  background-color: #1f1f1f !important; /* gray-800 */
+  border-color: #1f2937 !important;
+  color: white !important;
+  font-weight: 600;
 }
 
 .pagination-custom-figma button.pagination-item:disabled,
 .pagination-custom-figma button.pagination-arrow:disabled {
-  color: #9ca3af !important; /* Muted text for disabled */
+  color: #9ca3af !important; /* gray-400 */
   cursor: not-allowed;
-  background-color: #f9fafb !important; /* Slightly off-white disabled bg */
-  border-color: #e5e7eb !important;
+  background-color: #f9fafb !important; /* gray-50 */
+  border-color: #e5e7eb !important; /* gray-200 */
 }
 .pagination-custom-figma button.pagination-arrow:disabled svg {
-    color: #9ca3af !important; /* Mute icon in disabled arrow */
-}
-
-.pagination-custom-figma button.pagination-item.active {
-  background-color: #1f2937 !important; /* Dark active page background */
-  border-color: #1f2937 !important;
-  color: white !important;
-  font-weight: 600; /* Bolder for active page */
+  color: #9ca3af !important; /* gray-400 */
 }
 
 .pagination-custom-figma span.pagination-ellipsis {
@@ -198,29 +273,76 @@
   justify-content: center;
   border: none;
   background-color: transparent;
-  color: #6b7280; /* Ellipsis color */
+  color: #6b7280; /* gray-500 */
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1;
   cursor: default;
 }
 
+.pagination-summary-custom { /* The div wrapping "Showing x-y of z" and pagination */
+  /* Bootstrap classes handle flex and justify-content-between */
+}
+.pagination-summary-custom .text-muted.small { /* "Showing x-y of z" text */
+  font-size: 0.875rem; /* 14px */
+  color: #6b7280 !important; /* gray-500 */
+}
 
-/* --- Message Card Styles --- */
-.loading-message-card,
-.no-data-card, /* This class is used in VehicleModelTable.js as well */
-.error-message-card {
+
+/* --- Message Card Styles (Loading, No Data, Error) --- */
+/* These can be used by DynamicTable or VehicleModelPage for overall messages */
+.dynamic-table-message { /* Default class from DynamicTable */
   background-color: #ffffff;
   border-radius: 0.5rem; /* 8px */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0,0,0,0.05);
-  padding: 2rem 2.5rem; /* Generous padding */
+  padding: 2rem 2.5rem;
   text-align: center;
-  color: #6b7280; /* Muted text color */
-  margin-top: 1.25rem; /* 20px */
+  color: #6b7280; /* gray-500 */
+  margin-top: 1.25rem;
   font-size: 0.9rem;
 }
-.error-message-card {
-    color: #991b1b; /* Darker red for error text */
-    background-color: #fef2f2; /* Light red background for error */
-    /* border: 1px solid #fecaca; /* Optional: Red border for error */
+
+/* Specific class for "No Data" message (can be same as general message or styled differently) */
+.no-data-card-look { /* Used by DynamicTable, ensure it matches desired style */
+  /* Inherits from .dynamic-table-message if applied on same element,
+     or define fully if it's a standalone class */
+}
+
+/* Alert styling (Bootstrap Alerts are generally good, but can be tweaked) */
+.alert { /* General tweaks to Bootstrap alerts if needed */
+  border-radius: 6px;
+  font-size: 0.9rem;
+  padding: 0.8rem 1rem;
+}
+.alert-danger { /* Specific for error alerts */
+  /* color: #991b1b; */ /* Bootstrap default is often fine */
+  /* background-color: #fef2f2; */
+  /* border-color: #fecaca; */
+}
+.alert-success { /* Specific for success alerts */
+  /* Styles for success alerts */
+}
+
+/* Styling for the table itself if `DynamicTable` doesn't fully cover it */
+/* Example: Table wrapper from VehicleModelTable if you pass wrapperClassName */
+.vehicle-model-table-wrapper {
+  /* border-radius: 0.5rem; /* From old CSS */
+  /* box-shadow: ...; /* From old CSS */
+  /* overflow: hidden; /* From old CSS - to clip table corners */
+}
+
+/* Ensure table from DynamicTable aligns with Figma styles */
+.data-table-figma-style {
+  /* ... styles for the table, th, td ... */
+  /* For example, border styles for cells */
+}
+.data-table-figma-style th {
+  /* background-color: #f9fafb; /* Light gray header */
+  /* color: #374151; /* Darker header text */
+  /* font-weight: 500; */
+  /* text-transform: uppercase; */
+  /* font-size: 0.75rem; /* Smaller header text */
+}
+.data-table-figma-style td {
+  /* vertical-align: middle; */
 }

@@ -30,12 +30,15 @@ class VehicleModelController extends Controller
             if ($statusValue === 'available') { $query->where('is_available', true); }
             elseif ($statusValue === 'unavailable') { $query->where('is_available', false); }
         }
-        if ($request->filled('filter_fuel_type')) { $query->where('fuel_type', $request->input('filter_fuel_type')); }
+        if ($request->filled('filter_fuel_type')) { $query->where('fuel_type', 'LIKE', '%' . $request->input('filter_fuel_type') . '%'); }
         if ($request->filled('search') && $request->input('search') !== '') {
             $searchTerm = $request->input('search');
             $query->where(function (Builder $q) use ($searchTerm) {
                 $q->where('title', 'LIKE', "%{$searchTerm}%")->orWhere('brand', 'LIKE', "%{$searchTerm}%")->orWhere('model', 'LIKE', "%{$searchTerm}%")->orWhere('id', 'LIKE', "{$searchTerm}%");
             });
+        }
+        if ($request->filled('filter_transmission')) {
+    $query->where('transmission', 'LIKE', '%' . $request->input('filter_transmission') . '%');
         }
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');

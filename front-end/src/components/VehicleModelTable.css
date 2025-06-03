@@ -1,75 +1,186 @@
-/* src/components/VehicleModelTable.css or global styles */
+/* src/components/VehicleModelTable.css */
+/* Styles adapted from DynamicTable.css to achieve an alternating card-row look */
 
-.vehicle-model-table-wrapper {
-  overflow-x: auto; /* Ensures table is scrollable on small screens if needed */
+/* --- Wrapper for the entire table structure --- */
+.table-wrapper-figma-style {
+  width: 100%;
+  margin-top: 1.25rem; 
+  font-family: 'Poppins', sans-serif; /* Ensure Poppins font for the wrapper */
 }
 
-.vehicle-model-table th.sortable-header {
-  cursor: pointer;
-  user-select: none; /* Prevents text selection on click */
+/* --- Styling for the <Table> component from react-bootstrap --- */
+.data-table-figma-style {
+  margin-bottom: 0 !important; 
+  border: none !important;      
+  font-size: 0.875rem;        
+  border-collapse: separate !important; 
+  border-spacing: 0 8px !important;   
+  background-color: transparent; 
+  width: 100%; 
 }
 
-.vehicle-model-table th.sortable-header:hover {
-  background-color: #f0f0f0; /* Light hover for sortable headers */
+/* --- Table Header Styling --- */
+.data-table-figma-style thead.table-header-figma-style tr {
+  background-color: #ffffff !important; 
+  /* border-radius is applied to th elements below */
 }
 
-.model-thumbnail {
-  width: 60px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
+.data-table-figma-style thead.table-header-figma-style th {
+  background-color: transparent !important; 
+  color: #6b7280 !important;           
+  text-transform: uppercase;
+  font-size: 0.75rem;                   
+  letter-spacing: 0.05em;
+  padding: 12px 24px !important;        
+  text-align: left;                     
+  border: none !important;  
+  font-weight: 600 !important;
+  white-space: nowrap;    
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); 
+}
+.data-table-figma-style thead.table-header-figma-style tr th:first-child {
+  border-top-left-radius: 50px  !important;
+  border-bottom-left-radius: 50px  !important; 
+}
+.data-table-figma-style thead.table-header-figma-style tr th:last-child {
+  border-top-right-radius: 50px !important;
+  border-bottom-right-radius: 50px !important; 
 }
 
-.model-thumbnail-placeholder {
-  width: 60px;
-  height: 40px;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  color: #aaa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  border: 1px solid #e0e0e0;
+/* --- Table Body Styling for Alternating "Cards" --- */
+/* EVEN data rows get the card style */
+.data-table-figma-style tbody tr:nth-child(even) {
+  background-color: #ffffff !important; 
+}
+.data-table-figma-style tbody tr:nth-child(even) td {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); 
+  border-top: none !important; 
+  border-bottom: none !important; 
+}
+.data-table-figma-style tbody tr:nth-child(even) td:first-child {
+  border-top-left-radius: 50px;
+  border-bottom-left-radius: 50px;
+}
+.data-table-figma-style tbody tr:nth-child(even) td:last-child {
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
 }
 
-.status-badge {
-  font-size: 0.75rem;
-  padding: 0.3em 0.6em;
+/* ODD data rows are "transparent" */
+.data-table-figma-style tbody tr:nth-child(odd) {
+  /* background-color: transparent !important; */ /* Let it inherit or be default for no card style */
+  /* box-shadow: none !important; */ /* No shadow if not a card */
+}
+.data-table-figma-style tbody tr:nth-child(odd) td {
+  background-color: transparent !important; 
+  border-top: none !important; 
+  border-bottom: 1px solid #e5e7eb !important; /* Subtle line for odd rows, if desired */
+  border-radius: 0 !important; 
+}
+/* Adjust first odd row if it needs no top border */
+.data-table-figma-style tbody tr:nth-child(odd):first-child td {
+    border-top: none !important;
+}
+/* Remove bottom border from the very last odd row if it's the last child */
+.data-table-figma-style tbody tr:nth-child(odd):last-child td {
+    border-bottom: none !important;
 }
 
-.action-icon-btn svg {
+
+/* General TD styling (padding, default text color, vertical alignment) */
+.data-table-figma-style tbody td {
+  padding: 12px 24px !important; /* Consistent padding with header for alignment */
+  color: #374151;                 
   vertical-align: middle;
+  border: none; /* Default: no border, overridden by nth-child */
 }
 
-.action-icon-btn:hover {
-    background-color: rgba(0,0,0,0.05); /* Subtle hover for icon buttons */
+/* --- Specific Cell Content Styling (Examples) --- */
+.text-muted-custom { 
+  color: #9ca3af !important; /* Ensure higher specificity if needed */
+  font-style: italic;
+}
+.data-cell-name { 
+  font-weight: 500;
+  color: #111827;
+}
+.data-cell-description { 
+  color: #4b5563;
+}
+.data-cell-date { 
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
-/* Column width hints - adjust as needed */
-.col-thumbnail { width: 80px; }
-.col-title { min-width: 200px; }
-.col-brand { min-width: 100px; }
-.col-model { min-width: 100px; }
-.col-year { width: 80px; }
-.col-type { min-width: 100px; }
-.col-price { width: 120px; }
-.col-status { width: 110px; }
-.col-actions { width: 120px; text-align: right !important; } /* Ensure actions are right aligned */
+/* --- Badge Styling (using classes from DynamicTable.css) --- */
+.badge { 
+  display: inline-block;
+  padding: 0.4em 0.75em; /* Adjusted padding */
+  font-size: 0.75rem;    /* Adjusted font size */
+  font-weight: 600;      /* Adjusted font weight */
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 50px; /* Pill shape */
+}
 
-.vehicle-model-table .text-primary-emphasis { /* Bootstrap 5.3 specific class */
-    color: var(--bs-primary-text-emphasis) !important;
+.bg-success-light { background-color: #065F46 !important; } 
+.text-success-dark { color: #e8fff8 !important; }      
+
+.bg-danger-light { background-color: #991B1B !important; } 
+.text-danger-dark { color: #ffeeee !important; }       
+
+.bg-warning-light { background-color: #92400E !important; } 
+.text-warning-dark { color: #FEF3C7 !important; }      
+.bg-secondary-light { background-color: #2b2b2b !important; } 
+.text-secondary-dark { color: #e7e7e7 !important; } 
+.bg-primary-light { background-color:#1E40AF !important; }   
+.text-primary-dark { color: #DBEAFE !important; }        
+.bg-info-light { background-color:#146a6d !important; }  
+.text-info-dark { color: #d1fcfd !important; } 
+
+/* --- Action Buttons in Table --- */
+.actions-cell-figma { 
+  white-space: nowrap; 
+  text-align: right !important; /* Ensure actions are right-aligned */
 }
-.vehicle-model-table .text-success-emphasis {
-    color: var(--bs-success-text-emphasis) !important;
+.action-button-table-figma { 
+  color: #6b7280 !important; 
+  padding: 0.2rem 0.3rem !important; 
+  margin-left: 0.5rem !important;   
+  text-decoration: none !important;
+  line-height: 1;
+  border: none !important;
+  background: none !important;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out; 
 }
-.vehicle-model-table .bg-success-subtle {
-    background-color: var(--bs-success-bg-subtle) !important;
+.action-button-table-figma:first-child {
+  margin-left: 0 !important;
 }
-.vehicle-model-table .text-danger-emphasis {
-    color: var(--bs-danger-text-emphasis) !important;
+.action-button-table-figma.view { color: #10b981 !important; }
+.action-button-table-figma.edit { color: #3b82f6 !important; }
+.action-button-table-figma.delete { color: #ef4444 !important; }
+
+.action-button-table-figma:hover.view { color: #059669 !important; background-color: rgba(16, 185, 129, 0.1) !important; border-radius:4px;}
+.action-button-table-figma:hover.edit { color: #2563eb !important; background-color: rgba(59, 130, 246, 0.1) !important; border-radius:4px;}
+.action-button-table-figma:hover.delete { color: #dc2626 !important; background-color: rgba(239, 68, 68, 0.1) !important; border-radius:4px;}
+
+
+/* --- Message Styles for Loading/No Data (within the table area) --- */
+.dynamic-table-message {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-family: 'Poppins', sans-serif;
 }
-.vehicle-model-table .bg-danger-subtle {
-    background-color: var(--bs-danger-bg-subtle) !important;
+.dynamic-table-message.no-data-card-look {
+  background-color: #ffffff;
+  border-radius: 50px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  padding: 2.5rem;
+  text-align: center;
+}
+h1 h2 h3 h4 h5 h6{
+    font-family: 'Roboto', sans-serif;
+
 }

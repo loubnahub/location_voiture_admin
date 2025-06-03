@@ -1,142 +1,132 @@
 // src/components/VehicleModelTable.jsx
-import React from 'react';
-import { Table, Button, Badge } from 'react-bootstrap'; // Removed Image as thumbnail isn't used directly here
-import { LuArrowUpDown, LuArrowUp, LuArrowDown, LuEye, LuTrash2 } from 'react-icons/lu';
-import { Edit2 } from 'lucide-react'; // Corrected import for Edit2
-// import './VehicleModelTable.css'; // Ensure this CSS file is created and styled if you have custom styles
+import React, { useState } from 'react'; // Added useState
+import { Badge, Modal, Button as BootstrapButton, Spinner } from 'react-bootstrap'; // Added Modal, BootstrapButton, Spinner
+import DynamicTable from './DynamicTable'; // Assuming DynamicTable.jsx is in the same folder
+import { AlertTriangle } from 'lucide-react'; // For modal title icon
 
-// Helper to format price
+// Helper to format price (can remain the same)
 const formatPrice = (amount, currency = 'MAD') => {
   if (amount === null || amount === undefined) return 'N/A';
   const numericAmount = Number(amount);
   if (isNaN(numericAmount)) return 'N/A';
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(numericAmount);
-};
-
-// Helper to format date
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  try {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric', month: 'short', day: 'numeric'
-    });
-  } catch (e) {
-    return 'Invalid Date';
-  }
+  // Using the simple string concatenation as per your example
+  return numericAmount + ' ' + currency;
 };
 
 const VehicleModelTable = ({
   models,
-  onSort,
-  currentSortBy,
-  currentSortDirection,
-  onViewDetails, // Prop to handle navigation to detail view
-  onEditModel,   // Prop to handle navigation to edit view/mode
-  onDeleteModel, // Prop to handle delete action
+  loading,
+  onViewDetails,
+  onEditModel,  // This will be used to navigate to detail view in edit mode
+  onDeleteModel, // This will be called after confirmation
+  isDeleting, // New prop: boolean to indicate if a delete operation is in progress (for spinner on confirm button)
 }) => {
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [modelToDelete, setModelToDelete] = useState(null); // To store { id, title } of model
 
-  const renderSortIcon = (columnKey) => {
-    if (currentSortBy === columnKey) {
-      return currentSortDirection === 'asc' ? <LuArrowUp className="ms-1" size={14} /> : <LuArrowDown className="ms-1" size={14} />;
-    }
-    return <LuArrowUpDown className="ms-1 text-muted" size={14} />;
+  const handleDeleteClick = (item) => {
+    setModelToDelete({ id: item.id, title: item.title });
+    setShowDeleteConfirmModal(true);
   };
 
-  const tableHeaders = [
-    { key: 'title', label: 'Title', sortable: true, className: 'col-title' },
-    { key: 'brand', label: 'Brand', sortable: true, className: 'col-brand' },
-    { key: 'model', label: 'Model', sortable: true, className: 'col-model' },
-    { key: 'year', label: 'Year', sortable: true, className: 'text-center col-year' },
-    { key: 'vehicle_type_name', label: 'Type', sortable: false, className: 'col-type' },
-    { key: 'fuel_type', label: 'Fuel', sortable: true, className: 'col-fuel' },
-    { key: 'transmission', label: 'Transmission', sortable: true, className: 'col-transmission' },
-    { key: 'number_of_seats', label: 'Seats', sortable: true, className: 'text-center col-seats' },
-    { key: 'base_price_per_day', label: 'Price/Day', sortable: true, className: 'text-end col-price' },
-    { key: 'is_available', label: 'Status', sortable: true, className: 'text-center col-status' },
-    { key: 'created_at', label: 'Created', sortable: true, className: 'col-created' },
-    { key: 'actions', label: 'Actions', sortable: false, className: 'text-center col-actions' },
+  const confirmDelete = () => {
+    if (modelToDelete && onDeleteModel) {
+      onDeleteModel(modelToDelete.id); // Call the actual delete handler passed from parent
+    }
+    setShowDeleteConfirmModal(false);
+    setModelToDelete(null);
+  };
+
+  const columns = [
+    {
+      key: 'title',
+      header: 'Title',
+      className: 'col-title ', 
+      render: (item) => (
+        <div>
+          {/* Using dt-column-no-wrap and dt-column-wide directly in the DynamicTable.css would be better */}
+          <span className="fw-medium" style={{ whiteSpace: 'nowrap', minWidth: '150px', display: 'inline-block' }}> 
+            {item.title || 'N/A'}
+          </span>
+        </div>
+      ),
+    },
+    { key: 'brand', header: 'Brand', className: 'col-brand' },
+    {
+      key: 'model_name',
+      header: 'Model',
+      className: 'col-model',
+      render: (item) => item.model_name || item.model || 'N/A',
+    },
+    { key: 'year', header: 'Year', className: 'text-center col-year', textAlign: 'center' },
+    { key: 'vehicle_type_name', header: 'Type', className: 'col-type' },
+    { key: 'fuel_type', header: 'Fuel', className: 'col-fuel' },
+    { key: 'transmission', header: 'Transmission', className: 'col-transmission' },
+    {
+      key: 'base_price_per_day',
+      header: 'Price/Day',
+      className: 'text-end col-price',
+      textAlign: 'end',
+      render: (item) => formatPrice(item.base_price_per_day, 'MAD'),
+    },
+    {
+      key: 'is_available',
+      header: 'Status',
+      className: 'text-center col-status',
+      textAlign: 'center',
+      render: (item) =>
+        item.is_generally_available || item.is_available ? (
+          <Badge pill bg="success-subtle" text="success-emphasis" className="status-badge">Available</Badge>
+        ) : (
+          <Badge pill bg="danger-subtle" text="danger-emphasis" className="status-badge">Unavailable</Badge>
+        ),
+    },
   ];
 
-  if (!models || models.length === 0) {
-    // The parent component (VehicleModelPage) should ideally handle the "No models found" message.
-    // Returning null here is fine if the parent does that.
-    return null; 
-  }
+  // Actions for DynamicTable
+  // The 'onDelete' here will now trigger our local confirmation modal
+  const tableActions = {
+    onView: onViewDetails ? (item) => onViewDetails(item.id) : undefined,
+    onEdit: onEditModel ? (item) => onEditModel(item.id) : undefined, // This is correct, parent handles navigation with mode=edit
+    onDelete: handleDeleteClick, // Changed to call our local handler
+  };
 
   return (
-    <div className="table-responsive vehicle-model-table-wrapper shadow-sm rounded">
-      <Table hover responsive="md" className="vehicle-model-table mb-0 align-middle">
-        <thead className="table-light">
-          <tr>
-            {tableHeaders.map(header => (
-              <th
-                key={header.key}
-                className={`${header.className || ''} ${header.sortable ? 'sortable-header' : ''}`}
-                onClick={header.sortable && onSort ? () => onSort(header.key) : undefined}
-                style={header.sortable ? { cursor: 'pointer' } : {}}
-              >
-                {header.label}
-                {header.sortable && renderSortIcon(header.key)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {models.map((model) => (
-            <tr key={model.id}>
-              {/* Data cells - ensure data accessors match your API response for 'models' array items */}
-              <td className={tableHeaders.find(h => h.key === 'title')?.className}>
-                <span className="fw-medium text-primary-emphasis d-block">{model.title || 'N/A'}</span>
-                <small className="text-muted">ID: {model.id ? model.id.substring(0, 8) + '...' : 'N/A'}</small>
-              </td>
-              <td className={tableHeaders.find(h => h.key === 'brand')?.className}>{model.brand || 'N/A'}</td>
-              <td className={tableHeaders.find(h => h.key === 'model')?.className}>{model.model_name || model.model || 'N/A'}</td> {/* API uses model_name or model */}
-              <td className={tableHeaders.find(h => h.key === 'year')?.className}>{model.year || 'N/A'}</td>
-              <td className={tableHeaders.find(h => h.key === 'vehicle_type_name')?.className}>{model.vehicle_type_name || 'N/A'}</td>
-              <td className={tableHeaders.find(h => h.key === 'fuel_type')?.className}>{model.fuel_type || 'N/A'}</td>
-              <td className={tableHeaders.find(h => h.key === 'transmission')?.className}>{model.transmission || 'N/A'}</td>
-              <td className={tableHeaders.find(h => h.key === 'number_of_seats')?.className}>{model.number_of_seats || 'N/A'}</td>
-              <td className={tableHeaders.find(h => h.key === 'base_price_per_day')?.className}>
-                {formatPrice(model.base_price_per_day, 'MAD')}
-              </td>
-              <td className={tableHeaders.find(h => h.key === 'is_available')?.className}>
-                {model.is_generally_available || model.is_available ? ( // Check both possible keys from API
-                  <Badge pill bg="success-subtle" text="success-emphasis" className="status-badge">Available</Badge>
-                ) : (
-                  <Badge pill bg="danger-subtle" text="danger-emphasis" className="status-badge">Unavailable</Badge>
-                )}
-              </td>
-              <td className={tableHeaders.find(h => h.key === 'created_at')?.className}>
-                {formatDate(model.created_at)} {/* API usually sends 'created_at' directly */}
-              </td>
-              <td className={tableHeaders.find(h => h.key === 'actions')?.className}>
-                <Button 
-                  variant="link" size="sm" className="p-1 me-1 action-icon-btn text-info" 
-                  title="View Details" 
-                  onClick={() => onViewDetails && onViewDetails(model.id)}
-                >
-                  <LuEye size={18} />
-                </Button>
-                <Button 
-                  variant="link" size="sm" className="p-1 me-1 action-icon-btn text-primary" 
-                  title="Edit Model" 
-                  onClick={() => onEditModel && onEditModel(model.id)}
-                >
-                  <Edit2 size={18} />
-                </Button>
-                <Button 
-                  variant="link" size="sm" className="p-1 action-icon-btn text-danger" 
-                  title="Delete Model" 
-                  onClick={() => onDeleteModel && onDeleteModel(model.id)}
-                >
-                  <LuTrash2 size={18} />
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
+    <>
+      <DynamicTable
+        columns={columns}
+        items={models}
+        loading={loading}
+        actions={tableActions}
+        getKey={(item) => item.id}
+        noDataMessage="No vehicle models found to display."
+        _resourceNameForDebug="VehicleModel"
+      />
+
+      <Modal show={showDeleteConfirmModal} onHide={() => setShowDeleteConfirmModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="text-danger">
+            <AlertTriangle size={24} className="me-2" style={{ verticalAlign: 'bottom' }} /> Confirm Deletion
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the model "<strong>{modelToDelete?.title || 'this model'}</strong>"? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <BootstrapButton variant="secondary" onClick={() => setShowDeleteConfirmModal(false)} disabled={isDeleting}>
+            Cancel
+          </BootstrapButton>
+          <BootstrapButton variant="danger" onClick={confirmDelete} disabled={isDeleting}>
+            {isDeleting ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-1" />
+                Deleting...
+              </>
+            ) : "Delete"}
+          </BootstrapButton>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 };
 

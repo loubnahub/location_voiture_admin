@@ -8,7 +8,10 @@
   font-family: 'Poppins', sans-serif;
   /* padding from Bootstrap (p-4) is applied in ResourcePage.jsx */
 }
+h1 h2 h3 h4 h5 h6{
+    font-family: 'Roboto', sans-serif;
 
+}
 /* --- Page Header (Title and Create Button) --- */
 /* These classes are used by ResourcePage.jsx */
 .page-header-custom {

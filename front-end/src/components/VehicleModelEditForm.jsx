@@ -1,20 +1,21 @@
+// src/components/VehicleModelEditForm.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Row, Col, Button, Form, Spinner, Alert, ListGroup, Modal } from 'react-bootstrap';
 import {
   LuTag, LuCalendarDays, LuDollarSign, LuFuel, LuDoorOpen, LuUsers, LuSettings2, LuInfo,
-  LuGripVertical, LuTrash2, LuShieldCheck
+  LuGripVertical, LuTrash2, LuShieldCheck, LuGalleryHorizontal,LuArrowLeft // Added for the new button
 } from 'react-icons/lu';
 import { PlusCircle, XCircle, Save } from 'lucide-react';
-
+import {useNavigate} from 'react-router-dom'
 import {
   fetchAllFeatures,
   fetchAllExtras,
   fetchAllInsurancePlans,
   fetchAllVehicleTypes
 } from '../services/api';
-import './VehicleModelDetailView.css';
+import './VehicleModelDetailView.css'; // Assuming this contains relevant styles
 
-// --- ICON HELPERS ---
+// --- ICON HELPERS --- (Keep as is)
 const formatPrice = (amount, currency = 'MAD') => {
   if (amount === null || amount === undefined) return 'N/A';
   const numericAmount = Number(amount);
@@ -51,6 +52,7 @@ const InsurancePlanIcon = () => {
   const commonClasses = "text-secondary extra-icon";
   return <LuShieldCheck size={22} className={commonClasses} title="Insurance Plan" />;
 };
+// --- END ICON HELPERS ---
 
 const VehicleModelEditForm = ({
   modelId,
@@ -63,7 +65,9 @@ const VehicleModelEditForm = ({
   onCancel,
   isSavingParent,
   saveErrorParent,
+  onOpenMediaManager, // <<<< NEW PROP
 }) => {
+  // ... (all existing state and useEffect hooks remain the same) ...
   const [formData, setFormData] = useState({});
   const [editableFeatures, setEditableFeatures] = useState([]);
   const [editableExtras, setEditableExtras] = useState([]);
@@ -153,7 +157,7 @@ const VehicleModelEditForm = ({
     setSelectedExtrasInModal([]); setShowAddExtraModal(false);
   };
   const handleRemoveExtraFromList = (tempId) => setEditableExtras(editableExtras.filter(e => e._temp_id !== tempId));
-
+  const navigate=useNavigate()
   // --- Insurance Plan Handlers ---
   const handleTogglePlanInModal = (planId) => setSelectedPlansInModal(prev => prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]);
   const handleAddSelectedPlans = () => {
@@ -180,7 +184,7 @@ const VehicleModelEditForm = ({
   // --- Save payload ---
   const prepareSavePayload = () => {
     const payload = { ...formData };
-      delete payload.available_colors; // <-- Add this line
+    delete payload.available_colors;
     payload.year = parseInt(payload.year, 10) || null;
     payload.number_of_seats = parseInt(payload.number_of_seats, 10) || 0;
     payload.number_of_doors = parseInt(payload.number_of_doors, 10) || 0;
@@ -204,20 +208,47 @@ const VehicleModelEditForm = ({
     { label: 'Transmission', icon: 'transmission', field: 'transmission', type: 'text' },
   ];
 
+
   return (
-    <div className="vehicle-model-edit-form-wrapper">
-      <div className="mb-4">
-        <h3 className="text-primary">Editing: {initialFormData?.title || 'Vehicle Model'}</h3>
-        <hr />
-      </div>
+    <div className="vehicle-model-edit-form-wrapper bg-white p-5  rounded-4 shadow-sm ">
+      <Row className="mb-4 align-items-center">
+        <Col>
+                            <Button
+                            
+                            className="back-link-maquette bg-light text-dark p-2 shadow-sm border-0 "
+                            
+                            onClick={() => navigate(-1)}
+                            title="Back to Details View"
+                            >
+                            <LuArrowLeft size={22} />
+                            </Button>
+                           
+                        
+        </Col>
+        {modelId && onOpenMediaManager && ( // Only show if modelId exists and handler is provided
+            <Col xs="auto">
+                <Button 
+                    variant="dark" 
+                    onClick={onOpenMediaManager} 
+                    size="sm"
+                    className="manage-media-btn-maquette rounded-2 py-2 px-3"
+                    disabled={isSavingParent}
+                >
+                    <LuGalleryHorizontal size={16} className="me-2" /> Manage Media & Colors
+                </Button>
+            </Col>
+        )}
+        
+      </Row>
+      <hr className="mt-0 mb-4" />
+
       {saveErrorParent && <Alert variant="danger">{saveErrorParent}</Alert>}
 
       <Form onSubmit={e => { e.preventDefault(); onSave(prepareSavePayload()); }}>
-        {/* Core Model Fields */}
         <Row className="mb-3">
           <Form.Group as={Col} md="8" controlId="formEditModelTitle">
             <Form.Label>Title</Form.Label>
-            <Form.Control type="text" name="title" value={formData.title || ''} onChange={handleInputChange} placeholder="Vehicle Model Title" className="h1-like-input" required />
+            <Form.Control type="text" name="title" value={formData.title || ''} onChange={handleInputChange} placeholder="Vehicle Model Title" className="h1-like-input bg-transparent" required />
           </Form.Group>
           <Form.Group as={Col} md="4" controlId="formEditIsGenerallyAvailable" className="pt-md-4">
             <Form.Check type="switch" name="is_generally_available" label="Generally Available"
@@ -225,18 +256,18 @@ const VehicleModelEditForm = ({
           </Form.Group>
         </Row>
 
-        <div className="mb-4 p-3 border rounded bg-light">
+        <div className="mb-4 p-3 border rounded bg-light shadow-sm">
           <h5 className="mb-3 description-title-maquette">Specifications</h5>
           <Row xs={1} md={2} lg={3} className="g-3">
             {specificationsForForm.map((spec) => (
               <Col key={spec.label}>
                 <Form.Group controlId={`formEditSpec-${spec.field}`}>
-                  <Form.Label className="spec-label-maquette mb-1">
+                  <Form.Label className="spec-label-maquette fw-500  mb-1" style={{fontSize:'13px',fontWeight:'500'}}>
                     <SpecIcon type={spec.icon} /> {spec.label}
                   </Form.Label>
                   {spec.type === 'select' ? (
                     <Form.Select
-                      size="sm"
+                      size="md"
                       name={spec.field}
                       value={formData[spec.field] || ''}
                       onChange={handleInputChange}
@@ -249,7 +280,7 @@ const VehicleModelEditForm = ({
                       ))}
                     </Form.Select>
                   ) : (
-                    <Form.Control size="sm" type={spec.type || 'text'} name={spec.field}
+                    <Form.Control size="md" type={spec.type || 'text'} name={spec.field}
                       value={spec.field === 'base_price_per_day' ? (formData[spec.field] ?? '') : (formData[spec.field] || '')}
                       onChange={handleInputChange} step={spec.step} className="form-control-sm-maquette" />
                   )}
@@ -259,7 +290,7 @@ const VehicleModelEditForm = ({
           </Row>
         </div>
 
-        <div className="mb-4 p-3 border rounded bg-light">
+        <div className="mb-4 p-3 border rounded bg-light shadow-sm">
           <Form.Group controlId="formEditModelDescription">
             <Form.Label className="description-title-maquette"><LuInfo size={20} className="me-2" /> Description</Form.Label>
             <Form.Control as="textarea" rows={5} name="description" value={formData.description || ''} onChange={handleInputChange} placeholder="Model description" className="form-control-maquette" />
@@ -267,7 +298,7 @@ const VehicleModelEditForm = ({
         </div>
 
         {/* Editable Features */}
-        <div className="mb-4 p-3 border rounded bg-light editable-section-maquette">
+        <div className="mb-4 p-3 border rounded bg-light shadow-sm">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0 section-title-maquette">Features</h5>
             <Button variant="outline-primary" size="sm" onClick={() => { setSelectedFeaturesInModal([]); setShowAddFeatureModal(true); }} className="add-item-btn-maquette">
@@ -288,7 +319,7 @@ const VehicleModelEditForm = ({
         </div>
 
         {/* Editable Extras */}
-        <div className="mb-4 p-3 border rounded bg-light editable-section-maquette">
+        <div className="mb-4 p-3 border rounded bg-light shadow-sm">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0 section-title-maquette">Extras</h5>
             <Button variant="outline-primary" size="sm" onClick={() => { setSelectedExtrasInModal([]); setShowAddExtraModal(true); }} className="add-item-btn-maquette">
@@ -308,7 +339,7 @@ const VehicleModelEditForm = ({
         </div>
 
         {/* Editable Insurance Plans */}
-        <div className="mb-4 p-3 border rounded bg-light editable-section-maquette">
+        <div className="mb-4 p-3 border rounded bg-light shadow-sm">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0 section-title-maquette">Insurance Plans</h5>
             <Button variant="outline-primary" size="sm" onClick={() => { setSelectedPlansInModal([]); setShowAddInsurancePlanModal(true); }} className="add-item-btn-maquette">
@@ -337,7 +368,7 @@ const VehicleModelEditForm = ({
           </ListGroup>
         </div>
 
-        {/* Form Actions */}
+
         <div className="mt-4 pt-3 border-top text-end edit-actions-footer-maquette">
           <Button variant="outline-secondary" type="button" onClick={onCancel} disabled={isSavingParent} className="me-2 cancel-btn-maquette">
             <XCircle size={18} className="me-1" /> Cancel
@@ -348,7 +379,7 @@ const VehicleModelEditForm = ({
         </div>
       </Form>
 
-      {/* MODALS */}
+      {/* MODALS (Keep as is) */}
       <Modal show={showAddFeatureModal} onHide={() => { setShowAddFeatureModal(false); setSelectedFeaturesInModal([]); }} centered scrollable>
         <Modal.Header closeButton><Modal.Title>Select Features to Add</Modal.Title></Modal.Header>
         <Modal.Body>
@@ -435,6 +466,7 @@ const VehicleModelEditForm = ({
           </Button>
         </Modal.Footer>
       </Modal>
+
     </div>
   );
 };

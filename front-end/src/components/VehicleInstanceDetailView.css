@@ -3,7 +3,10 @@
 body { /* Or your app's root element if body is too global */
   background-color: #f0f2f5; /* Light grey background as seen in Figma */
 }
+h1 h2 h3 h4 h5 h6{
+    font-family: 'Roboto', sans-serif;
 
+}
 .vehicle-instance-detail-view .container {
   padding-top: 2rem;    /* Adjust as per Figma */
   padding-bottom: 2rem; /* Adjust as per Figma */

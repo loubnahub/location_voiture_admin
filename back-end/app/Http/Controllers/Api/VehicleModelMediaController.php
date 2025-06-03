@@ -51,7 +51,7 @@ class VehicleModelMediaController extends Controller
                 'required',
                 'file',
     'mimetypes:image/jpeg,image/png,image/gif,image/webp,model/gltf-binary,application/octet-stream',
-                'max:10240',
+                'max:20480',
             ],
             'color_hexes' => 'nullable|array',
             'color_hexes.*' => 'nullable|string|max:10',

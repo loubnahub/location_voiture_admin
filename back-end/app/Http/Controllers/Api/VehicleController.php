@@ -366,6 +366,7 @@ public function show(Request $request, Vehicle $vehicle)
             'base_price_per_day' => (float) $model->base_price_per_day,
             'description' => $model->description,
             'main_image_url' => $mainImageUrl,
+            'is_available'=>$model->is_available,
             'all_media' => $model->media ? $model->media->map(fn($m) => ([
                 'id' => $m->id, 
                 'url' => $m->url ? Storage::url($m->url) : null,

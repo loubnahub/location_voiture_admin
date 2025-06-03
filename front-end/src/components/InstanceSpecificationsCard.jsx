@@ -15,7 +15,6 @@ const InstanceSpecificationsCard = ({ model, instanceStatus }) => {
     );
   }
 
-  const isInStock = instanceStatus === 'Available'; 
 
   const specs = [
      { 
@@ -34,10 +33,10 @@ const InstanceSpecificationsCard = ({ model, instanceStatus }) => {
       key: 'doors' 
     },
     { 
-      value: isInStock ? 'Active' : 'Not Active', 
-      icon: isInStock ? <CheckSquare size={25} className="spec-icon text-success-figma" /> : <XSquare size={20} className="spec-icon text-danger-figma" />, 
+      value: instanceStatus ? 'Active' : 'Not Active', 
+      icon: instanceStatus ? <CheckSquare size={25} className="spec-icon text-success-figma" /> : <XSquare size={20} className="spec-icon text-danger-figma" />, 
       key: 'stock',
-      valueClassName: isInStock ? 'text-success-figma' : 'text-danger-figma' // For styling the "Yes"/"No" text
+      valueClassName: instanceStatus ? 'text-success-figma' : 'text-danger-figma' // For styling the "Yes"/"No" text
     },
     { 
       value: model.base_price_per_day ? `${parseFloat(model.base_price_per_day).toFixed(2)} MAD` : 'N/A', 

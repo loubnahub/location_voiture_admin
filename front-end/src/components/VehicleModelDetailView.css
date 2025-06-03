@@ -1,8 +1,7 @@
 /* --- General Page and Card Styling --- */
-.vehicle-model-detail-view {
-  background-color: #f4f6f8; /* Light purplish-gray background like maquette */
-  /* padding-top: 2rem; */ /* Done with Bootstrap py-md-4 */
-  /* padding-bottom: 2rem; */
+h1 h2 h3 h4 h5 h6{
+    font-family: 'Roboto', sans-serif;
+
 }
 
 .detail-card {
@@ -166,7 +165,7 @@
   border-color: #dee2e6; /* border-gray-300 */
   color: #495057; /* text-gray-700 */
   font-size: 0.875rem;
-  padding: 0.5rem 1rem;
+  box-shadow:0px 0px 5px 1px #97979887 ;
 }
 .license-plate-button:hover, .license-plate-button:focus {
   background-color: #e9ecef; /* Lighter gray hover */
@@ -210,8 +209,8 @@
 .spec-item-maquette {
   background-color: #f8f9fa; /* bg-light or a custom light gray */
   padding: 0.75rem;
-  border-radius: 0.375rem; /* rounded */
-  /* box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* shadow-sm */
+  border-radius: 0.6rem; /* rounded */
+  box-shadow:0px 0px 5px 1px #97979887 ;
   border: 1px solid #e9ecef;
   height: 100%; /* For equal height columns in a row */
 }
@@ -256,11 +255,12 @@
 /* Description Section */
 .description-section-maquette {
   margin-top: 2rem;
-  background-color: #f8f9fa; /* Card-like background */
+  background-color: #f8f9fa; 
   padding: 1.5rem;
   border-radius: 0.5rem;
-  /* box-shadow: 0 1px 3px rgba(0,0,0,0.05); */
-  border: 1px solid #e9ecef;
+  box-shadow:0px 0px 5px 1px #97979887 ;
+
+
 }
 .description-title-maquette {
   font-size: 1.125rem; /* approx 18px */
@@ -295,9 +295,9 @@
 }
 
 .feature-extras-card, .editable-section-maquette {
-  background-color: #f8f9fa; /* Maquette's light card background */
   padding: 1.25rem;
-  border-radius: 0.5rem; /* Maquette's card radius */
+  box-shadow:0px 0px 5px 1px #97979887 ;
+  border-radius: 1rem; /* Maquette's card radius */
   /* box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* Subtle shadow */
   border: 1px solid #e9ecef;
   margin-bottom: 1.5rem; /* Space between cards */
@@ -430,7 +430,7 @@
 
 /* Custom Scrollbar for maquette (Subtle) */
 .list-items-scrollable::-webkit-scrollbar { width: 5px; }
-.list-items-scrollable::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px;}
+.list-items-scrollable::-webkit-scrollbar-track { background: #f1f1f1ef; border-radius: 10px;}
 .list-items-scrollable::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px;}
 .list-items-scrollable::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
