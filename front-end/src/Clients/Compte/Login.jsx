@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { Mail, Eye, EyeOff } from 'lucide-react';
 import Header from '../Header/Nav'; // Assuming this path is correct
 
-// LoDriveLogo can be reused if you keep it in a shared location or copy it here
-// For simplicity, I'll assume it's accessible or you can copy it from SignUpPage.jsx
 
-const LoginPage = () => {
+const LoginClient = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,29 +18,24 @@ const LoginPage = () => {
     e.preventDefault();
     console.log('Login Data:', formData);
     alert('Login simulated!');
-    // Perform login logic, then redirect
   };
 
-  // --- NEW COLOR SCHEME FOR FORM ---
-  // Base input styles, focus ring updated
+ 
   const inputBaseClass = "w-full rounded-xl text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/70"; // Blue focus ring
   
-  // Input field class, uses base class
   const inputFieldClass = `${inputBaseClass} bg-transparent py-3 pl-4 pr-12`;
   
   // Wrapper for input field + icon area
   const inputWrapperClass = "relative flex items-center bg-slate-800/80 border border-slate-700 rounded-xl shadow-md"; // Cooler gray/slate background
   
-  // Background for the icon part of the input
-  const iconBackgroundClass = "bg-slate-700/70"; // Slightly different slate for icon area, or could be darker e.g., bg-slate-900/70
+  const iconBackgroundClass = "bg-slate-700/70"; 
 
-  // Primary accent color for links and interactive elements
   const accentBlue = "text-blue-400";
   const accentBlueHover = "hover:text-blue-300";
 
   return (
     <div className="min-h-screen bg-[#1A1A1A] text-white flex flex-col">
-      {/* Background  for the section */}
+     
       <div
         className="absolute inset-0 h-full bg-cover bg-center opacity-20 z-0"
         style={{ backgroundImage: "url('/images/Cars/Bently.jpg')" }}
@@ -61,7 +54,7 @@ const LoginPage = () => {
               Your <br /> Account<span className={`${accentBlue}`}>.</span> {/* Changed to accentBlue */}
             </h1>
             <p className="mt-4 text-gray-300 text-base sm:text-lg">
-              Welcome back to LO DRIVE! Access your account.
+              Welcome back to REACLO! Access your account.
             </p>
           </div>
 
@@ -141,4 +134,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default LoginClient;

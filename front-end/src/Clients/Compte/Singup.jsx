@@ -17,7 +17,7 @@ import Header from '../Header/Nav';
 
 
 
-const SignUpPage = () => {
+const SignUpClient = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -209,4 +209,4 @@ const SignUpPage = () => {
   );
 };
 
-export default SignUpPage;
+export default SignUpClient;

@@ -27,6 +27,19 @@ import VehicleModelDetailView from './components/VehicleModelDetailView';
 import VehicleInstanceDetailView from './components/VehicleInstanceDetailView';
 import VehicleDisplayGallery from './components/VehicleDisplayGallery';
 
+
+import LoginClient from './Clients/Compte/Login';
+import Home from './Clients/Home/Home';
+import SignUpClient from './Clients/Compte/Singup';
+import CarColorPage from './Clients/DetailsCars/DetailsCarColor';
+import CarDetails3d from './Clients/DetailsCars/DetailsCar3d';
+import CarDetailPage from './Clients/DetailsCars/DetailsModalCar';
+import OurServiceSection from './Clients/Home/Section/ServiceHome';
+import ContactPage from './Clients/Contact/Section/ContactPage';
+import About from './Clients/About/About';
+import BookingPageClient from './Clients/DetailsCars/RentNow';
+import Vehicle from './Clients/VEHICLE/Vehicle';
+
 // --- Protected Route Component ---
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,9 +79,22 @@ const AuthRedirect = () => {
 function App() {
   return (
     <Router>
+          
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
+            <Route path="/LoginClient" element={<LoginClient />} />  
+            <Route path="/home" element={<Home />} />
+            <Route path="/Signup" element={<SignUpClient />} />
+            <Route path="/LoginClient" element={<LoginClient/>} />  // Example: Client login if different from admin
+            <Route path="/fleet" element={<Vehicle />} /> {/* Lists available vehicles/vehicle models */}   
+            <Route path="/fleet/details/:vehicleId" element={<CarDetailPage />} />
+            <Route path="/booking/:vehicleId" element={<BookingPageClient />} />
+            <Route path="/fleet/details/:vehicleId/3d" element={<CarDetails3d />} />
+            <Route path="/fleet/details/:vehicleId/ar" element={<CarColorPage />} />
+            <Route path="/Services" element={<OurServiceSection />} />
+            <Route path="/Contact" element={<ContactPage />} />
+            <Route path="/About" element={<About />} />
           <Route
             path="/login"
             element={

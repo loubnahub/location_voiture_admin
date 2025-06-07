@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\UserController; // Generic User Controller
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Api\AvisController;
 use App\Http\Controllers\Api\VehicleTypeController;
 use App\Http\Controllers\Api\VehicleModelController;
 use App\Http\Controllers\Api\VehicleController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Api\ExtraController;
 use App\Http\Controllers\Api\FeatureController;
 use App\Http\Controllers\Api\InsurancePlanController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\ContactController;
 // use App\Http\Controllers\Api\UserBookingController;
 use App\Http\Controllers\Api\OperationalHoldController;
 use App\Http\Controllers\Api\MaintenanceRecordController;
@@ -161,3 +163,15 @@ Route::apiResource('promotion-campaigns', PromotionCampaignController::class)->p
 Route::fallback(function(){
     return response()->json(['message' => 'Not Found.'], 404);
 });
+
+
+// If you prefer to define them individually (equivalent to apiResource):
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::post('/contact', [ContactController::class, 'store'])->name('contacts.store');
+Route::get('/contact/{contact}', [ContactController::class, 'show'])->name('contacts.show');
+Route::put('/contact/{contact}', [ContactController::class, 'update'])->name('contacts.update'); // Handles PUT
+Route::delete('/contact/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+
+
+// Avis (formerly Reviews) Routes
+Route::apiResource('avis', AvisController::class);
