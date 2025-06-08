@@ -376,7 +376,7 @@ public function show(Request $request, Vehicle $vehicle)
                 'color_hex' => $m->color_hex ?? null, 
                 'media_type' => $m->media_type ?? 'image'
             ]))->values() : [],
-            'available_colors_from_model' => $model->available_colors,
+            'available_colors_from_model' => $model->available_colors ?? [],
             'vehicle_type_name' => $model->vehicleType?->name,
             'features_grouped' => $model->features->isNotEmpty() ? $model->features->groupBy('category')->map(fn($catFeat, $catName) => ['category_name' => $catName?:'General', 'items' => $catFeat->map(fn($f) => ['id'=>$f->id, 'name'=>$f->name, 'description' => $f->description ?? null])->values()])->values() : [], // Added description to features
             'extras_available' => $model->extras->isNotEmpty() ? $model->extras->map(fn($e)=>(['id'=>$e->id, 'name'=>$e->name, 'description' => $e->description ?? null, 'default_price_per_day'=>(float)($e->default_price_per_day ?? 0)]))->values() : [], // Added description to extras

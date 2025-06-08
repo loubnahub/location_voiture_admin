@@ -64,9 +64,6 @@ export const createVehicleModel = (data) => apiClient.post('/vehicle-models', da
 export const updateVehicleModel = (id, modelData) => {
   // If modelData could include file uploads and becomes FormData:
   if (modelData instanceof FormData) {
-    // For FormData with Laravel, often you POST and spoof PUT/PATCH.
-    // Ensure your backend route for update accepts POST if you do this.
-    // Example: modelData.append('_method', 'PUT'); // If not handled by a global interceptor or backend directly
     return apiClient.post(`/vehicle-models/${id}`, modelData);
   }
   // For regular JSON updates:
@@ -180,36 +177,16 @@ export const fetchVehicleModelMediaList = (vehicleModelId) => {
   return apiClient.get(`/vehicle-models/${vehicleModelId}/media`);
 };
 
-/**
- * Uploads one or more media files for a specific vehicle model.
- * Corresponds to VehicleModelMediaController@store
- * POST /api/vehicle-models/{vehicleModelId}/media
- * @param {string} vehicleModelId - The ID of the vehicle model.
- * @param {FormData} formData - FormData object containing 'media_files[]' and optional 'captions[]', 'is_cover_flags[]', 'media_types[]'.
- * @returns {Promise<AxiosResponse<any>>}
- */
+
 export const uploadVehicleModelMedia = (vehicleModelId, formData) => {
   // Axios will set the Content-Type to multipart/form-data due to the interceptor
   return apiClient.post(`/vehicle-models/${vehicleModelId}/media`, formData);
 };
 
-/**
- * Updates a specific media item (e.g., caption, is_cover).
- * Corresponds to VehicleModelMediaController@update
- * PUT /api/media/{mediaId}
- * @param {string} mediaId - The ID of the media item to update.
- * @param {object} dataToUpdate - Object containing fields to update (e.g., { caption: "New Caption", is_cover: true }).
- * @returns {Promise<AxiosResponse<any>>}
- */
+
 export const updateVehicleModelMediaItem = (mediaId, dataToUpdate) => {
   return apiClient.put(`/media/${mediaId}`, dataToUpdate);
-  // Or use POST with _method if your server requires it for PUT with complex data,
-  // but for simple JSON like this, PUT is standard.
-  // If sending FormData for update (e.g. replacing file, less common for this partial update):
-  // if (dataToUpdate instanceof FormData) {
-  //   dataToUpdate.append('_method', 'PUT');
-  //   return apiClient.post(`/media/${mediaId}`, dataToUpdate);
-  // }
+ 
 };
 export const deleteVehicleModelMediaItem = (mediaId) => {
   return apiClient.delete(`/media/${mediaId}`);
@@ -224,7 +201,7 @@ export const reorderVehicleModelMedia = (vehicleModelId, orderedMediaIds) => {
 // Fetch all colors for a vehicle model
 export const fetchVehicleModelColors = (vehicleModelId) =>
   apiClient.get(`/vehicle-models/${vehicleModelId}/colors`);
-
+export const fetchAllVehicleModelsForDropdown = () => apiClient.get('/vehicle-models/list-all');
 // Add a color to a vehicle model
 export const addVehicleModelColor = (vehicleModelId, colorData) =>
   apiClient.post(`/vehicle-models/${vehicleModelId}/colors`, colorData);

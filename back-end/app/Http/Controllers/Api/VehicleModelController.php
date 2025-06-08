@@ -130,7 +130,7 @@ class VehicleModelController extends Controller
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
             'title' => 'required|string|max:255|unique:vehicle_models,title',
             'brand' => 'required|string|max:100',
-            'model' => 'required|string|max:100',
+        'model_name' => 'required|string|max:100', // <-- THE FIX: Changed from 'model'
             'year' => 'required|integer|min:1900|max:' . (date('Y') + 2),
             'fuel_type' => 'required|string|max:50',
             'transmission' => 'required|string|max:50',
@@ -288,4 +288,43 @@ class VehicleModelController extends Controller
         $vehicleModel->delete();
         return response()->json(['message' => 'Vehicle model deleted successfully.'], 200);
     }
+    // app/Http/Controllers/Api/VehicleModelController.php
+
+// ... (keep the existing index, show, store, update, destroy methods as they are) ...
+
+    /**
+     * A new, lightweight method to fetch all models for dropdowns.
+     * This method does not paginate and returns only the necessary fields.
+     */
+    public function listAll()
+    {
+        $vehicleModels = VehicleModel::query()
+            ->select('id', 'title', 'brand', 'year', 'available_colors') // Select only what's needed
+            ->with(['media' => function ($query) {
+                // Get the thumbnail for the creative preview
+                $query->where('is_cover', true)->orWhere(function ($q) {
+                    $q->orderBy('order', 'asc')->limit(1);
+                });
+            }])
+            ->orderBy('title', 'asc')
+            ->get();
+            
+        // We still need to transform the data to get the thumbnail_url
+        $transformedData = $vehicleModels->map(function ($model) {
+            $attributes = $model->toArray();
+            $thumbnail_url = null;
+            if (!empty($model->media) && $model->media->isNotEmpty()) {
+                $cover = $model->media->firstWhere('is_cover', true);
+                $thumbnail_url = $cover ? $cover->url : ($model->media->first() ? $model->media->first()->url : null);
+            }
+            $attributes['thumbnail_url'] = $thumbnail_url;
+            // The frontend already handles parsing this, so just pass it through
+            // $attributes['available_colors'] = json_decode($model->available_colors);
+            unset($attributes['media']); // Clean up the response
+            return $attributes;
+        });
+
+        return response()->json(['data' => $transformedData]);
+    }
+
 }

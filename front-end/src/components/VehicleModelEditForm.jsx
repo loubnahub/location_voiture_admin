@@ -98,7 +98,7 @@ const VehicleModelEditForm = ({
     } else {
       setLocalVehicleTypes(vehicleTypeOptions);
     }
-  }, [vehicleTypeOptions]);
+  }, []);
 
   // Initialize form data and editable lists
   useEffect(() => {

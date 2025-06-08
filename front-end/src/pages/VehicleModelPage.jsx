@@ -129,8 +129,8 @@ const VehicleModelPage = () => {
   const handleDeleteAction = async (modelId) => {
     // Added a local 'isDeleting' flag if you have a spinner on the table's delete button
     // For now, using window.confirm as per your original code
-    if (window.confirm(`Are you sure you want to delete vehicle model ${modelId}? This action cannot be undone.`)) {
       // setListLoading(true); // Or a specific isDeletingModelId state
+         setListError(null); 
       try {
         await deleteVehicleModel(modelId);
         // Consider showing a success toast/message
@@ -141,9 +141,9 @@ const VehicleModelPage = () => {
       } finally {
         // setListLoading(false);
       }
-    }
+    
   };
-  const handleCreateModel = () => { navigate('/admin/fleet/vehicle-models/new'); };
+  const handleCreateModel = () => { navigate('/admin/fleet/vehicle-models/create') };
   
   const renderPaginationItems = () => { 
     if (totalPages <= 1 || totalItems === 0) return null;

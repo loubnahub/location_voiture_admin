@@ -54,7 +54,7 @@ const DynamicTable = ({
               </th>
             ))}
             {hasAnyActions && (
-              <th className="text-end">Actions</th>
+              <th className="text-center">Actions</th>
             )}
           </tr>
         </thead>

@@ -67,6 +67,12 @@ return $response;// If withCredentials is true on frontend
 })->where('filepath', '.*'); // Allow slashes in filepath
 
 
+Route::get('/vehicle-models/list-all', [VehicleModelController::class, 'listAll']);
+
+// Your existing vehicle-models route can stay as it is
+Route::apiResource('/vehicle-models', VehicleModelController::class);
+
+// ... other routes
     // --- User Self-Service Routes ---
     Route::apiResource('addresses', AddressController::class)->parameters(['my-addresses' => 'address'])->except(['store', 'update', 'destroy']);
     Route::post('addresses', [AddressController::class, 'storeForCurrentUser'])->name('my-addresses.store');

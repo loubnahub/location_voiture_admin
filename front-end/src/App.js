@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminLayout from './layouts/AdminLayout';
 
 // Pages
-import LoginPage from './pages/Auth/LoginPage';
+import LoginPage from './Clients/Compte/Login';
 import DashboardPage from './pages/DashboardPage';
 import VehicleModelPage from './pages/VehicleModelPage';
 import VehicleTypePage from './pages/VehicleTypePage';
@@ -26,7 +26,10 @@ import PaymentPage from './pages/payments/PaymentsPage';
 import VehicleModelDetailView from './components/VehicleModelDetailView';
 import VehicleInstanceDetailView from './components/VehicleInstanceDetailView';
 import VehicleDisplayGallery from './components/VehicleDisplayGallery';
-
+import Home from './Clients/Home/Home';
+import ClientLayout from './layouts/ClientLayout';
+import VehicleModelCreatePage from './pages/VehicleModelCreatePage';
+import VehicleCreatePage from './pages/VehicleCreatePage'
 // --- Protected Route Component ---
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -69,6 +72,15 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
+          <Route path="/" element={<ClientLayout />}>
+            <Route index element={<Home />} />
+            {/* <Route path="home" element={<HomePage />} />
+            <Route path="about" element={<AboutPage />} />
+            <Route path="services" element={<ServicesPage />} />
+            <Route path="fleet" element={<FleetPage />} />
+            <Route path="contact" element={<ContactPage />} /> */}
+            {/* Add other client routes like /booking/:id here */}
+          </Route>
           <Route
             path="/login"
             element={
@@ -88,6 +100,7 @@ function App() {
             <Route path="fleet/vehicle-types" element={<VehicleTypePage />} />
             <Route path="fleet/features" element={<FeaturePage />} />
             <Route path="fleet/extras" element={<ExtraPage />} />
+            <Route path="fleet/vehicle-models/create" element={<VehicleModelCreatePage />} />
             <Route path="fleet/insurance-plans" element={<InsurancePlanPage />} />
             <Route path="/admin/inventory/bookings" element={<BookingPage />} />
             <Route path="operations/damage-reports" element={<DamageReportPage />} />
@@ -99,12 +112,14 @@ function App() {
             <Route path="marketing/promotion-codes" element={<PromotionCodePage />} />
             <Route path="financials/payments" element={<PaymentPage />} />
             <Route path="vehicle-instance/:instanceId" element={<VehicleInstanceDetailView />} />
+               <Route path="vehicles/create" element={<VehicleCreatePage />} />
 
             {/* Add other admin routes here */}
           </Route>
           {/* Fallback Route */}
           <Route path="*" element={<AuthRedirect />} />
         </Routes>
+        
       </AuthProvider>
     </Router>
   );
