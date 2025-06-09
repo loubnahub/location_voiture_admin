@@ -11,6 +11,7 @@ import { LuTicket, LuClock, LuBan } from 'react-icons/lu';
 import { Badge } from 'react-bootstrap';
 import { PromotionCodeStatus as PromotionCodeStatusEnum } from '../../Enums'; // Adjust path
 import { CheckCircle, XCircle } from 'lucide-react'; // Corrected import
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Columns for the Promotion Code Table ---
 const codeColumns = [

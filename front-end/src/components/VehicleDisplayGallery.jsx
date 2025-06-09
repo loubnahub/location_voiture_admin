@@ -14,6 +14,7 @@ import {
     fetchVehicleModelColors,
     deleteVehicleModel // <-- Import the delete function
 } from '../services/api'; // Adjust path
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 import './VehicleDisplayGallery.css'; // Your CSS for this component
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -313,7 +314,7 @@ const VehicleDisplayGallery = () => {
                 onClick={handleDeleteModelClick} // <-- Updated onClick handler
                 disabled={isDeleting} // Disable if a delete operation is in progress
             >
-                <DeleteIcon size={16} className="me-1" />
+                <DeleteIcon size={16} className="me-1 d-inline" />
                 Delete
             </Button>
             <Button variant="primary" size="sm" onClick={handleOpenMediaManager} className="gallery-manage-media-button px-4 rounded-2">

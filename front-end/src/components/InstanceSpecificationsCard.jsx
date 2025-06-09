@@ -5,6 +5,7 @@ import {
     LuFuel, LuUsers, LuDoorOpen, LuDollarSign, LuFileText // LuFuel for Fuel, LuDoorOpen for Doors
 } from 'react-icons/lu';
 import { CheckSquare, XSquare } from 'lucide-react'; // Using these for In Stock? for clearer Yes/No
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const InstanceSpecificationsCard = ({ model, instanceStatus }) => {
   if (!model) {

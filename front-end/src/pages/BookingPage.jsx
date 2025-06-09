@@ -10,6 +10,7 @@ import DynamicTable from '../components/DynamicTable'; // Adjust path as needed
 import BookingModalForm from '../components/bookings/BookingModalForm'; // Adjust path as needed
 import { BookingStatus as BookingStatusEnum } from '../Enums'; // Adjust path as needed
 import { CheckCircle } from 'lucide-react';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const ITEMS_PER_PAGE = 8;
 

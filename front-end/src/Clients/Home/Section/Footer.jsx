@@ -23,17 +23,17 @@ const Footer = () => {
     {
       icon: <Phone size={24} className="text-gray-900" />,
       title: 'Call us',
-      detail: '+971 52-333-4444',
+      detail: ['+212 0674811990' ,  '+212 060604405'],
     },
     {
       icon: <Mail size={24} className="text-gray-900" />,
       title: 'Write to us',
-      detail: 'info@renax.com',
+      detail: 'contact@Reaclo.com',
     },
     {
       icon: <MapPin size={24} className="text-gray-900" />,
       title: 'Address',
-      detail: 'Dubai, Water Tower, Office 123',
+      detail: 'lazaret oujda, Recalo',
     },
   ];
 
@@ -64,8 +64,8 @@ const Footer = () => {
           {/* RENAX Info */}
           <div>
             <h3 className="text-3xl font-bold mb-4">
-              <span className="text-amber-500">LO</span>{" "}
-              <span className="text-white">Cars</span>
+              <span className="text-amber-500">RE</span>
+              <span className="text-white">CALO</span>
             </h3>
             <p className="text-sm mb-6 leading-relaxed text-gray-400">
               Rent a car imperdiet sapien porttito the bibendum ellentesue the commodo erat nesuen.
@@ -118,7 +118,7 @@ const Footer = () => {
         {/* Bottom Copyright & Scroll to Top - Line above this section */}
         <div className="py-6 md:py-8 border-t border-gray-700 flex flex-col sm:flex-row justify-center items-center text-sm">
           <p className="text-gray-500 mb-4 sm:mb-0">
-            ©{new Date().getFullYear()} <a href="#" className="text-amber-500 hover:underline">L & O Rentals Cars</a>. All rights reserved.
+            ©{new Date().getFullYear()} <a href="#" className="text-amber-500 hover:underline">RECALO</a>. All rights reserved.
           </p>
         </div>
       </div>

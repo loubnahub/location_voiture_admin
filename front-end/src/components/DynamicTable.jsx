@@ -1,8 +1,9 @@
 import React from 'react';
 import { Table, Button, Spinner } from 'react-bootstrap';
 import { LuTrash2, LuEye } from 'react-icons/lu'; // Default action icons
-import './DynamicTable.css'; // Ensure this CSS file is created
 import { Edit } from 'lucide-react'; // Using Edit from lucide-react
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import './DynamicTable.css'; // Ensure this CSS file is created
 
 const DynamicTable = ({
   columns,

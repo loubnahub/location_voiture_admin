@@ -6,6 +6,7 @@ import {
     LuWrench, LuMapPin, LuShieldCheck, LuBell, 
     LuTrash2, LuArrowRight // Added LuArrowRight
 } from 'react-icons/lu';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Alert Styles - Tailored to Figma ---
 // Note: The 'border' property from your original style is not used as per Figma.

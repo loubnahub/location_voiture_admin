@@ -11,6 +11,7 @@ import {
 } from 'react-icons/lu';
 import { PlusCircle } from 'lucide-react';
 import Select from 'react-select';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 import {
   createVehicle,

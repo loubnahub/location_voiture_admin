@@ -11,6 +11,7 @@ import {
 import { Form, Row, Col, Button, Modal, Spinner, Alert } from 'react-bootstrap';
 import { LuFileText, LuDownload, LuPrinter, LuSend,} from 'react-icons/lu';
 import { CheckSquare, CheckCircle  } from 'lucide-react';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Initial Form Data for the "Edit Agreement Details" Modal ---
 const initialAgreementEditData = {

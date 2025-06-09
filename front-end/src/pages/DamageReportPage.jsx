@@ -11,6 +11,7 @@ fetchAllUsersForAdmin as fetchAllUsers,
 import { Form, Row, Col, Spinner, InputGroup, Button, Image, Alert, CloseButton } from 'react-bootstrap';
 import { FaExclamationTriangle, FaTrash } from 'react-icons/fa';
 import { DamageReportStatus as DamageReportStatusEnum, getDisplayLabel } from '../Enums';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Columns ---
 const damageReportColumns = [

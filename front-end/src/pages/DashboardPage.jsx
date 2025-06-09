@@ -2,6 +2,7 @@
 import React from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext'; // Adjust path
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const DashboardPage = () => {
     const { currentUser } = useAuth();

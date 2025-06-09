@@ -8,6 +8,7 @@ import {
 } from '../services/api';
 import { Form, Alert } from 'react-bootstrap';
 import { LuSettings2 } from 'react-icons/lu'; // Using a generic settings/feature icon
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // 1. Define Columns for Features
 const featureColumns = [

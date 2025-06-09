@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const eventColors = { 
   primaryBooking: '#0D6EFD',    // Standard Booking

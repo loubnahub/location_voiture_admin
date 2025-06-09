@@ -1,42 +1,33 @@
+// src/contexts/AuthContext.js - VERIFY THIS EXACT CODE
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import {
-    loginUser as apiLogin,
-    logoutUser as apiLogout,
-    getCurrentAuthenticatedUser as apiGetCurrentUser,
-    getToken as storageGetToken,
-    getStoredUser as storageGetStoredUser
-} from '../services/authService'; // Adjust path as needed
-import { useNavigate } from 'react-router-dom'; // If using react-router v6
+import { useNavigate } from 'react-router-dom';
+import { login as apiLogin, logout as apiLogout, fetchCurrentUser } from '../services/api'; 
+import apiClient from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(storageGetStoredUser());
-    const [authToken, setAuthToken] = useState(storageGetToken());
-    const [isLoading, setIsLoading] = useState(true); // For initial auth check
-    const [authError, setAuthError] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); 
+    const [authError, setAuthError] = useState(null); // The function is created here
     const navigate = useNavigate();
 
-    const isAuthenticated = !!authToken && !!currentUser;
-
-    // Check authentication status on initial load
     useEffect(() => {
         const checkAuthStatus = async () => {
-            setIsLoading(true);
-            const token = storageGetToken();
+            const token = localStorage.getItem('authToken');
             if (token) {
+                apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 try {
-                    const userData = await apiGetCurrentUser(); // Fetches user from /api/user
-                    setCurrentUser(userData);
-                    setAuthToken(token);
+                    const response = await fetchCurrentUser(); 
+                    setCurrentUser(response.data);
+                    setIsAuthenticated(true);
                 } catch (error) {
-                    console.warn("Auth check failed, logging out:", error.message);
-                    // Token might be invalid or expired
-                    await apiLogout(); // This will clear localStorage via authService
-                    setCurrentUser(null);
-                    setAuthToken(null);
+                    localStorage.removeItem('authToken');
+                    delete apiClient.defaults.headers.common['Authorization'];
                 }
             }
             setIsLoading(false);
@@ -45,57 +36,44 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = useCallback(async (email, password) => {
-        setIsLoading(true);
         setAuthError(null);
         try {
-            const data = await apiLogin({ email, password });
-            setCurrentUser(data.user);
-            setAuthToken(data.token);
-            setIsLoading(false);
-            return data.user; // Return user data on successful login
+            const response = await apiLogin({ email, password }); 
+            const { token, user } = response.data;
+            localStorage.setItem('authToken', token);
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+            return user; 
         } catch (error) {
-            console.error("AuthContext login error:", error);
-            setAuthError(error.message || (error.errors ? Object.values(error.errors).flat().join(' ') : 'Login failed. Please check your credentials.'));
-            setIsLoading(false);
-            throw error;
+            const errorMessage = error.response?.data?.message || 'Login failed.';
+            setAuthError(errorMessage);
+            throw new Error(errorMessage);
         }
     }, []);
 
     const logout = useCallback(async (redirectTo = '/login') => {
-        setIsLoading(true);
-        await apiLogout(); // Clears token from localStorage via authService
+        localStorage.removeItem('authToken');
+        delete apiClient.defaults.headers.common['Authorization'];
         setCurrentUser(null);
-        setAuthToken(null);
-        setIsLoading(false);
-        if (redirectTo) {
-            navigate(redirectTo);
-        }
+        setIsAuthenticated(false);
+        if (redirectTo) navigate(redirectTo);
     }, [navigate]);
 
-    const hasRole = useCallback((roleNameOrNames) => {
+    const hasRole = useCallback((roleName) => {
         if (!currentUser || !currentUser.roles) return false;
-        const rolesToCheck = Array.isArray(roleNameOrNames) ? roleNameOrNames : [roleNameOrNames];
-        return rolesToCheck.some(role => currentUser.roles.includes(role));
+        return currentUser.roles.includes(roleName);
     }, [currentUser]);
-
-    const hasPermission = useCallback((permissionNameOrNames) => {
-        if (!currentUser || !currentUser.permissions) return false;
-        const permissionsToCheck = Array.isArray(permissionNameOrNames) ? permissionNameOrNames : [permissionNameOrNames];
-        return permissionsToCheck.some(perm => currentUser.permissions.includes(perm));
-    }, [currentUser]);
-
 
     const value = {
         currentUser,
-        authToken,
         isAuthenticated,
-        isLoading, // For UI to show loading state during auth operations
+        isLoading,
         authError,
-        setAuthError, // To allow clearing errors from components
+        setAuthError, // The function is EXPORTED here
         login,
         logout,
         hasRole,
-        hasPermission,
     };
 
     return (

@@ -4,6 +4,8 @@ import { LuLogOut, } from 'react-icons/lu'; // Example icons
 import { useAuth } from '../contexts/AuthContext'; // Adjust path to your AuthContext
 import { Link, useNavigate } from 'react-router-dom';
 import{ UserCircle} from 'lucide-react'
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+
 const Header = () => {
   const { currentUser, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -30,7 +32,7 @@ const Header = () => {
                 <NavDropdown
                   title={
                     <>
-                      <UserCircle size={20} className="me-1" />
+                      <UserCircle size={20} className="me-1 d-inline" />
                       {currentUser.full_name || currentUser.email}
                     </>
                   }

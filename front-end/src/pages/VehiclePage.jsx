@@ -16,6 +16,7 @@ import {
   fetchAllAddresses,
   createAddress
 } from '../services/api';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // ===================================================================================
 // ResourcePage COMPONENT (with ESLint props fix)

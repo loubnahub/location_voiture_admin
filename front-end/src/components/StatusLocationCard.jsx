@@ -5,6 +5,7 @@ import { Edit as EditIcon, Trash2 as DeleteIcon, ParkingCircle } from 'lucide-re
 
 import { VehicleStatus } from '../Enums';
 import { updateVehicle, deleteVehicle, updateAddress, createAddress } from '../services/api';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const StatusLocationCard = ({ instance, onDataChange }) => {
   // --- State Management ---

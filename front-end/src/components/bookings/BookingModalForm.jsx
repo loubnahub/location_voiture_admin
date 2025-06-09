@@ -8,6 +8,7 @@ import {
     validatePromotionCode
 } from '../../services/api';
 import { BookingStatus as BookingStatusEnum } from '../../Enums';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const bookingStatusOptions = Object.values(BookingStatusEnum || {}).map(status => ({
     value: status.value || status,

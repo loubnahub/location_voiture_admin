@@ -14,7 +14,7 @@ import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa'; // For stars
 import { ImQuotesLeft } from "react-icons/im";
 
 // API Endpoint
-const API_AVIS_ENDPOINT = (process.env.REACT_APP_API_URL || 'http://localhost:8000/api') + '/avis';
+// const API_AVIS_ENDPOINT = (process.env.REACT_APP_API_URL || 'http://localhost:8000/api') + '/avis';
 
 // Accent color
 const ACCENT_COLOR = 'text-amber-400';
@@ -82,38 +82,38 @@ const OurClinetSaying = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchAvis = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Fetch only approved avis, usually for public display
-        const response = await fetch(`${API_AVIS_ENDPOINT}?approved=true&per_page=9`); // Fetch e.g., 9 latest approved
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.message || `HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        // The API returns a paginated response. We need result.data.
-        // Map API data to the structure TestimonialCard expects
-        const formattedAvis = (result.data || []).map(avi => ({
-          id: avi.id,
-          name: avi.name,
-          // Use ui-avatars.com for dynamic avatars based on name if no avatarUrl is in your DB
-          avatarUrl: avi.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(avi.name)}&background=2A2A2A&color=FFA600&bold=true`,
-          rating: parseFloat(avi.rating) || 0, // Ensure rating is a number
-          comment: avi.comment,
-          carName: avi.carName || avi.car_name || null, // Handle both potential casings from API
-        }));
-        setAvisList(formattedAvis);
-      } catch (e) {
-        console.error("Failed to fetch avis:", e);
-        setError(e.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // const fetchAvis = async () => {
+    //   setIsLoading(true);
+    //   setError(null);
+    //   try {
+    //     // Fetch only approved avis, usually for public display
+    //     const response = await fetch(`${API_AVIS_ENDPOINT}?approved=true&per_page=9`); // Fetch e.g., 9 latest approved
+    //     if (!response.ok) {
+    //       const errData = await response.json();
+    //       throw new Error(errData.message || `HTTP error! status: ${response.status}`);
+    //     }
+    //     const result = await response.json();
+    //     // The API returns a paginated response. We need result.data.
+    //     // Map API data to the structure TestimonialCard expects
+    //     const formattedAvis = (result.data || []).map(avi => ({
+    //       id: avi.id,
+    //       name: avi.name,
+    //       // Use ui-avatars.com for dynamic avatars based on name if no avatarUrl is in your DB
+    //       avatarUrl: avi.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(avi.name)}&background=2A2A2A&color=FFA600&bold=true`,
+    //       rating: parseFloat(avi.rating) || 0, // Ensure rating is a number
+    //       comment: avi.comment,
+    //       carName: avi.carName || avi.car_name || null, // Handle both potential casings from API
+    //     }));
+    //     setAvisList(formattedAvis);
+    //   } catch (e) {
+    //     console.error("Failed to fetch avis:", e);
+    //     setError(e.message);
+    //   } finally {
+    //     setIsLoading(false);
+    //   }
+    // };
 
-    fetchAvis();
+    // fetchAvis();
   }, []); // Empty dependency array means this effect runs once on mount
 
   if (isLoading) {

@@ -9,6 +9,7 @@ import {
 } from '../services/api'; // Adjust path
 import { Form, Row, Col, Spinner, Badge, ListGroup } from 'react-bootstrap'; // Added Badge, ListGroup
 import { LuUsers } from 'react-icons/lu'; // Icon for Users
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Columns for the User Table ---
 const userColumns = [

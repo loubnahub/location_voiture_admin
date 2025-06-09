@@ -6,140 +6,143 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
     /**
-     * Register a new user.
+     * Helper to transform the authenticated user for API response.
+     * This ensures the format matches your frontend expectations perfectly.
      */
-    public function register(Request $request)
+    private function transformAuthenticatedUser(User $user)
     {
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|string|max:20', // Adjust validation as needed
-            'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
+        // Eager load the roles to make sure they are available.
+        $user->load('roles');
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-        ]);
-
-        // Optionally, assign a default role upon registration
-        // if (class_exists(\Spatie\Permission\Models\Role::class)) {
-        //     $defaultRole = \Spatie\Permission\Models\Role::findByName('renter', 'web'); // or your default guard
-        //     if ($defaultRole) {
-        //         $user->assignRole($defaultRole);
-        //     }
-        // }
-
-
-        // Optionally, log the user in and return a token immediately
-        // $token = $user->createToken('api-token')->plainTextToken;
-        // return response()->json([
-        //     'message' => 'User registered successfully.',
-        //     'user' => $user->only(['id', 'full_name', 'email']), // Return minimal user info
-        //     'token' => $token
-        // ], 201);
-
-        return response()->json(['message' => 'User registered successfully. Please log in.'], 201);
-    }
-
-    /**
-     * Authenticate the user and return a token.
-     */
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-            'device_name' => 'nullable|string|max:255' // Optional: for naming the token
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json([
-                'message' => 'Invalid credentials.'
-                // Or more detailed if you prefer:
-                // 'errors' => ['email' => ['These credentials do not match our records.']]
-            ], 401); // Or 422 if you want to show field-specific errors
-        }
-
-        $user = Auth::user();
-        // Revoke all old tokens to ensure only one active session per device name if desired, or manage multiple tokens
-        // $user->tokens()->delete(); // This revokes ALL tokens for the user. Be careful.
-        // Or target specific tokens: $user->tokens()->where('name', $request->input('device_name', 'default_device'))->delete();
-
-        $token = $user->createToken($request->input('device_name', 'auth_token'))->plainTextToken;
-
-        // Eager load roles and permissions to include in the response
-        // The exact structure of roles/permissions might vary based on how you want to consume it on the frontend.
-        $user->load(['roles:name', 'permissions:name']); // Load only names
-
-        $roles = $user->roles->pluck('name');
-        $permissions = $user->getAllPermissions()->pluck('name'); // getAllPermissions includes inherited ones
-
-        return response()->json([
-            'message' => 'Login successful.',
-            'user' => [
-                'id' => $user->id,
-                'full_name' => $user->full_name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'profile_picture_url' => $user->profile_picture_url,
-                'loyalty_points' => $user->loyalty_points,
-                'roles' => $roles,
-                'permissions' => $permissions,
-            ],
-            'token' => $token,
-        ]);
-    }
-
-    /**
-     * Get the authenticated User.
-     */
-    public function user(Request $request)
-    {
-        $user = $request->user();
-        $user->load(['roles:name', 'permissions:name']); // Eager load roles and permissions
-
-        $roles = $user->roles->pluck('name');
-        $permissions = $user->getAllPermissions()->pluck('name');
-
-        return response()->json([
+        return [
             'id' => $user->id,
             'full_name' => $user->full_name,
             'email' => $user->email,
             'phone' => $user->phone,
             'profile_picture_url' => $user->profile_picture_url,
-            'loyalty_points' => $user->loyalty_points,
-            'roles' => $roles,
-            'permissions' => $permissions,
-            // Add other fields as needed, respecting $hidden in User model
+            // CRITICAL: Use getRoleNames() to return a simple array like ['admin', 'customer']
+            'roles' => $user->getRoleNames()->toArray(),
+            'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+        ];
+    }
+
+    /**
+     * Handle user registration.
+     */
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        $user = User::create($validated);
+
+        // --- FIXED ROLE NAME ---
+        // Assign the 'customer' role, which exists in your database.
+        $user->assignRole('customer');
+        
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $this->transformAuthenticatedUser($user),
+            'token' => $token
+        ], 201);
+    }
+
+    /**
+     * Handle user login.
+     */
+  // In app/Http/Controllers/Api/AuthController.php
+
+    /**
+     * Handle user login.
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'The provided credentials do not match our records.'
+            ], 401);
+        }
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // It's good practice to delete old tokens
+        $user->tokens()->delete();
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        // --- THIS IS THE FIX ---
+        // Return BOTH the user object (using your transformer) AND the token.
+        return response()->json([
+            'user' => $this->transformAuthenticatedUser($user),
+            'token' => $token
         ]);
     }
 
     /**
-     * Log the user out (Invalidate the token).
+     * Handle user logout for both SPA and API tokens.
      */
-    public function logout(Request $request)
-    {
-        // Revoke the token that was used to authenticate the current request
-        $request->user()->currentAccessToken()->delete();
+ // In app/Http/Controllers/Api/AuthController.php
 
-        return response()->json(['message' => 'Successfully logged out.']);
+    /**
+     * Handle user logout for both SPA and API tokens.
+     */
+   // In app/Http/Controllers/Api/AuthController.php
+
+/**
+ * Handle user logout for both SPA and API tokens.
+ */
+public function logout(Request $request)
+{
+    /** @var \App\Models\User $user */
+    $user = $request->user();
+
+    // Check if the user was authenticated via an API token.
+    // The `token()` method returns a PersonalAccessToken instance if so.
+    if ($user && method_exists($user, 'token') && $user->token()) {
+        $user->token()->delete(); // Delete the specific token used for the request.
+    }
+    
+    // Invalidate the session for SPA-based authentication.
+    // This is safe to run even if the user wasn't authenticated via session.
+    Auth::guard('web')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return response()->json([
+        'message' => 'Successfully logged out'
+    ]);
+}
+    
+
+    /**
+     * Get the authenticated User.
+     * This is the method for the GET /api/user route.
+     */
+    public function user(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        
+        // This is a redundant check, but good for safety.
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // Use the same universal transformer to guarantee the data format.
+        return response()->json($this->transformAuthenticatedUser($user));
     }
 }

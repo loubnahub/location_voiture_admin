@@ -10,6 +10,7 @@ import { PlusCircle, CheckCircle } from 'lucide-react';
 import VehicleModelEditForm from '../components/VehicleModelEditForm';
 import VehicleModelMediaManager from '../components/VehicleModelMediaManager';
 import { createVehicleModel } from '../services/api';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const VehicleModelCreatePage = () => {
   const navigate = useNavigate();

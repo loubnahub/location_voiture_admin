@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Row, Col, FormCheck } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // Assuming your PromotionRewardType Enum from backend is available here
 // You might define this array based on your App\Enums\PromotionRewardType

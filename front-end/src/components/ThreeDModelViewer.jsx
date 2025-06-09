@@ -1,6 +1,7 @@
 import React, { useRef, useState,useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 function SpinningModel({ url, spinning, color }) {
   const { scene } = useGLTF(url);

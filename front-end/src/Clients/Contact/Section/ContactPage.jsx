@@ -108,8 +108,8 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-medium text-lg mb-1">Our Location</h3>
                       <p className="text-gray-400">
-                        3300 Speedway Boulevard<br />
-                        Metropolis, CA 90210
+                        3300 lazaret Oujda <br />
+                        Recalo, CA 203956 
                       </p>
                     </div>
                   </div>
@@ -120,7 +120,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-medium text-lg mb-1">Phone Number</h3>
-                      <p className="text-gray-400">+1 (555) 432-1098</p>
+                      <p className="text-gray-400">+212 674811990</p>
+                      <p className="text-gray-400">+212 606604405</p>
                       <p className="text-gray-500 text-sm">Mon-Fri from 8am to 8pm</p>
                     </div>
                   </div>
@@ -131,7 +132,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-medium text-lg mb-1">Email Address</h3>
-                      <p className="text-gray-400">info@speedway-rentals.com</p>
+                      <p className="text-gray-400">contact@Recalo.com</p>
                       <p className="text-gray-500 text-sm">Always available for support</p>
                     </div>
                   </div>

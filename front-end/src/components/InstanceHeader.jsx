@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Dropdown, Badge, Image } from 'react-bootstrap';
 import { LuListTree, LuChevronDown } from 'react-icons/lu';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const InstanceHeader = ({
   modelTitle,
@@ -47,7 +48,7 @@ const InstanceHeader = ({
             className="instance-switcher-toggle px-4 py-1 rounded-2"
             onClick={() => setShowDropdown(!showDropdown)} 
           >
-            <LuListTree size={16} className="toggle-icon me-1" />
+            <LuListTree size={16} className="toggle-icon d-inline me-1" />
             {toggleText}
   
           </Dropdown.Toggle>

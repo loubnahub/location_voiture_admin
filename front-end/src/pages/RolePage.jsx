@@ -8,6 +8,7 @@ import {
 } from '../services/api';     // Adjust path to your API service
 import { Form, InputGroup } from 'react-bootstrap';
 import { Users2 } from 'lucide-react'; // Example icon for "Extras" (a plus in a square)
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // 1. Define Columns for the DynamicTable (specific to Roles)
 const roleColumns = [

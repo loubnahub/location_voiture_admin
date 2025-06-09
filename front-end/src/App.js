@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate,Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -30,31 +30,69 @@ import Home from './Clients/Home/Home';
 import ClientLayout from './layouts/ClientLayout';
 import VehicleModelCreatePage from './pages/VehicleModelCreatePage';
 import VehicleCreatePage from './pages/VehicleCreatePage'
-// --- Protected Route Component ---
-const ProtectedRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+
+// In App.js
+
+
+// In App.js
+const ProtectedRoute = ({ requiredRole }) => {
+  const { isAuthenticated, isLoading, currentUser } = useAuth();
+
+
 
   if (isLoading) {
-    return <div>Loading authentication status...</div>;
+    return <div>Loading Application...</div>;
   }
-  // Render AdminLayout with Outlet for nested routes!
-  return isAuthenticated ? (
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!currentUser) {
+    return <div>Finalizing Session...</div>;
+  }
+
+  // --- THIS IS THE MOST IMPORTANT PART ---
+  // At this point, we have a user. Let's inspect them carefully.
+  
+  const userHasRole = currentUser.roles?.includes(requiredRole);
+  
+
+  if (!userHasRole) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
     <AdminLayout>
       <Outlet />
     </AdminLayout>
-  ) : (
-    <Navigate to="/login" replace />
   );
 };
-
 // --- Public Route Component ---
+// --- Add this new component inside App.js ---
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, currentUser } = useAuth();
+
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  return isAuthenticated ? <Navigate to="/admin/dashboard" replace /> : children;
+
+  if (isAuthenticated) {
+    if (!currentUser) {
+      return <div>Finalizing Session...</div>;
+    }
+    
+    const isAdmin = currentUser.roles?.includes('admin');
+    if (isAdmin) {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else {
+      return <Navigate to="/" replace />;
+    }
+  }
+
+  // If we are not loading and not authenticated, show the child (the login page).
+  return children;
 };
 
 // --- Fallback Auth Redirect ---
@@ -63,7 +101,7 @@ const AuthRedirect = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  return isAuthenticated ? <Navigate to="/admin/dashboard" replace /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />;
 };
 
 function App() {
@@ -89,8 +127,9 @@ function App() {
               </PublicRoute>
             }
           />
+
           {/* Protected Admin Routes */}
-          <Route path="/admin" element={<ProtectedRoute />}>
+          <Route path="/admin" element={<ProtectedRoute  requiredRole="admin"/>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="inventory/vehicles" element={<VehiclePage />} />

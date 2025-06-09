@@ -9,7 +9,7 @@ import {
 } from '../services/api'; // Adjust path as needed
 import { Form, InputGroup, Row, Col, Spinner, FormCheck } from 'react-bootstrap';
 import { FaTools } from 'react-icons/fa';
-
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 // 1. Define Columns (No changes needed from your correct version)
 const operationalHoldColumns = [
   { header: 'Vehicle', key: 'vehicle_display', render: (item) => item.vehicle_display || <span className="text-muted-custom">N/A</span> },

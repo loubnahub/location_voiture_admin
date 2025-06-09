@@ -10,6 +10,7 @@ import {
 import { LuMegaphone } from 'react-icons/lu';
 import { Badge } from 'react-bootstrap';
 import { CheckCircle, XCircle } from 'lucide-react';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Columns for the Promotion Campaign Table ---
 const campaignColumns = [

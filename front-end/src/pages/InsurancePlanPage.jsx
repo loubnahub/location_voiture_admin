@@ -8,6 +8,7 @@ import {
 } from '../services/api';
 import { Form, Alert, InputGroup, FormCheck } from 'react-bootstrap'; // Added FormCheck for boolean
 import { LuShieldCheck } from 'react-icons/lu'; // Icon for Insurance Plans
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // 1. Define Columns for Insurance Plans
 const insurancePlanColumns = [

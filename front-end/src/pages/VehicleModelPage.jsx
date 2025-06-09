@@ -9,8 +9,9 @@ import {
 } from '../services/api'; // Assuming fetchAllVehicleTypes is in this file
 import { Button, Form, InputGroup, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { LuSearch, LuFilter, LuChevronLeft, LuChevronRight, LuX, LuRotateCcw, LuPlus } from 'react-icons/lu';
-import './VehicleModelPage.css'; 
 
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import './VehicleModelPage.css'; 
 const ITEMS_PER_PAGE_DEFAULT = 10;
 
 const VehicleModelPage = () => {

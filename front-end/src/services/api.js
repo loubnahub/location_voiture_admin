@@ -1,7 +1,8 @@
 // src/services/api.js
+
 import axios from 'axios';
 
-// Configure an Axios instance
+// Configure an Axios instance for your API endpoints
 const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api', // Your Laravel API URL
   withCredentials: true, // ESSENTIAL for Sanctum SPA cookie-based authentication
@@ -11,22 +12,35 @@ const apiClient = axios.create({
 });
 
 // Interceptor to dynamically set Content-Type for FormData
-apiClient.interceptors.request.use(config => {
-  if (config.data instanceof FormData) {
-    delete config.headers['Content-Type']; // Let Axios set it for FormData
-  } else if (!config.headers['Content-Type']) {
-    config.headers['Content-Type'] = 'application/json'; // Default for JSON
+apiClient.interceptors.request.use(
+  (config) => {
+    // It gets the token from localStorage at the last possible moment.
+    const token = localStorage.getItem('authToken');
+    
+    // If a token exists, it attaches it to the request as a Bearer token.
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return config; // It returns the modified request config.
+  },
+  (error) => {
+    // If there's an error setting up the request, it's rejected.
+    return Promise.reject(error);
   }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+);
+
 
 // --- Authentication Functions ---
 export const login = async (credentials) => {
-  await apiClient.get('/sanctum/csrf-cookie');
+  // --- THIS IS THE FIX ---
+  // Use a direct axios call for the CSRF cookie to bypass the '/api' prefix.
+  await axios.get('http://localhost:8000/sanctum/csrf-cookie');
+
+  // Then use the configured apiClient for the actual login request.
   return apiClient.post('/login', credentials);
 };
+
 export const fetchCurrentUser = () => apiClient.get('/user');
 export const logout = () => apiClient.post('/logout');
 
@@ -36,12 +50,14 @@ export const createUserAdmin = (userData) => apiClient.post('/admin/users', user
 export const fetchUserAdmin = (id) => apiClient.get(`/admin/users/${id}`);
 export const updateUserAdmin = (id, userData) => {
   if (userData instanceof FormData) {
-    return apiClient.post(`/admin/users/${id}`, userData); // Laravel handles _method for POST
+    return apiClient.post(`/admin/users/${id}`, userData);
   }
   return apiClient.put(`/admin/users/${id}`, userData);
 };
 export const deleteUserAdmin = (id) => apiClient.delete(`/admin/users/${id}`);
 export const fetchAvailableRoles = () => apiClient.get('/admin/roles-list');
+
+// ... (The rest of your api.js file remains unchanged and is correct) ...
 
 // --- Role Functions (Admin) ---
 export const fetchAllRolesAdmin = (params = {}) => apiClient.get('/admin/system/roles', { params });
