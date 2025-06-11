@@ -7,6 +7,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use App\Models\Address;
 
 class AuthController extends Controller
 {
@@ -34,36 +39,90 @@ class AuthController extends Controller
     /**
      * Handle user registration.
      */
-    public function register(Request $request)
+  public function register(Request $request)
     {
-        $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Password::defaults()],
+        // 1. Validate all incoming data from the React form.
+        // The keys here match the 'name' attributes of your form inputs.
+        $validator = Validator::make($request->all(), [
+            'fullName' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8',
+            'phone' => 'nullable|string|max:25',
+            
+            // Address fields
+            'address' => 'required|string|max:255', // This maps to 'street_line_1'
+            'city' => 'required|string|max:255',
+            'postalCode' => 'required|string|max:20',
+            'country' => 'required|string|max:255',
+
+            // Profile Picture validation
+            'profilePicture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
         ]);
 
-        $user = User::create($validated);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        // --- FIXED ROLE NAME ---
-        // Assign the 'customer' role, which exists in your database.
-        $user->assignRole('customer');
-        
-        $token = $user->createToken('auth-token')->plainTextToken;
+        // 2. Use a Database Transaction for safety.
+        // If any step fails, the entire process is rolled back.
+        try {
+            DB::beginTransaction();
 
-        return response()->json([
-            'user' => $this->transformAuthenticatedUser($user),
-            'token' => $token
-        ], 201);
+            // 3. Create the User
+            $user = User::create([
+                'full_name' => $request->fullName,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+            ]);
+
+            // 4. Create the Address and link it to the new user
+            $address = Address::create([
+                'user_id' => $user->id,
+                'street_line_1' => $request->address,
+                'city' => $request->city,
+                'postal_code' => $request->postalCode,
+                'country' => $request->country,
+                'is_default_billing' => true, // Make it the default
+                'is_default_shipping' => true,
+            ]);
+
+            // Set the default address foreign keys on the user model
+            $user->default_billing_address_id = $address->id;
+            $user->default_shipping_address_id = $address->id;
+
+            // 5. Handle the Profile Picture Upload
+            if ($request->hasFile('profilePicture')) {
+                // Store in `storage/app/public/profiles` and get the path.
+                // Ensure you've run `php artisan storage:link`.
+                $path = $request->file('profilePicture')->store('profiles', 'public');
+                $user->profile_photo_path = $path;
+            }
+
+            $user->save(); // Save the user again to store default address IDs and photo path
+
+            if (method_exists($user, 'assignRole')) {
+                $user->assignRole('customer');
+            }
+
+            DB::commit();
+
+            // 6. Create an authentication token for automatic login
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            // 7. Return a success response with token and user data
+            return response()->json([
+                'message' => 'Registration successful!',
+                'user' => $user->fresh(),
+                'token' => $token,
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Registration failed: ' . $e->getMessage());
+            return response()->json(['message' => 'An error occurred during registration.'], 500);
+        }
     }
-
-    /**
-     * Handle user login.
-     */
-  // In app/Http/Controllers/Api/AuthController.php
-
-    /**
-     * Handle user login.
-     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -92,19 +151,7 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Handle user logout for both SPA and API tokens.
-     */
- // In app/Http/Controllers/Api/AuthController.php
-
-    /**
-     * Handle user logout for both SPA and API tokens.
-     */
-   // In app/Http/Controllers/Api/AuthController.php
-
-/**
- * Handle user logout for both SPA and API tokens.
- */
+   
 public function logout(Request $request)
 {
     /** @var \App\Models\User $user */

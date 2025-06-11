@@ -335,11 +335,23 @@ const BookingModalForm = ({
         );
     };
 
-    const formatDateForInputHelper = (dateString) => {
-        if (!dateString) return '';
-        try { const date = new Date(dateString); return isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 16); }
-        catch (e) { return ''; }
-    };
+  const formatDateForInputHelper = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+        return '';
+    }
+
+    const pad = (num) => num.toString().padStart(2, '0');
+    
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1); // getMonth() is 0-indexed
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
 
     useEffect(() => { if (submissionError && clearSubmissionError) clearSubmissionError(); }, [formData, clearSubmissionError]);
 

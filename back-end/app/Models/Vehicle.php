@@ -8,6 +8,7 @@ use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\VehicleStatus; // Assuming you created this Enum
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Vehicle extends Model
 {
@@ -47,6 +48,10 @@ class Vehicle extends Model
     {
         return $this->belongsTo(Address::class, 'current_location_address_id');
     }
+      public function damageReports(): HasManyThrough
+    {
+        
+        return $this->hasManyThrough(DamageReport::class, Booking::class);}
 
     public function bookings(): HasMany
     {

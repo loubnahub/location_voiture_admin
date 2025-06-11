@@ -25,6 +25,8 @@ use App\Http\Controllers\Api\DamageReportController;
 use App\Http\Controllers\Api\RentalAgreementController;
 use App\Http\Controllers\Api\PromotionCampaignController;
 use App\Http\Controllers\Api\PromotionCodeController;
+use App\Http\Controllers\Api\Admin\DashboardController; 
+use App\Http\Controllers\Api\Admin\NotificationController; 
 
 // --- Admin Controller Imports ---
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
@@ -46,12 +48,17 @@ use App\Http\Controllers\Api\Admin\RoleController as AdminRoleController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-    Route::apiResource('vehicle-types', VehicleTypeController::class)->parameters(['vehicle-types' => 'vehicle_type']);
+Route::get('/vehicle-models/list-all', [VehicleModelController::class, 'listAll']);
+    Route::get('/lov/renters', [AdminUserController::class, 'getRentersForDropdown']);
+
+// In routes/api.php, inside the `auth:sanctum` group but OUTSIDE the `admin` prefix group
+        Route::apiResource('vehicle-types', VehicleTypeController::class)->parameters(['vehicle-types' => 'vehicle_type']);
     Route::apiResource('vehicle-models', VehicleModelController::class)->parameters(['vehicle-models' => 'vehicle_model']);
 // Publicly viewable fleet information
 Route::get('/vehicle-models/public', [VehicleModelController::class, 'publicIndex'])->name('public.vehicle-models.index');
 Route::get('/vehicle-models/public/{vehicle_model}', [VehicleModelController::class, 'publicShow'])->name('public.vehicle-models.show');
-
+Route::get('lov/vehicles-available', [VehicleController::class, 'getAvailableForDropdown']);
+Route::get('lov/insurance-plans-active', [InsurancePlanController::class, 'getActiveForDropdown']);
 // Special route for streaming 3D model files
 Route::get('/stream-glb/{filepath}', function ($filepath) {
     if (Str::contains($filepath, '..')) { abort(403, 'Invalid file path.'); }
@@ -60,7 +67,8 @@ Route::get('/stream-glb/{filepath}', function ($filepath) {
     return Storage::disk('local')->response($fullStoragePath);
 })->where('filepath', '.*');
 
-
+    Route::apiResource('insurance-plans', InsurancePlanController::class)->parameters(['insurance-plans' => 'insurance_plan']);
+Route::get('/my-rewards', [UserController::class, 'getMyRewards']);
 // ========================================================================
 //   Group 2: Authenticated Routes (User MUST be logged in)
 // ========================================================================
@@ -77,16 +85,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('addresses/{address}', [AddressController::class, 'destroyForCurrentUser'])->name('my-addresses.destroy');
     Route::patch('user/default-address/{address}', [UserController::class, 'setDefaultAddress'])->name('user.default-address.update');
     Route::get('/my-promotion-codes', [PromotionCodeController::class, 'currentUserCodes'])->name('my-promotion-codes.index');
-
+Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedule'])->name('vehicles.schedule');
     // --- General Application Resources (CRUD) ---
     Route::apiResource('users', UserController::class);
-    Route::apiResource('addresses', AddressController::class)->except(['store', 'destroy']);
-
+    Route::apiResource('addresses', AddressController::class);
     Route::apiResource('vehicles', VehicleController::class);
     Route::apiResource('extras', ExtraController::class);
     Route::apiResource('features', FeatureController::class);
-    Route::apiResource('insurance-plans', InsurancePlanController::class)->parameters(['insurance-plans' => 'insurance_plan']);
-    Route::apiResource('bookings', BookingController::class);
     Route::apiResource('operational-holds', OperationalHoldController::class)->parameters(['operational-holds' => 'operational_hold']);
     Route::apiResource('maintenance-records', MaintenanceRecordController::class)->parameters(['maintenance-records' => 'maintenance_record']);
     Route::apiResource('payments', PaymentController::class);
@@ -107,7 +112,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/vehicle-models/{vehicleModel}/colors/{color}', [VehicleModelColorController::class, 'destroy']);
     
     // --- Custom Actions & Helper Routes ---
-    Route::get('/vehicle-models/list-all', [VehicleModelController::class, 'listAll']);
     Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirmBooking'])->name('bookings.confirm');
     Route::post('/bookings/{booking}/complete', [BookingController::class, 'completeBooking'])->name('bookings.complete');
     Route::get('/bookings/{booking}/payments', [PaymentController::class, 'indexForBooking'])->name('bookings.payments.index');
@@ -116,12 +120,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('promotion-codes/lov/users', [PromotionCodeController::class, 'getUsersForDropdown'])->name('promotion-codes.lov.users');
     Route::get('promotion-codes/lov/campaigns', [PromotionCodeController::class, 'getCampaignsForDropdown'])->name('promotion-codes.lov.campaigns');
     Route::post('promotion-codes/validate-apply', [PromotionCodeController::class, 'validateAndApplyPreview'])->name('promotion-codes.validate-apply');
-    
+        Route::get('bookings-for-agreement', [BookingController::class, 'forAgreementDropdown'])->name('bookings.for-agreement-dropdown');
+
     // Rental Agreement Custom Actions
     Route::post('rental-agreements/generate', [RentalAgreementController::class, 'store'])->name('rental-agreements.generate');
     Route::get('rental-agreements/{rental_agreement}/download', [RentalAgreementController::class, 'downloadDocument'])->name('rental-agreements.download');
     Route::post('rental-agreements/{rental_agreement}/send-notification', [RentalAgreementController::class, 'sendAgreementNotification'])->name('rental-agreements.send-notification');
     Route::get('/bookings/{booking}/rental-agreement', [RentalAgreementController::class, 'showForBooking'])->name('bookings.rental-agreement.show');
+        Route::apiResource('bookings', BookingController::class);
+
+// In routes/api.php
+
+// ... inside Route::middleware('auth:sanctum')->group(...)
+// ... inside Route::prefix('admin')->middleware('role:admin')->group(...)
 
 
     // ========================================================================
@@ -134,10 +145,17 @@ Route::middleware('auth:sanctum')->group(function () {
          ->middleware('role:admin') // Spatie's role middleware
          ->group(function() {
             Route::apiResource('users', AdminUserController::class);
+             Route::get('users/{user}/rewards', [AdminUserController::class, 'getUserRewards']);
             Route::get('roles-list', [AdminUserController::class, 'fetchRoles'])->name('roles.list');
             Route::apiResource('system/roles', AdminRoleController::class)
                   ->parameters(['roles' => 'role'])
                   ->names('system.roles');
+                  Route::delete('notifications/clear-all', [NotificationController::class, 'clearAll'])->name('admin.notifications.clear-all');
+Route::delete('notifications/clear-read', [NotificationController::class, 'clearRead'])->name('admin.notifications.clear-read');
+
+Route::get('dashboard-stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats');
+Route::get('notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
+
     });
 
 }); // --- End of Authenticated Routes Group ---

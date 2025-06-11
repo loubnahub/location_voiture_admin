@@ -30,7 +30,7 @@ import Home from './Clients/Home/Home';
 import ClientLayout from './layouts/ClientLayout';
 import VehicleModelCreatePage from './pages/VehicleModelCreatePage';
 import VehicleCreatePage from './pages/VehicleCreatePage'
-
+import SignUpClient from './Clients/Compte/Singup'
 // In App.js
 
 
@@ -68,8 +68,7 @@ const ProtectedRoute = ({ requiredRole }) => {
     </AdminLayout>
   );
 };
-// --- Public Route Component ---
-// --- Add this new component inside App.js ---
+
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isLoading, currentUser } = useAuth();
 
@@ -127,7 +126,14 @@ function App() {
               </PublicRoute>
             }
           />
-
+<Route
+            path="/SignUp"
+            element={
+              <PublicRoute>
+                <SignUpClient />
+              </PublicRoute>
+            }
+          />
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute  requiredRole="admin"/>}>
             <Route index element={<Navigate to="dashboard" replace />} />

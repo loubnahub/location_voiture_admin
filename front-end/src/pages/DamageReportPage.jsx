@@ -6,12 +6,14 @@ import {
   updateDamageReport,
   deleteDamageReport,
   fetchAllBookings,
-fetchAllUsersForAdmin as fetchAllUsers,
+  fetchAllUsersForAdmin as fetchAllUsers,
 } from '../services/api';
 import { Form, Row, Col, Spinner, InputGroup, Button, Image, Alert, CloseButton } from 'react-bootstrap';
 import { FaExclamationTriangle, FaTrash } from 'react-icons/fa';
-import { DamageReportStatus as DamageReportStatusEnum, getDisplayLabel } from '../Enums';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import { DamageReportStatus as DamageReportStatusEnum } from '../Enums';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { LuEye } from 'react-icons/lu';
+import DamageReportDetailModal from '../components/damage-reports/DamageReportDetailModal';
 
 // --- Columns ---
 const damageReportColumns = [
@@ -161,7 +163,7 @@ const DamageReportModalFormFields = ({ formData, handleInputChange, modalFormErr
     return (<div className="text-center p-3"><Spinner animation="border" size="sm" className="me-2" />Loading form options...</div>);
   }
 
-  return (
+ return (
     <>
       <Form.Group className="mb-3" controlId="drBookingId">
         <Form.Label>Related Booking <span className="text-danger">*</span></Form.Label>
@@ -286,56 +288,72 @@ const DamageReportModalFormFields = ({ formData, handleInputChange, modalFormErr
           </Form.Group>
         </Col>
       </Row>
+
+      {/* --- START OF THE MODIFIED BLOCK --- */}
       <div className="image-management-section border p-3 mt-3">
         <h5>Damage Images</h5>
         {imageUploadError && <Alert variant="danger" size="sm">{imageUploadError}</Alert>}
         {loadingImages && <Spinner animation="border" size="sm" />}
+        
+        {/* Existing Images Section */}
         {!loadingImages && currentImages.length > 0 && (
           <div className="mb-3">
-            <h6>Existing Images:</h6>
-            <Row xs={2} md={3} lg={4} className="g-2">
+            <br/>
+            <Row xs={2} md={4} lg={5} className="g-3">
               {currentImages.map((image) => (
-                <Col key={image.id} className="position-relative">
-                  <Image src={image.url} thumbnail fluid style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    className="position-absolute top-0 end-0 m-1 p-1 lh-1"
-                    onClick={() => handleDeleteExistingImage(image.id)}
-                    title="Delete this image"
-                  >
-                    <FaTrash size={10} />
-                  </Button>
+                <Col key={image.id}>
+                  <div className="position-relative d-inline-block">
+                    <Image src={image.url} thumbnail fluid style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="position-absolute top-0 end-0 p-1 lh-1"
+                      onClick={() => handleDeleteExistingImage(image.id)}
+                      title="Delete this image"
+                      style={{ transform: 'translate(50%, -50%)' }}
+                    >
+                      <FaTrash size={10} />
+                    </Button>
+                  </div>
                 </Col>
               ))}
             </Row>
           </div>
         )}
+        
         {!loadingImages && isEditMode && currentImages.length === 0 && (
           <p className="text-muted small">No existing images for this report.</p>
         )}
+        
+        {/* New Images Section */}
         {newImageFiles.length > 0 && (
           <div className="mb-3">
             <h6>New Images to Upload:</h6>
-            <Row xs={2} md={3} lg={4} className="g-2">
+            <br/>
+            <Row xs={2} md={4} lg={5} className="g-3">
               {newImageFiles.map((file, index) => (
-                <Col key={index} className="position-relative">
-                  <Image src={URL.createObjectURL(file)} thumbnail fluid style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    className="position-absolute top-0 end-0 m-1 p-1 lh-1"
-                    onClick={() => handleRemoveNewImage(index)}
-                    title="Remove this image before upload"
-                  >
-                    <CloseButton variant="white" style={{ fontSize: '0.5rem' }} />
-                  </Button>
-                  <p className="small text-muted truncate-text" title={file.name}>{file.name}</p>
+                <Col key={index}>
+                  <div className="position-relative d-inline-block">
+                    <Image src={URL.createObjectURL(file)} thumbnail fluid style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      className="position-absolute top-0 end-0 p-1 lh-1"
+                      onClick={() => handleRemoveNewImage(index)}
+                      title="Remove this image before upload"
+                      style={{ transform: 'translate(50%, -50%)' }}
+                    >
+                      <CloseButton variant="white" style={{ fontSize: '0.5rem' }} />
+                    </Button>
+                  </div>
+                  <p className="small text-muted text-truncate" title={file.name}>{file.name}</p>
                 </Col>
               ))}
             </Row>
           </div>
         )}
+
+        {/* File Input */}
         <Form.Group controlId="drImageUpload">
           <Form.Label>Add Images</Form.Label>
           <Form.Control
@@ -349,13 +367,35 @@ const DamageReportModalFormFields = ({ formData, handleInputChange, modalFormErr
           </Form.Text>
         </Form.Group>
       </div>
+      {/* --- END OF THE MODIFIED BLOCK --- */}
     </>
   );
-};
+  }
 
 // --- Main Page Component ---
 const DamageReportPage = () => {
-  // Only process core fields for API (not helper/image fields)
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+
+  const handleShowDetailModal = (item) => {
+    setSelectedReport(item);
+    setShowDetailModal(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedReport(null);
+  };
+
+  const damageReportTableActions = [
+    {
+      icon: <LuEye size={18} />,
+      handler: (item) => handleShowDetailModal(item),
+      title: "View Details",
+      className: "text-info",
+    },
+  ];
+
   const processCoreReportFields = useCallback((data) => {
     const processed = {
       id: data.id || null,
@@ -366,8 +406,6 @@ const DamageReportPage = () => {
       status: data.status || null,
       repair_cost: data.repair_cost || null,
     };
-
-    // Date formatting for reported_at
     if (processed.reported_at) {
       try {
         const date = new Date(processed.reported_at);
@@ -387,8 +425,6 @@ const DamageReportPage = () => {
     } else {
       processed.reported_at = null;
     }
-
-    // Repair cost formatting
     if (processed.repair_cost === '' || processed.repair_cost === null || processed.repair_cost === undefined) {
       processed.repair_cost = null;
     } else {
@@ -411,16 +447,10 @@ const DamageReportPage = () => {
   }, []);
 
   const handleCreateDamageReport = async (dataFromResourcePage) => {
-    console.log("DRP: handleCreate - Raw dataFromResourcePage:", JSON.stringify(dataFromResourcePage, null, 2));
     const coreReportData = processCoreReportFields({ ...dataFromResourcePage });
     const imageFilesToUpload = dataFromResourcePage.newly_uploaded_images || [];
-
-    console.log("DRP: handleCreate - Core Report Data:", coreReportData);
-    console.log("DRP: handleCreate - New Image Files:", imageFilesToUpload.map(f => f.name));
-
     let payload;
     if (imageFilesToUpload.length > 0 && imageFilesToUpload.every(f => f instanceof File)) {
-      console.log("DRP: handleCreate - Using FormData.");
       payload = new FormData();
       for (const key in coreReportData) {
         if (coreReportData[key] !== null && coreReportData[key] !== undefined) {
@@ -431,28 +461,19 @@ const DamageReportPage = () => {
         payload.append(`images[${index}]`, file, file.name);
       });
     } else {
-      console.log("DRP: handleCreate - Using JSON.", coreReportData);
       payload = coreReportData;
     }
     return createDamageReport(payload);
   };
 
   const handleUpdateDamageReport = async (id, dataFromResourcePage) => {
-    console.log("DRP: handleUpdate - Raw dataFromResourcePage for ID:", id, JSON.stringify(dataFromResourcePage, null, 2));
     const coreReportData = processCoreReportFields({ ...dataFromResourcePage });
     const imageFilesToUpload = dataFromResourcePage.newly_uploaded_images || [];
     const imageIdsScheduledForDeletion = dataFromResourcePage.image_ids_to_delete || [];
-
-    console.log("DRP: handleUpdate - Core Report Data:", coreReportData);
-    console.log("DRP: handleUpdate - New Image Files:", imageFilesToUpload.map(f => f.name));
-    console.log("DRP: handleUpdate - Image IDs to Delete:", imageIdsScheduledForDeletion);
-
     let payload;
     if (imageFilesToUpload.length > 0 && imageFilesToUpload.every(f => f instanceof File)) {
-      console.log("DRP: handleUpdate - Using FormData (new images present).");
       payload = new FormData();
       payload.append('_method', 'PUT');
-
       for (const key in coreReportData) {
         if (coreReportData[key] !== null && coreReportData[key] !== undefined) {
           payload.append(key, String(coreReportData[key]));
@@ -466,38 +487,37 @@ const DamageReportPage = () => {
       imageFilesToUpload.forEach((file, index) => {
         payload.append(`images[${index}]`, file, file.name);
       });
-      console.log("DRP: handleUpdate - FormData entries being sent:");
-      for (let pair of payload.entries()) {
-        console.log(`  ${pair[0]}:`, pair[1] instanceof File ? `File(${pair[1].name})` : pair[1]);
-      }
     } else {
-      // No new images, send as JSON. This payload will include image_ids_to_delete if present.
-      console.log("DRP: handleUpdate - Using JSON (no new files).");
       payload = { ...coreReportData };
       if (imageIdsScheduledForDeletion.length > 0) {
         payload.image_ids_to_delete = imageIdsScheduledForDeletion;
       }
-      // 'newly_uploaded_images' is not part of coreReportData
-      // 'images' (array of existing image objects) is also not part of coreReportData
-      console.log("DRP: handleUpdate - JSON Payload for ID:", id, JSON.stringify(payload, null, 2));
     }
     return updateDamageReport(id, payload);
   };
 
   return (
-    <ResourcePage
-      resourceName="Damage Report"
-      resourceNamePlural="Damage Reports"
-      IconComponent={FaExclamationTriangle}
-      columns={damageReportColumns}
-      initialFormData={initialDamageReportData}
-      renderModalForm={renderModalFormWithLogic}
-      fetchAllItems={fetchAllDamageReports}
-      createItem={handleCreateDamageReport}
-      updateItem={handleUpdateDamageReport}
-      deleteItem={deleteDamageReport}
-      searchPlaceholder="Search by description, vehicle, reporter..."
-    />
+    <>
+      <ResourcePage
+        resourceName="Damage Report"
+        resourceNamePlural="Damage Reports"
+        IconComponent={FaExclamationTriangle}
+        columns={damageReportColumns}
+        initialFormData={initialDamageReportData}
+        renderModalForm={renderModalFormWithLogic}
+        tableActionsConfig={damageReportTableActions}
+        fetchAllItems={fetchAllDamageReports}
+        createItem={handleCreateDamageReport}
+        updateItem={handleUpdateDamageReport}
+        deleteItem={deleteDamageReport}
+        searchPlaceholder="Search by description, vehicle, reporter..."
+      />
+      <DamageReportDetailModal
+        show={showDetailModal}
+        onHide={handleCloseDetailModal}
+        report={selectedReport}
+      />
+    </>
   );
 };
 

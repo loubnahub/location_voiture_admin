@@ -10,7 +10,12 @@ const apiClient = axios.create({
     'Accept': 'application/json',
   },
 });
-
+export const fetchVehicleSchedule = (vehicleId) => {
+  if (!vehicleId) {
+    return Promise.reject(new Error("Vehicle ID is required to fetch schedule."));
+  }
+  return apiClient.get(`/vehicles/${vehicleId}/schedule`);
+};
 // Interceptor to dynamically set Content-Type for FormData
 apiClient.interceptors.request.use(
   (config) => {
@@ -43,8 +48,10 @@ export const login = async (credentials) => {
 
 export const fetchCurrentUser = () => apiClient.get('/user');
 export const logout = () => apiClient.post('/logout');
-
-// --- User Functions (Admin) ---
+// In src/services/api.js
+export const fetchBookingsForAgreementDropdown = () => apiClient.get('/bookings-for-agreement');
+export const fetchAdminDashboardStats = () => apiClient.get('/admin/dashboard-stats');
+export const fetchUserRewardsAdmin = (userId) => apiClient.get(`/admin/users/${userId}/rewards`);// --- User Functions (Admin) ---
 export const fetchAllUsersForAdmin = (params = {}) => apiClient.get('/admin/users', { params });
 export const createUserAdmin = (userData) => apiClient.post('/admin/users', userData);
 export const fetchUserAdmin = (id) => apiClient.get(`/admin/users/${id}`);
@@ -68,11 +75,17 @@ export const deleteRoleAdmin = (id) => apiClient.delete(`/admin/system/roles/${i
 
 // --- Vehicle Functions ---
 export const fetchAllVehicles = (params = {}) => apiClient.get('/vehicles', { params });
+export const fetchAvailableVehiclesForDropdown = (currentVehicleId = null) => {
+  const params = currentVehicleId ? { current_vehicle_id: currentVehicleId } : {};
+  return apiClient.get('/lov/vehicles-available', { params });
+};
+export const fetchActiveInsurancePlansForDropdown = () => apiClient.get('/lov/insurance-plans-active');
 export const fetchVehicle = (id) => apiClient.get(`/vehicles/${id}`);
 export const createVehicle = (vehicleData) => apiClient.post('/vehicles', vehicleData);
 export const updateVehicle = (id, vehicleData) => apiClient.put(`/vehicles/${id}`, vehicleData);
 export const deleteVehicle = (id) => apiClient.delete(`/vehicles/${id}`);
 export const updateAddress = (id, addressData) => apiClient.put(`/addresses/${id}`, addressData);
+export const deleteAddress = (id) => apiClient.delete(`/addresses/${id}`);
 // --- Vehicle Model Functions ---
 export const fetchAllVehicleModels = (params = {}) => apiClient.get('/vehicle-models', { params });
 export const fetchVehicleModelById = (id) => apiClient.get(`/vehicle-models/${id}`);
@@ -152,6 +165,7 @@ export const updateDamageReport = (id, data) => {
   return apiClient.put(`/damage-reports/${id}`, data);
 };
 export const deleteDamageReport = (id) => apiClient.delete(`/damage-reports/${id}`);
+export const fetchRentersForDropdown = () => apiClient.get('/lov/renters');
 
 // --- Rental Agreement Functions ---
 export const fetchAllRentalAgreements = (params = {}) => apiClient.get('/rental-agreements', { params });

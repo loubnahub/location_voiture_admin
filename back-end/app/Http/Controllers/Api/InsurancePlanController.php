@@ -172,4 +172,20 @@ class InsurancePlanController extends Controller
 
         return response()->json(['message' => 'Insurance plan deleted successfully.'], 200);
     }
+    // In app/Http/Controllers/Api/InsurancePlanController.php
+
+// ... other methods ...
+
+/**
+ * Fetch a list of active insurance plans formatted for a dropdown.
+ */
+public function getActiveForDropdown()
+{
+    $plans = InsurancePlan::where('is_active', true)
+        ->select('id', 'name', 'price_per_day')
+        ->orderBy('name', 'asc')
+        ->get();
+
+    return response()->json(['data' => $plans]);
+}
 }

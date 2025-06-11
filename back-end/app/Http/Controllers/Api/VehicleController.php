@@ -14,6 +14,14 @@ use Illuminate\Support\Str;  // For Str::uuid() if creating Address on the fly
 use Illuminate\Support\Facades\Storage;
 class VehicleController extends Controller
 {
+       const HOLD_REASONS = [
+        'MAINTENANCE' => 'Maintenance',
+        'INSPECTION' => 'Inspection',
+        'CLEANING' => 'Cleaning',
+        'UNAVAILABLE' => 'Temporary Unavailability',
+        'RELOCATION' => 'Relocation',
+        'OTHER' => 'Other',
+    ];
     /**
      * Helper method to transform a Vehicle model for API response.
      */
@@ -123,7 +131,6 @@ class VehicleController extends Controller
             'color' => 'required|string|max:50',
             'hexa_color_code' => 'nullable|string|max:7', // e.g., #RRGGBB
             'mileage' => 'required|integer|min:0',
-            'status' => ['required', Rule::in(array_column(VehicleStatus::cases(), 'value'))], // Validate against enum values
             'acquisition_date' => 'nullable|date_format:Y-m-d',
             // Add logic for creating a new address if address fields are sent instead of ID
             // 'new_address.street_line_1' => 'required_without:current_location_address_id|string|max:255',
@@ -158,47 +165,29 @@ class VehicleController extends Controller
      * Display the specified resource.
      * This is the method we worked on for the detail page with multiple tabs.
      */
-public function show(Request $request, Vehicle $vehicle)
+  public function show(Request $request, Vehicle $vehicle)
     {
+        // 1. EFFICIENTLY LOAD ALL NECESSARY DATA
+        // This single query fetches the vehicle and all related data we need.
         $vehicle->load([
             'vehicleModel.vehicleType',
             'vehicleModel.media' => fn($q) => $q->orderBy('is_cover', 'desc')->orderBy('order', 'asc'),
             'vehicleModel.features' => fn($q) => $q->orderBy('category')->orderBy('name'),
             'vehicleModel.extras' => fn($q) => $q->orderBy('name'),
-            // 'vehicleModel.insurancePlans', // Load if you need it in model_details
             'currentLocationAddress',
-            'bookings' => fn($q) => $q->select(['id', 'vehicle_id', 'renter_user_id', 'start_date', 'end_date', 'status', 'created_at'])->with([ // Added created_at for sorting if needed
+            'bookings' => fn($q) => $q->with([
                 'renter:id,full_name',
-                'damageReports.images', // Assuming DamageReport has 'images'
+                'damageReports.images',
             ])->orderBy('start_date', 'asc'),
-            'operationalHolds.maintenanceRecord' => fn($q) => $q->select(['id', 'operational_hold_id', 'description', 'cost', 'created_at']),
+            'operationalHolds.maintenanceRecord',
         ]);
 
         $vehicleModel = $vehicle->vehicleModel;
-
-        // --- गैदर ALL DAMAGE REPORTS (THIS SEEMS FINE FOR A SEPARATE LIST, NOT FOR CALENDAR DIRECTLY UNLESS MODIFIED) ---
-        $allDamageReportsForListing = $vehicle->bookings->flatMap(function ($booking) {
-            return $booking->damageReports->map(function ($report) use ($booking) {
-                return [
-                    'id' => $report->id,
-                    'booking_id' => $booking->id,
-                    'description' => $report->description,
-                    'status' => $report->status,
-                    'reported_at' => $report->reported_at?->toIso8601String(),
-                    'images' => $report->images->map(function ($img) {
-                        return [
-                            'id' => $img->id,
-                            'url' => $img->url ? Storage::url($img->url) : null, // Ensure full URL
-                        ];
-                    }),
-                ];
-            });
-        })->values();
-
-        // --- AGGREGATE SCHEDULE EVENTS FOR CALENDAR ---
         $scheduleEvents = [];
+        $alertsAndHealth = [];
 
-        // Bookings for Calendar
+        // 2. PROCESS BOOKINGS
+        // Add all bookings to the schedule.
         foreach ($vehicle->bookings as $booking) {
             $scheduleEvents[] = [
                 'id' => 'booking_' . $booking->id,
@@ -209,21 +198,69 @@ public function show(Request $request, Vehicle $vehicle)
             ];
         }
 
-        // Operational Holds for Calendar (Maintenance, Cleaning, other Holds)
-        foreach ($vehicle->operationalHolds as $hold) {
-            $eventTitle = $hold->reason ?? 'Operational Hold'; // Default title
-            $eventType = 'operational_hold'; // Default type
-
-            if ($hold->maintenanceRecord) {
-                $eventType = 'maintenance'; // Specific type for maintenance
-                $eventTitle = 'Maintenance: ' . ($hold->maintenanceRecord->description ?? $hold->reason);
-            } elseif (strtolower(trim($hold->reason ?? '')) === 'cleaning') {
-                $eventType = 'cleaning'; // Specific type for cleaning
-                $eventTitle = 'Cleaning: ' . ($hold->notes ?? $hold->reason);
+        // 3. PROCESS DAMAGE REPORTS
+        // Add damage reports to BOTH the schedule (as single-day events) and the alerts list.
+        $allDamageReportsForListing = [];
+        foreach ($vehicle->bookings->flatMap->damageReports as $report) {
+            // Add to the detailed listing for a dedicated damage report view
+            $allDamageReportsForListing[] = [
+                'id' => $report->id,
+                'booking_id' => $report->booking_id,
+                'description' => $report->description,
+                'status' => $report->status,
+                'reported_at' => $report->reported_at?->toIso8601String(),
+                'images' => $report->images->map(fn ($img) => ['id' => $img->id, 'url' => $img->url ? Storage::url($img->url) : null]),
+            ];
+            
+            // Add to the calendar as a single-day, non-blocking event
+            if ($report->reported_at) {
+                $scheduleEvents[] = [
+                    'id' => 'damage_event_' . $report->id,
+                    'type' => 'damage',
+                    'title' => 'Damage Reported',
+                    'start' => $report->reported_at->toIso8601String(),
+                    'end' => $report->reported_at->toIso8601String(),
+                ];
             }
-            // Add more elseif conditions here if other operational hold reasons
-            // should map to different 'types' for calendar display.
 
+            // Add to the health/alerts list
+            $alertsAndHealth[] = [
+                'id' => 'damage_alert_' . $report->id,
+                'type' => 'damage',
+                'title' => 'Damage Report',
+                'details' => Str::limit($report->description, 50),
+                'date' => $report->reported_at?->toIso8601String(),
+                'action_label' => 'View Report',
+            ];
+        }
+
+        // 4. PROCESS OPERATIONAL HOLDS (MAINTENANCE, CLEANING, ETC.)
+        // This single loop processes holds for BOTH the calendar and the alerts list.
+        foreach ($vehicle->operationalHolds as $hold) {
+            // Use the class constant for reasons. Default to 'Other' if reason is missing.
+            $reason = $hold->reason ?? self::HOLD_REASONS['OTHER'];
+            $eventType = 'operational_hold'; // Default event type
+            $eventTitle = $reason;
+            $details = Str::limit($hold->notes ?? $reason, 50);
+
+            // Determine specific types and titles based on the reason
+            switch ($reason) {
+                case self::HOLD_REASONS['MAINTENANCE']:
+                    $eventType = 'maintenance';
+                    $eventTitle = 'Maintenance'; // Simplified title for calendar
+                    if ($hold->maintenanceRecord) {
+                        $details = Str::limit($hold->maintenanceRecord->description, 50);
+                    }
+                    break;
+                case self::HOLD_REASONS['CLEANING']:
+                    $eventType = 'cleaning';
+                    break;
+                case self::HOLD_REASONS['INSPECTION']:
+                    $eventType = 'inspection';
+                    break;
+            }
+
+            // Add event to the calendar schedule
             $scheduleEvents[] = [
                 'id' => 'hold_' . $hold->id,
                 'type' => $eventType,
@@ -231,80 +268,23 @@ public function show(Request $request, Vehicle $vehicle)
                 'start' => $hold->start_date?->toIso8601String(),
                 'end' => $hold->end_date?->toIso8601String(),
             ];
+
+            // Add a corresponding item to the alerts list
+            $alertsAndHealth[] = [
+                'id' => 'alert_hold_' . $hold->id,
+                'type' => $eventType,
+                'title' => $reason,
+                'details' => $details,
+                'date' => $hold->start_date?->toIso8601String(),
+                'action_label' => 'View Details',
+            ];
         }
 
-        // **** ADD DAMAGE REPORTS AS SINGLE-DAY EVENTS TO SCHEDULE_EVENTS ****
-        foreach ($vehicle->bookings as $booking) {
-            foreach ($booking->damageReports as $report) {
-                if ($report->reported_at) { // Ensure there's a date
-                    $scheduleEvents[] = [
-                        'id' => 'damage_event_' . $report->id, // Unique ID prefix for calendar event
-                        'type' => 'damage',                   // Type for frontend matching
-                        'title' => 'Damage Reported',         // Simple title for tooltip
-                        // More detailed title: 'Damage: ' . Str::limit($report->description, 25),
-                        'start' => $report->reported_at->toIso8601String(), // Single day event
-                        'end' => $report->reported_at->toIso8601String(),   // Start and end are the same
-                        // You can include original_report_id or other details if needed by frontend
-                        // 'original_report_id' => $report->id, 
-                    ];
-                }
-            }
-        }
-        // **** END OF DAMAGE REPORT ADDITION TO SCHEDULE_EVENTS ****
+        // 5. SORT THE FINAL LISTS (Optional but recommended for consistency)
+        usort($scheduleEvents, fn ($a, $b) => strtotime($a['start'] ?? 0) <=> strtotime($b['start'] ?? 0));
+        usort($alertsAndHealth, fn ($a, $b) => strtotime($b['date'] ?? 0) <=> strtotime($a['date'] ?? 0)); // Sort alerts newest first
 
-        // Sort all schedule events by start date (optional)
-        usort($scheduleEvents, function ($a, $b) {
-            return strtotime($a['start'] ?? 'now') <=> strtotime($b['start'] ?? 'now');
-        });
-
-
-        // --- AGGREGATE ALERTS & HEALTH (FOR THE LIST CARD) ---
-        $alertsAndHealth = [];
-
-        // Damage reports for Alerts List
-        foreach ($vehicle->bookings as $booking) {
-            foreach ($booking->damageReports as $report) {
-                $alertsAndHealth[] = [
-                    'id' => 'damage_alert_' . $report->id, // Different ID for alert list item
-                    'type' => 'damage',
-                    'title' => 'Damage Report',
-                    'details' => Str::limit($report->description, 50), // Limit details for list view
-                    'date' => $report->reported_at?->toIso8601String(),
-                    'action_label' => 'View Report', // Changed from "Install Report"
-                ];
-            }
-        }
-
-        // Maintenance for Alerts List (from Operational Holds)
-        foreach ($vehicle->operationalHolds as $hold) {
-            if ($hold->maintenanceRecord) {
-                $alertsAndHealth[] = [
-                    'id' => 'maintenance_alert_' . $hold->maintenanceRecord->id,
-                    'type' => 'maintenance',
-                    'title' => 'Maintenance Scheduled',
-                    'details' => Str::limit($hold->maintenanceRecord->description ?? $hold->reason, 50),
-                    'date' => $hold->start_date?->toIso8601String(), // Use hold's start date or maintenance record's due_date if available
-                    'action_label' => 'View Log',
-                ];
-            }
-        }
-
-        // Cleaning for Alerts List (from Operational Holds)
-        foreach ($vehicle->operationalHolds as $hold) {
-            if (strtolower(trim($hold->reason ?? '')) === 'cleaning') {
-                $alertsAndHealth[] = [
-                    'id' => 'cleaning_alert_' . $hold->id,
-                    'type' => 'cleaning',
-                    'title' => 'Cleaning Scheduled',
-                    'details' => Str::limit($hold->notes ?? $hold->reason, 50),
-                    'date' => $hold->start_date?->toIso8601String(),
-                    'action_label' => 'View Details',
-                ];
-            }
-        }
-        // You might want to sort alertsAndHealth by date too
-
-
+        // 6. ASSEMBLE THE FINAL JSON RESPONSE
         $modelDetailsPayload = $vehicleModel ? $this->transformVehicleModelForDetail($vehicleModel) : null;
 
         return response()->json([
@@ -315,23 +295,23 @@ public function show(Request $request, Vehicle $vehicle)
                 'color' => $vehicle->color,
                 'hexa_color_code' => $vehicle->hexa_color_code,
                 'mileage' => (int) $vehicle->mileage,
-                'status' => $vehicle->status, // This is the VehicleStatus Enum instance
-                'status_display' => $vehicle->status ? ucfirst(str_replace('_', ' ', $vehicle->status->value)) : null, // For convenience
+                'status' => $vehicle->status,
+                'status_display' => $vehicle->status ? ucfirst(str_replace('_', ' ', $vehicle->status->value)) : null,
                 'acquisition_date' => $vehicle->acquisition_date?->toDateString(),
                 
                 'model_details' => $modelDetailsPayload,
                 'current_location' => $vehicle->currentLocationAddress ? $this->transformAddressForDetail($vehicle->currentLocationAddress) : null,
                 
-                'schedule_events' => $scheduleEvents, // This NOW INCLUDES damage and correctly typed cleaning/maintenance
+                'schedule_events' => $scheduleEvents,
                 'alerts_and_health' => $alertsAndHealth,
-                
-                'damage_reports_listing' => $allDamageReportsForListing, // Keep original if needed for a separate detailed list of damages
+                'damage_reports_listing' => $allDamageReportsForListing,
 
                 'created_at' => $vehicle->created_at?->toIso8601String(),
                 'updated_at' => $vehicle->updated_at?->toIso8601String(),
             ]
         ]);
     }
+
 
     // Ensure your transformVehicleModelForDetail includes full URLs and color_hex for media
     private function transformVehicleModelForDetail(VehicleModel $model): ?array
@@ -395,7 +375,6 @@ public function show(Request $request, Vehicle $vehicle)
             'color' => 'sometimes|required|string|max:50',
             'hexa_color_code' => 'nullable|string|max:7',
             'mileage' => 'sometimes|required|integer|min:0',
-            'status' => ['sometimes', 'required', Rule::in(array_column(VehicleStatus::cases(), 'value'))],
             'acquisition_date' => 'nullable|date_format:Y-m-d',
             // Add logic for updating/creating address if address fields are sent
         ]);
@@ -449,6 +428,61 @@ public function show(Request $request, Vehicle $vehicle)
             // You could also include the accessor if needed on frontend, though frontend can construct it too
             // 'full_address_string' => $address->full_address_string, 
         ];
+    }
+    // In app/Http/Controllers/Api/VehicleController.php
+
+// ... other methods ...
+
+/**
+ * Fetch a list of available vehicles formatted for a dropdown.
+ * Includes the currently booked vehicle if an ID is provided.
+ */
+public function getAvailableForDropdown(Request $request)
+{
+    $request->validate([
+        'current_vehicle_id' => 'nullable|uuid|exists:vehicles,id'
+    ]);
+
+    $query = Vehicle::query()
+        ->with('vehicleModel:id,title,brand') // Eager load necessary relations
+        ->select('id', 'license_plate', 'status', 'base_price_per_day', 'vehicle_model_id');
+
+    // Start with available vehicles
+    $query->where('status', 'available');
+
+    // If a current_vehicle_id is passed (i.e., we are editing a booking),
+    // make sure that vehicle is included in the list even if its status isn't 'available'.
+    if ($request->filled('current_vehicle_id')) {
+        $query->orWhere('id', $request->input('current_vehicle_id'));
+    }
+
+    $vehicles = $query->orderBy('created_at', 'desc')->get();
+
+    // Transform the data to a consistent format for the frontend
+    $formattedVehicles = $vehicles->map(function ($vehicle) {
+        return [
+            'id' => $vehicle->id,
+            'base_price_per_day' => (float) $vehicle->base_price_per_day,
+            'status' => $vehicle->status,
+            'display_name' => ($vehicle->vehicleModel->brand ?? '') . ' ' .
+                              ($vehicle->vehicleModel->title ?? 'Unknown Model') . ' (' .
+                              ($vehicle->license_plate ?? 'N/A') . ') - Status: ' .
+                              (ucfirst($vehicle->status) ?? 'N/A'),
+        ];
+    });
+
+    return response()->json(['data' => $formattedVehicles]);
+}
+ public function getSchedule(Vehicle $vehicle)
+    {
+        // Fetch all bookings for this vehicle that are not cancelled and have not yet ended.
+        // This gives the frontend all the "busy" time slots.
+        $bookings = $vehicle->bookings()
+            ->whereNotIn('status', ['cancelled_by_user', 'cancelled_by_platform'])
+            ->where('end_date', '>', Carbon::now())
+            ->get(['id', 'start_date', 'end_date']); // Only select the fields we need
+
+        return response()->json(['data' => $bookings]);
     }
     // You'd also need transformScheduleEvents and transformAlerts helpers
 }

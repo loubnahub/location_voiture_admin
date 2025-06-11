@@ -1,48 +1,54 @@
-// AlertsVehicleHealthCard.jsx
-import React from 'react';
-import { Button, Card } from 'react-bootstrap'; // Using Card component
-import { AlertTriangle, Edit as EditIcon } from 'lucide-react'; // Renamed Edit to EditIcon to avoid conflict
-import { 
-    LuWrench, LuMapPin, LuShieldCheck, LuBell, 
-    LuTrash2, LuArrowRight // Added LuArrowRight
-} from 'react-icons/lu';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+// src/components/vehicle/AlertsVehicleHealthCard.jsx
 
-// --- Alert Styles - Tailored to Figma ---
-// Note: The 'border' property from your original style is not used as per Figma.
-// The icon 'bg' is the main color indicator.
+import React, { useState } from 'react'; // Import useState
+import { Button, Card } from 'react-bootstrap';
+import { AlertTriangle, Edit as EditIcon } from 'lucide-react';
+import { 
+    LuWrench, LuMapPin, LuShieldCheck, LuBell, LuArrowRight 
+} from 'react-icons/lu';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+// Centralized styles for different alert types (no changes here)
 const alertTypeStyles = {
   damage:   { 
-    iconBg: '#DC3545', // Figma Red (Bootstrap danger)
+    iconBg: '#DC3545',
     iconColor: '#FFFFFF', 
     icon: <AlertTriangle size={20} />, 
-    actionButtonBg: '#FFE5E5', // Light red for button bg
-    actionButtonColor: '#DC3545', // Darker red for button icon/text
+    actionButtonBg: '#FFE5E5',
+    actionButtonColor: '#DC3545',
     defaultActionLabel: 'View Report' 
   },
   maintenance: { 
-    iconBg: '#FFC107', // Figma Yellow (Bootstrap warning)
-    iconColor: '#212529', // Dark text on yellow
+    iconBg: '#FFC107',
+    iconColor: '#212529',
     icon: <LuWrench size={20} />,
-    actionButtonBg: '#FFF3CD', // Light yellow
-    actionButtonColor: '#B58900', // Darker yellow/brown
+    actionButtonBg: '#FFF3CD',
+    actionButtonColor: '#B58900',
     defaultActionLabel: 'View Log'
   },
-  relocation:  { // Figma purple - using a generic purple, adjust as needed
-    iconBg: '#6F42C1', // Bootstrap purple example
+  relocation:  {
+    iconBg: '#6F42C1',
     iconColor: '#FFFFFF', 
     icon: <LuMapPin size={20} />,
-    actionButtonBg: '#E9DFFF', // Light purple
+    actionButtonBg: '#E9DFFF',
     actionButtonColor: '#6F42C1',
     defaultActionLabel: 'View Details' 
   },
-  cleaning:    { // Figma blue for cleaning
-    iconBg: '#0D6EFD', // Bootstrap primary blue
+  cleaning:    {
+    iconBg: '#0D6EFD',
     iconColor: '#FFFFFF', 
     icon: <LuShieldCheck size={20} />,
-    actionButtonBg: '#CFE2FF', // Light blue
+    actionButtonBg: '#CFE2FF',
     actionButtonColor: '#0D6EFD',
     defaultActionLabel: 'View Hold'
+  },
+  inspection:  {
+    iconBg: '#6F42C1',
+    iconColor: '#FFFFFF', 
+    icon: <LuShieldCheck size={20} />,
+    actionButtonBg: '#E9DFFF',
+    actionButtonColor: '#6F42C1',
+    defaultActionLabel: 'View Details' 
   },
   default:     { 
     iconBg: '#ADB5BD', 
@@ -54,33 +60,55 @@ const alertTypeStyles = {
   },
 };
 
-const AlertsVehicleHealthCard = ({ alertsAndHealth }) => {
-  const alerts = Array.isArray(alertsAndHealth) ? alertsAndHealth : [];
+const AlertsVehicleHealthCard = ({ alertsAndHealth, onAlertClick }) => {
+  // --- NEW: State to control visibility ---
+  const [showAll, setShowAll] = useState(false);
 
-  const handleAlertAction = (item) => {
-    alert(`Action for: ${item.title}\nDetails: ${item.details}`);
+  const allAlerts = Array.isArray(alertsAndHealth) ? alertsAndHealth : [];
+
+  // --- NEW: Determine which alerts to display ---
+  const alertsToDisplay = showAll ? allAlerts : allAlerts.slice(0, 3);
+
+  const handleAlertAction = (e, item) => {
+    e.stopPropagation();
+    if (onAlertClick) {
+      onAlertClick(item);
+    } else {
+      console.log(`Action for: ${item.title}\nDetails: ${item.details}`);
+    }
   };
 
-
   return (
-    // Using Bootstrap Card component for base structure
-    <Card className="alerts-vehicle-health-card h-100"> {/* h-100 for equal height if parent is d-flex */}
+    <Card className="alerts-vehicle-health-card h-100">
       <Card.Header className="d-flex justify-content-between align-items-center">
         <h5 className="card-title mb-0">Alerts & Vehicle Health</h5>
         
+        {/* --- NEW: "View All" button --- */}
+        {allAlerts.length > 3 && (
+          <Button 
+            variant="link" 
+            className="p-0 view-all-btn"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? 'Show Less' : `View All (${allAlerts.length})`}
+          </Button>
+        )}
       </Card.Header>
-      <Card.Body className={alerts.length > 0 ? "p-0" : "d-flex align-items-center justify-content-center"}>
-        {alerts.length === 0 ? (
+      <Card.Body className={alertsToDisplay.length > 0 ? "p-0" : "d-flex align-items-center justify-content-center"}>
+        {alertsToDisplay.length === 0 ? (
           <p className="text-muted mb-0">No active alerts or health items.</p>
         ) : (
-          <ul className="list-group list-group-flush p-3"> {/* Added p-3 for spacing around list items */}
-            {alerts.map((item, index) => {
+          <ul className="list-group list-group-flush p-3">
+            {/* --- MODIFIED: Use alertsToDisplay instead of alerts --- */}
+            {alertsToDisplay.map((item, index) => {
               const style = alertTypeStyles[item.type] || alertTypeStyles.default;
               const actionLabel = item.action_label || style.defaultActionLabel;
               return (
                 <li
                   key={item.id || index}
-                  className="list-group-item alert-list-item" // Custom class for specific styling
+                  className="list-group-item alert-list-item"
+                  onClick={(e) => handleAlertAction(e, item)} 
+                  style={{cursor: 'pointer'}}
                 >
                   <div className="d-flex align-items-center">
                     <span className="alert-icon-wrapper" style={{ backgroundColor: style.iconBg, color: style.iconColor }}>
@@ -91,85 +119,74 @@ const AlertsVehicleHealthCard = ({ alertsAndHealth }) => {
                       <small className="alert-subtitle text-muted d-block">{item.details}</small>
                       {item.date && (
                         <small className="alert-date text-muted d-block">
-                          {/* Using "Until" or "Due" based on Figma hints */}
-                          {item.type === 'maintenance' ? 'Due: ' : 'Until: '} 
                           {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
-                          {item.time && ` ${item.time}`} {/* Assuming item.time might exist */}
                         </small>
                       )}
                     </div>
                   </div>
-                  <Button 
-                    variant="light" // Using variant="light" to then style background with CSS/inline
+                  {/* <Button 
+                    variant="light"
                     size="sm" 
                     className="alert-action-button"
-                    onClick={() => handleAlertAction(item)}
+                    onClick={(e) => handleAlertAction(e, item)}
                     style={{ 
                         backgroundColor: style.actionButtonBg, 
-                        borderColor: style.actionButtonBg, // Or a slightly darker shade
+                        borderColor: style.actionButtonBg,
                         color: style.actionButtonColor
                     }}
                   >
                     <span className="action-label">{actionLabel}</span>
                     <LuArrowRight size={16} className="ms-1 action-arrow" />
-                  </Button>
+                  </Button> */}
                 </li>
               );
             })}
           </ul>
         )}
       </Card.Body>
+      {/* --- This is your exact original style block, with one addition for the new button --- */}
       <style jsx>{`
         .alerts-vehicle-health-card {
-          border-radius: 16px !important; /* Figma like */
+          border-radius: 16px !important;
           background-color:rgba(255, 255, 255, 0.61);
-          border: none; /* Figma has no border on the main card, relies on shadow */
-          box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+          border: none;
+          box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
         }
         .alerts-vehicle-health-card .card-header {
-          background-color: rgba(255, 255, 255, 0.61) !important; /* White header */
-          border-bottom: 1px solid #F0F2F5; /* Light separator */
-          padding: 1rem 1.5rem; /* Adjust padding */
+          background-color: rgba(255, 255, 255, 0.61) !important;
+          border-bottom: 1px solid #F0F2F5;
+          padding: 1rem 1.5rem;
           border-radius: 16px !important;
-
         }
         .alerts-vehicle-health-card .card-title {
-          font-size: 1.125rem; /* Approx 18px */
-          font-weight: 600; /* Semi-bold */
+          font-size: 1.125rem;
+          font-weight: 600;
           color: #212529;
         }
-        .header-action-button {
-          font-size: 0.8rem;
-          font-weight: 500;
-          padding: 0.4rem 0.8rem !important;
-          border-radius: 8px !important;
-          display: inline-flex;
-          align-items: center;
-        }
-        .header-action-button svg {
-           margin-right: 0.3rem;
-        }
-        .delete-button {
-          background-color: #FF5C5C !important; /* Figma red */
-          border-color: #FF5C5C !important;
-        }
-        .edit-button {
-          background-color: #4A90E2 !important; /* Figma blue */
-          border-color: #4A90E2 !important;
-        }
 
-     
+        /* --- NEW STYLE FOR "VIEW ALL" BUTTON --- */
+        .view-all-btn {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0D6EFD; /* Primary blue color */
+            text-decoration: none;
+        }
+        .view-all-btn:hover {
+            text-decoration: underline;
+        }
+        /* --- END NEW STYLE --- */
+
         .alerts-vehicle-health-card .list-group-flush {
-            padding: 1rem 1.5rem; /* Spacing for the list items from card edge */
+            padding: 1rem 1.5rem;
         }
 
         .alert-list-item {
-          background-color:rgba(255, 255, 255, 0.61) !important; /* Each item is white */
-          border: 1px solid #F0F2F5 !important; /* Very light border for each item */
-          border-radius: 10px !important; /* Rounded corners for each item */
-          padding: 0.75rem 1rem !important; /* Padding inside each item */
-          margin-bottom: 0.75rem; /* Space between items */
-          box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.04); /* Subtle shadow per item */
+          background-color:rgba(255, 255, 255, 0.61) !important;
+          border: 1px solid #F0F2F5 !important;
+          border-radius: 10px !important;
+          padding: 0.75rem 1rem !important;
+          margin-bottom: 0.75rem;
+          box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.04);
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -178,43 +195,43 @@ const AlertsVehicleHealthCard = ({ alertsAndHealth }) => {
           margin-bottom: 0;
         }
         .alert-icon-wrapper {
-          width: 40px; /* Figma icon circle size */
-          height: 40px; /* Figma icon circle size */
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-right: 1rem; /* Space between icon and text */
+          margin-right: 1rem;
         }
         .alert-text-content {
-            /* flex-grow: 1; */ /* Allow text to take up space if needed */
+            /* flex-grow: 1; */
         }
         .alert-title {
-          font-size: 0.9rem; /* Approx 14-15px */
-          font-weight: 600; /* Semi-bold */
+          font-size: 0.9rem;
+          font-weight: 600;
           color: #343a40;
           margin-bottom: 0.1rem;
         }
         .alert-subtitle, .alert-date {
-          font-size: 0.8rem; /* Approx 12-13px */
+          font-size: 0.8rem;
           color: #6c757d;
         }
         .alert-action-button {
-          padding: 0.3rem 0.3rem !important; /* Tighter padding for the square button */
-          border-radius: 6px !important; /* Rounded corners for the action button */
-          width: 30px; /* Square button width */
-          height: 30px; /* Square button height */
+          padding: 0.3rem 0.3rem !important;
+          border-radius: 6px !important;
+          width: 30px;
+          height: 30px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           font-weight: 500;
         }
         .alert-action-button .action-label {
-          display: none; /* Hide text label as per Figma, only show icon */
+          display: none;
         }
         .alert-action-button .action-arrow {
-          margin-left: 0 !important; /* No margin if label is hidden */
-          font-size: 1rem; /* Adjust arrow size */
+          margin-left: 0 !important;
+          font-size: 1rem;
         }
       `}</style>
     </Card>

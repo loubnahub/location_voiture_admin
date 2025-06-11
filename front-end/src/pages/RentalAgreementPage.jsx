@@ -6,7 +6,7 @@ import {
   updateRentalAgreement,
   deleteRentalAgreement,
   sendRentalAgreementNotification,
-  fetchAllBookings
+fetchBookingsForAgreementDropdown
 } from '../services/api';
 import { Form, Row, Col, Button, Modal, Spinner, Alert } from 'react-bootstrap';
 import { LuFileText, LuDownload, LuPrinter, LuSend,} from 'react-icons/lu';
@@ -90,16 +90,28 @@ const RentalAgreementPage = () => {
   const [notificationStatus, setNotificationStatus] = useState({ type: '', message: '' });
   const [markingAsSignedInfo, setMarkingAsSignedInfo] = useState({ id: null, type: null });
 
-  const fetchBookingsForDropdown = useCallback(async () => {
-    setLoadingBookings(true);
-    try {
-      const response = await fetchAllBookings({ all: true });
-      const data = response.data.data || response.data || [];
-      setBookingsForDropdown(Array.isArray(data) ? data : []);
-    } catch (error) { console.error("Error fetching bookings:", error); setBookingsForDropdown([]); }
-    finally { setLoadingBookings(false); }
-  }, []);
+  // In src/pages/RentalAgreementPage.jsx
 
+const fetchBookingsForDropdown = useCallback(async () => {
+    setLoadingBookings(true);
+    console.log("--- Starting to fetch eligible bookings... ---"); // LOG 1
+    try {
+      const response = await fetchBookingsForAgreementDropdown();
+      
+      console.log("API Response Received:", response); // LOG 2 - Check the whole response object
+
+      const data = response.data.data || [];
+      console.log("Extracted data from response:", data); // LOG 3 - Check the extracted array
+
+      setBookingsForDropdown(Array.isArray(data) ? data : []);
+      console.log("State should now be set."); // LOG 4
+
+    } catch (error) {
+      console.error("CRITICAL: Error fetching eligible bookings:", error.response || error);
+    } finally {
+      setLoadingBookings(false);
+    }
+}, []);
   const handleOpenGenerateModal = () => {
     fetchBookingsForDropdown();
     setSelectedBookingForGeneration(''); setGenerationNotes('');
@@ -310,12 +322,18 @@ const RentalAgreementPage = () => {
           {generationSuccess && <Alert variant="success">{generationSuccess}</Alert>}
           <Form.Group className="mb-3" controlId="generateRaBookingId">
             <Form.Label>Select Booking <span className="text-danger">*</span></Form.Label>
-            <Form.Select value={selectedBookingForGeneration}
-                         onChange={(e) => { setSelectedBookingForGeneration(e.target.value); setGenerationError(''); }}
-                         disabled={loadingBookings || isGenerating} required>
-              <option value="">{loadingBookings ? "Loading..." : "Select a booking..."}</option>
-              {bookingsForDropdown.map(b => (<option key={b.id} value={b.id}>{`ID: ${b.id?.substring(0,8)}... (V: ${b.vehicle_display || 'N/A'}, R: ${b.renter_name || 'N/A'})`}</option>))}
-            </Form.Select>
+            <Form.Select 
+    value={selectedBookingForGeneration}
+    onChange={(e) => { setSelectedBookingForGeneration(e.target.value); setGenerationError(''); }}
+    disabled={loadingBookings || isGenerating} required
+>
+    <option value="">{loadingBookings ? "Loading..." : "Select an eligible booking..."}</option>
+    {bookingsForDropdown.map(b => (
+        <option key={b.id} value={b.id}>
+            {b.display_text}
+        </option>
+    ))}
+</Form.Select>
           </Form.Group>
           <Form.Group className="mb-3" controlId="generateRaNotes">
             <Form.Label>Initial Notes (Optional)</Form.Label>

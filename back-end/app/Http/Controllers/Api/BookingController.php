@@ -10,6 +10,7 @@ use App\Models\Vehicle;
 use App\Models\InsurancePlan;
 use App\Models\PromotionCode;
 use App\Models\Extra;
+use App\Enums\PromotionCodeStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -101,15 +102,14 @@ class BookingController extends Controller
         if (in_array($sortBy, $allowedSorts)) { $query->orderBy($sortBy, $sortDirection); }
         else { $query->orderBy('created_at', 'desc'); }
 
-        if ($request->boolean('all')) {
-            $bookings = $query->get();
-            return response()->json(['data' => $bookings->map(fn($b) => $this->transformBooking($b))]);
-        } else {
-            $perPage = $request->input('per_page', config('pagination.default_per_page', 15));
-            $bookingsPaginated = $query->paginate((int)$perPage);
-            $bookingsPaginated->getCollection()->transform(fn($b) => $this->transformBooking($b));
-            return response()->json($bookingsPaginated);
-        }
+  
+$perPage = $request->input('per_page', config('pagination.default_per_page', 15));
+
+$paginator = $query->paginate($request->boolean('all') ? 9999 : (int)$perPage);
+
+$paginator->getCollection()->transform(fn($booking) => $this->transformBooking($booking));
+
+return response()->json($paginator);
     }
 
     public function store(Request $request)
@@ -119,7 +119,7 @@ class BookingController extends Controller
             'renter_user_id' => 'required|uuid|exists:users,id',
             'vehicle_id' => 'required|uuid|exists:vehicles,id',
             'insurance_plan_id' => 'nullable|uuid|exists:insurance_plans,id',
-            'promotion_code_id' => 'nullable|uuid|exists:promotion_codes,id',
+            'promotion_code_id' => ['nullable', 'uuid', Rule::exists('promotion_codes', 'id')->where('status', 'active')],
             'start_date' => 'required|date|after_or_equal:now',
             'end_date' => 'required|date|after:start_date',
             'status' => ['sometimes', 'required', Rule::in(array_column(BookingStatus::cases(), 'value'))],
@@ -157,8 +157,7 @@ class BookingController extends Controller
         try {
             $bookingInputData = collect($validatedData)->except('booking_extras')->all();
             $booking = Booking::create($bookingInputData);
-            Log::info('BookingController@store: Booking created with ID: ' . $booking->id);
-
+            Log::info("--- BOOKING CREATED (ID: {$booking->id}). EVENT SHOULD FIRE NOW. ---");
             $extrasToSync = [];
             if (!empty($validatedData['booking_extras'])) {
                 foreach ($validatedData['booking_extras'] as $extraData) {
@@ -174,7 +173,18 @@ class BookingController extends Controller
                 $booking->bookingExtras()->sync($extrasToSync);
                 Log::info('BookingController@store: Extras synced successfully for booking ID ' . $booking->id);
             }
+             if (!empty($validatedData['promotion_code_id'])) {
+            $promoCode = PromotionCode::find($validatedData['promotion_code_id']);
+            if ($promoCode) {
+                $promoCode->status = PromotionCodeStatus::USED;
+                $promoCode->used_at = now();
+                $promoCode->used_on_booking_id = $booking->id;
+                $promoCode->save();
+                Log::info("Promotion code {$promoCode->code_string} marked as USED for Booking ID: {$booking->id}");
+            }
+        }
             DB::commit();
+            
             return response()->json(['data' => $this->transformBooking($booking->refresh()), 'message' => 'Booking created successfully.'], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -185,6 +195,7 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
+            $booking->load('bookingExtras');
         return response()->json(['data' => $this->transformBooking($booking)]);
     }
 
@@ -241,6 +252,38 @@ class BookingController extends Controller
                     Log::info('BookingController@update: Extras synced successfully for booking ID ' . $booking->id);
                 }
             }
+              $newPromoCodeId = $validatedData['promotion_code_id'] ?? null;
+               $originalPromoCodeId = $booking->promotion_code_id; // <-- ADD THIS LINE
+    
+    $bookingUpdateInputData = collect($validatedData)->except('booking_extras')->all();
+        
+        // Only process if the code has actually changed
+        if ($newPromoCodeId !== $originalPromoCodeId) {
+
+            // If an old code was attached, revert it to ACTIVE
+            if ($originalPromoCodeId) {
+                $originalPromoCode = PromotionCode::find($originalPromoCodeId);
+                if ($originalPromoCode) {
+                    $originalPromoCode->status = PromotionCodeStatus::ACTIVE;
+                    $originalPromoCode->used_at = null;
+                    $originalPromoCode->used_on_booking_id = null;
+                    $originalPromoCode->save();
+                    Log::info("Original promotion code {$originalPromoCode->code_string} REVERTED to ACTIVE.");
+                }
+            }
+
+            // If a new code is being attached, mark it as USED
+            if ($newPromoCodeId) {
+                $newPromoCode = PromotionCode::find($newPromoCodeId);
+                if ($newPromoCode && $newPromoCode->status === PromotionCodeStatus::ACTIVE) {
+                    $newPromoCode->status = PromotionCodeStatus::USED;
+                    $newPromoCode->used_at = now();
+                    $newPromoCode->used_on_booking_id = $booking->id;
+                    $newPromoCode->save();
+                    Log::info("NEW promotion code {$newPromoCode->code_string} marked as USED for Booking ID: {$booking->id}");
+                }
+            }
+        }
             DB::commit();
             return response()->json(['data' => $this->transformBooking($booking->refresh()), 'message' => 'Booking updated successfully.']);
         } catch (\Exception $e) {
@@ -273,42 +316,91 @@ public function destroy($id) // Changed from `Booking $booking` to `$id`
         return response()->json(['message' => 'Booking cannot be confirmed or is already confirmed/processed.'], 422);
     }
 
-    public function completeBooking(Request $request, Booking $booking)
-    {
-        // Only allow completing if status is ACTIVE
-        if ($booking->status === BookingStatus::ACTIVE) {
-            DB::beginTransaction();
-            try {
-                $booking->status = BookingStatus::COMPLETED;
-                $booking->save();
+ 
 
-                // Increment user's loyalty_points
-                $renter = $booking->renter()->first();
-                if ($renter) {
-                    $renter->increment('loyalty_points');
-                    Log::info("User {$renter->id} loyalty_points incremented. New count: {$renter->loyalty_points}");
-                } else {
-                    Log::warning("Could not find renter for booking {$booking->id} to increment loyalty points.");
-                }
+// In app/Http/Controllers/Api/BookingController.php
 
-                DB::commit();
+// In BookingController.php
 
-                // Dispatch event after commit
-                event(new BookingCompleted($booking->fresh()));
-                Log::info("BookingCompleted event dispatched for booking ID {$booking->id}");
-
-                return response()->json(['data' => $this->transformBooking($booking->refresh()), 'message' => 'Booking marked as completed and loyalty updated.']);
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error("Error completing booking {$booking->id}: " . $e->getMessage(), ['exception' => $e]);
-                return response()->json(['message' => 'Failed to complete booking due to a server error.'], 500);
-            }
-        }
-        return response()->json(['message' => 'Only active bookings can be completed, or this booking is not in a state to be completed.'], 422);
+public function completeBooking(Request $request, Booking $booking)
+{
+    if ($booking->status !== BookingStatus::ACTIVE) {
+        return response()->json(['message' => 'Only active bookings can be completed.'], 422);
     }
-    // Example in BookingController.php
+
+    Log::info("--- STARTING COMPLETE BOOKING FOR ID: {$booking->id} ---");
+
+    DB::transaction(function () use ($booking) {
+        $booking->load('renter');
+        $renter = $booking->renter;
+
+        if ($renter) {
+            Log::info("Renter {$renter->id} found. Current points: {$renter->loyalty_points}. Booking final price: {$booking->final_price}");
+
+            // --- TEMPORARY TEST: Unconditionally award 1 point ---
+            $pointsToAward = 1; 
+            Log::info("TEST: Forcing pointsToAward to be {$pointsToAward}.");
+            // --- END TEMPORARY TEST ---
+
+            if ($pointsToAward > 0) {
+                $renter->increment('loyalty_points', $pointsToAward);
+                Log::info("Executing increment method.");
+            } else {
+                 Log::info("Condition (pointsToAward > 0) was FALSE. Skipping increment.");
+            }
+        } else {
+            Log::warning("No renter found for booking.");
+        }
+        
+        $booking->status = BookingStatus::COMPLETED;
+        $booking->save();
+        Log::info("Booking status set to COMPLETED and saved.");
+    });
+
+    $freshBooking = Booking::with('renter')->find($booking->id);
+
+    Log::info("--- TRANSACTION COMPLETE. FINAL CHECK ---", [
+        'renter_id' => $freshBooking->renter->id,
+        'points_in_db' => $freshBooking->renter->loyalty_points,
+    ]);
+
+    event(new BookingCompleted($freshBooking));
+    Log::info("Event dispatched.");
+
+    return response()->json([
+        'data' => $this->transformBooking($freshBooking),
+        'message' => 'Booking marked as completed and loyalty updated.'
+    ], 200);
+}
 public function forDropdown() {
     $bookings = Booking::select('id')->orderBy('created_at', 'desc')->get();
     return response()->json(['data' => $bookings]);
 }
+public function forAgreementDropdown()
+    {
+        // Fetch bookings that DO NOT HAVE a related rental agreement.
+        // We also only fetch recent bookings to keep the list manageable.
+        $bookings = Booking::whereDoesntHave('rentalAgreement')
+            ->with(['renter:id,full_name', 'vehicle:id,license_plate', 'vehicle.vehicleModel:id,title'])
+            ->where('start_date', '>=', now()->subMonths(3)) // Optional: only show recent/upcoming bookings
+            ->latest() // Show newest first
+            ->limit(100) // Limit the result size for performance
+            ->get();
+
+        // We can use the existing Booking transformation, but a simpler one is better for a dropdown
+        $transformedBookings = $bookings->map(function ($booking) {
+            $vehicleDisplay = $booking->vehicle?->vehicleModel?->title ?? $booking->vehicle?->license_plate ?? 'N/A';
+            return [
+                'id' => $booking->id,
+                'display_text' => sprintf(
+                    'ID: %s... (V: %s, R: %s)',
+                    substr($booking->id, 0, 8),
+                    $vehicleDisplay,
+                    $booking->renter?->full_name ?? 'N/A'
+                )
+            ];
+        });
+
+        return response()->json(['data' => $transformedBookings]);
+    }
 }

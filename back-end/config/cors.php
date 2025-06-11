@@ -21,20 +21,14 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')),
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
     // --- THIS IS THE MOST IMPORTANT PART TO FIX ---
     // In config/cors.php
 
-'allowed_headers' => [
-    'Content-Type',
-    'X-XSRF-TOKEN',
-    'Authorization',
-    'Accept',
-    'X-Requested-With',
-],
+'allowed_headers' => ['*'],
     'exposed_headers' => [],
 
     'max_age' => 0,

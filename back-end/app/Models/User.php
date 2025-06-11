@@ -64,9 +64,9 @@ class User extends Authenticatable
         return $this->hasMany(Review::class, 'reviewer_user_id');
     }
 
-    public function notifications(): HasMany
+     public function notifications(): HasMany
     {
-        return $this->hasMany(Notification::class);
+        return $this->hasMany(Notification::class)->orderBy('timestamp', 'desc');
     }
 
     public function promotionCodes(): HasMany

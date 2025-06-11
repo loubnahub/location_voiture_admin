@@ -108,13 +108,7 @@ const DynamicTable = ({
 
                     // Log the result of the shouldShow evaluation
                     // This log is crucial for debugging your "Send to Client" button visibility
-                    if (typeof customAction.shouldShow === 'function') { // Only log if shouldShow was actually a function
-                        console.log(
-                            `DynamicTable (${_resourceNameForDebug || 'Table'}): Custom Action: '${customAction.title}' (Item ID: ${getKey(item)})`,
-                            `\n  - shouldShow() was called and returned: ${showThisCustomAction}`
-                            // `\n  - Item data passed to shouldShow:`, JSON.parse(JSON.stringify(item)) // Avoid circular issues if item is complex
-                        );
-                    }
+                   
 
 
                     if (showThisCustomAction && customAction.handler) { // Ensure handler also exists

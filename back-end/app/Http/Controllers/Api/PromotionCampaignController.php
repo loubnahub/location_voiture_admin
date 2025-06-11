@@ -83,7 +83,7 @@ class PromotionCampaignController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:promotion_campaigns,name',
             'description' => 'nullable|string|max:1000',
-            'required_rental_count' => 'required|integer|min:1',
+            'required_rental_count' => 'nullable|integer|min:1',
             'reward_value' => 'required|numeric|min:0',
             'reward_type' => ['required', Rule::in(array_column(PromotionRewardType::cases(), 'value'))], // Validate against Enum values
             'code_validity_days' => 'nullable|integer|min:1',
