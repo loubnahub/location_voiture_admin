@@ -33,6 +33,19 @@ import VehicleCreatePage from './pages/VehicleCreatePage'
 import SignUpClient from './Clients/Compte/Singup'
 // In App.js
 
+import Vehicle from './Clients/VEHICLE/Vehicle';
+import CarDetailPage from './Clients/DetailsCars/DetailsModalCar'; 
+import CarProductPage from './Clients/DetailsCars/DetailsCarColor'; 
+import Service from './Clients/Services/Service';
+import Contact from './Clients/Contact/Contact';
+import About from './Clients/About/About';
+import CarDetails3d from './Clients/DetailsCars/DetailsCar3d'; 
+import BookingPageClient from './Clients/DetailsCars/RentNow';
+import SignUpPage from './Clients/Compte/Singup';
+import NotificationsPage from './Clients/Compte/Notification';
+import FAQs from './Clients/FAQs/Faqs';
+import Blog from './Clients/Blog/Blog';
+import PrivacyPolicyPage from './Clients/Privacy/Section/PrivacyPage';
 
 // In App.js
 const ProtectedRoute = ({ requiredRole }) => {
@@ -111,13 +124,20 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<ClientLayout />}>
             <Route index element={<Home />} />
-            {/* <Route path="home" element={<HomePage />} />
-            <Route path="about" element={<AboutPage />} />
-            <Route path="services" element={<ServicesPage />} />
-            <Route path="fleet" element={<FleetPage />} />
-            <Route path="contact" element={<ContactPage />} /> */}
-            {/* Add other client routes like /booking/:id here */}
-          </Route>
+      
+                      <Route path="/Notification" element={<NotificationsPage />} />
+                      <Route path="/fleet" element={<Vehicle />} /> 
+                      <Route path="/fleet/details/:vehicleId" element={<CarDetailPage />} />
+                      <Route path="/booking/:vehicleId" element={<BookingPageClient />} />
+                      <Route path="/fleet/details/:vehicleId/3d" element={<CarDetails3d />} />
+                      <Route path="/fleet/details/:vehicleId/ar" element={<CarProductPage />} />
+                      <Route path="/Services" element={<Service />} />
+                      <Route path="/Contact" element={<Contact />} />
+                      <Route path="/About" element={<About />} />
+                      <Route path="/FAQs" element={<FAQs />} />
+                      <Route path="/Blog" element={<Blog />} />
+                      <Route path="/PrivacyPolicy" element={<PrivacyPolicyPage/>} />
+                    </Route>
           <Route
             path="/login"
             element={

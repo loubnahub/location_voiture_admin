@@ -27,6 +27,8 @@ use App\Http\Controllers\Api\PromotionCampaignController;
 use App\Http\Controllers\Api\PromotionCodeController;
 use App\Http\Controllers\Api\Admin\DashboardController; 
 use App\Http\Controllers\Api\Admin\NotificationController; 
+use App\Http\Controllers\Api\AvisController;
+use App\Http\Controllers\Api\ContactSubmissionController;
 
 // --- Admin Controller Imports ---
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
@@ -73,7 +75,29 @@ Route::get('/my-rewards', [UserController::class, 'getMyRewards']);
 //   Group 2: Authenticated Routes (User MUST be logged in)
 // ========================================================================
 // All routes within this group are protected by Sanctum's authentication.
+Route::post('/contact-submissions', [ContactSubmissionController::class, 'store'])
+    ->name('contact-submissions.store'); // Consistent naming
 
+
+Route::get('/contact-submissions', [ContactSubmissionController::class, 'index'])
+    ->name('contact-submissions.index');
+
+
+Route::get('/contact-submissions/{contactSubmission}', [ContactSubmissionController::class, 'show'])
+    ->name('contact-submissions.show')
+    ->whereNumber('contactSubmission'); // Ensures the {contactSubmission} parameter is a number (ID)
+
+
+Route::put('/contact-submissions/{contactSubmission}', [ContactSubmissionController::class, 'update'])
+    ->name('contact-submissions.update')
+    ->whereNumber('contactSubmission');
+// Note: Route::patch(...) is also common for partial updates and maps to the same 'update' method.
+
+
+Route::delete('/contact-submissions/{contactSubmission}', [ContactSubmissionController::class, 'destroy'])
+    ->name('contact-submissions.destroy')
+    ->whereNumber('contactSubmission');
+Route::apiResource('avis', AvisController::class);
 Route::middleware('auth:sanctum')->group(function () {
 
     // --- Core Authentication Routes ---
