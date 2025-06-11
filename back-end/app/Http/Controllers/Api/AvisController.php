@@ -1,46 +1,39 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Avi; // Make sure this model exists and is correctly named
+use App\Models\Avi;
 use Illuminate\Http\Request;
+// Removed: use Illuminate\Support\Facades\Auth; // No longer needed if not associating users
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\AvisResource;
 
 class AvisController extends Controller
 {
+    // No constructor middleware needed for public access
+
     public function index(Request $request)
     {
         try {
-            $query = Avi::query();
+            $query = Avi::query(); // Start with query builder
 
-            if ($request->has('approved')) {
-                $query->where('is_approved', filter_var($request->query('approved'), FILTER_VALIDATE_BOOLEAN));
-            } else {
-                // Default to public approved view if not specified otherwise
-                // For an admin panel or specific views, you might remove this default or change it
-                $query->where('is_approved', true); 
+            // Removed 'approved' filter as is_approved column is removed
+            // All fetched avis are considered public
+
+            if ($request->filled('carName')) {
+                $query->where('car_name', $request->query('carName'));
             }
 
-            if ($request->has('carName')) {
-                // Ensure your Avi model has a 'car_name' attribute or accessor if 'carName' is preferred.
-                // If DB column is 'car_name', this is fine.
-                $query->where('car_name', $request->query('carName')); 
-            }
+            $query->orderBy('created_at', 'desc');
 
-            $perPage = $request->input('per_page', 15); // Default per_page
-            $avisList = $query->orderBy('created_at', 'desc')->paginate((int)$perPage);
-            
-            return response()->json($avisList);
+            $perPage = $request->input('per_page', 10);
+            $avisList = $query->paginate((int)$perPage);
 
+            return AvisResource::collection($avisList);
         } catch (\Exception $e) {
-            Log::error('Error retrieving avis: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                // 'trace' => $e->getTraceAsString() // Be cautious about sending full traces in production
-            ]);
-            return response()->json(['message' => 'Sorry, there was an error retrieving avis. Please check server logs.'], 500);
+            Log::error('Error retrieving avis: ' . $e->getMessage(), ['exception_trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Sorry, there was an error retrieving reviews.'], 500);
         }
     }
 
@@ -49,9 +42,8 @@ class AvisController extends Controller
         $validator = Validator::make($request->all(), [
             'name'        => 'required|string|max:255',
             'rating'      => 'required|integer|min:1|max:5',
-            'comment'     => 'required|string|min:5|max:5000',
-            'carName'     => 'nullable|string|max:255', // Frontend sends 'carName'
-            'is_approved' => 'sometimes|boolean',      // Optional, for admin or specific cases
+            'comment'     => 'required|string|min:10|max:5000',
+            'carName'     => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -65,56 +57,53 @@ class AvisController extends Controller
                 'name'        => $validatedData['name'],
                 'rating'      => $validatedData['rating'],
                 'comment'     => $validatedData['comment'],
-                // Default to true (approved) if 'is_approved' is not sent by client.
-                // For user-submitted reviews, you might want to default this to false
-                // and have an admin approve them.
-                'is_approved' => $validatedData['is_approved'] ?? true, 
+                // 'is_approved' removed
+                // 'user_id' removed
+                // 'avatar_url' removed
             ];
 
-            // Map 'carName' from request to 'car_name' for database if necessary
-            // If your Avi model has 'carName' in $fillable, Eloquent might handle it.
-            // But explicit mapping is safer if DB column is 'car_name'.
             if (isset($validatedData['carName'])) {
                 $dataToCreate['car_name'] = $validatedData['carName'];
             } else {
-                // Default carName if not provided from frontend.
-                // Ensure your DB column 'car_name' allows NULL or has a default.
-                $dataToCreate['car_name'] = $validatedData['carName'] ?? "General Feedback"; 
+                $dataToCreate['car_name'] = null;
             }
 
-
+            Log::info('Attempting to create Avi (Review) with data:', $dataToCreate);
             $avi = Avi::create($dataToCreate);
+            Log::info('Avi (Review) created successfully', ['id' => $avi->id]);
 
             return response()->json([
-                'message' => 'Thank you! Your Avis has been submitted.',
-                'data'    => $avi
+                'message' => 'Thank you! Your review has been submitted.', // Simpler message
+                'data'    => new AvisResource($avi)
             ], 201);
+
+        } catch (\Illuminate\Database\QueryException $qe) {
+            Log::error('Database Query Error saving review: ', ['message' => $qe->getMessage(), 'sql' => $qe->getSql(), 'bindings' => $qe->getBindings(), 'payload' => $request->all(), 'prepared_data' => $dataToCreate ?? [], 'trace' => $qe->getTraceAsString()]);
+            return response()->json(['message' => 'Sorry, there was a database error submitting your review.'], 500);
         } catch (\Exception $e) {
-            Log::error('Error saving avi: ' . $e->getMessage(), [
-                'request_payload' => $request->all(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                // 'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json(['message' => 'Sorry, there was an error submitting your Avis. Please try again later.'], 500);
+            Log::error('General Error saving review: ', ['message' => $e->getMessage(), 'payload' => $request->all(), 'prepared_data' => $dataToCreate ?? [], 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Sorry, there was an error submitting your review.'], 500);
         }
     }
 
-    public function show(Avi $avi) // Uses route model binding
+    public function show(Avi $avi)
     {
-        return response()->json(['message' => 'Avis retrieved successfully.', 'data' => $avi]);
+        return new AvisResource($avi);
     }
 
-    public function update(Request $request, Avi $avi) // Uses route model binding
+    public function update(Request $request, Avi $avi)
     {
-        // Add authorization check here: e.g., if (auth()->user()->cannot('update', $avi)) abort(403);
-        
+        // Since user_id is removed, authorization for update/delete
+        // would need a different mechanism if not admin-only (e.g., token-based edit for a limited time).
+        // For now, assuming these might be admin actions or future enhancements.
+        // $this->authorize('update', $avi); 
+
         $validator = Validator::make($request->all(), [
             'name'        => 'sometimes|required|string|max:255',
             'rating'      => 'sometimes|required|integer|min:1|max:5',
-            'comment'     => 'sometimes|required|string|min:5|max:5000',
-            'carName'     => 'nullable|string|max:255',
-            'is_approved' => 'sometimes|boolean',
+            'comment'     => 'sometimes|required|string|min:10|max:5000',
+            'carName'     => 'sometimes|nullable|string|max:255',
+            // 'is_approved' removed from validation
         ]);
 
         if ($validator->fails()) {
@@ -125,43 +114,37 @@ class AvisController extends Controller
             $validatedData = $validator->validated();
             $updateData = [];
 
-            // Explicitly map fields to avoid mass assignment issues if $fillable is strict
             if (isset($validatedData['name'])) $updateData['name'] = $validatedData['name'];
             if (isset($validatedData['rating'])) $updateData['rating'] = $validatedData['rating'];
             if (isset($validatedData['comment'])) $updateData['comment'] = $validatedData['comment'];
-            if (array_key_exists('carName', $validatedData)) { // array_key_exists for nullable fields
+            if (array_key_exists('carName', $validatedData)) {
                 $updateData['car_name'] = $validatedData['carName'];
             }
-            if (isset($validatedData['is_approved'])) $updateData['is_approved'] = $validatedData['is_approved'];
-
+            // 'is_approved' removed
+            
             if (!empty($updateData)) {
                 $avi->update($updateData);
             }
 
             return response()->json([
-                'message' => 'Avis updated successfully.',
-                'data'    => $avi->fresh() // Return the updated model
+                'message' => 'Review updated successfully.',
+                'data'    => new AvisResource($avi->fresh())
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating avi: ' . $e->getMessage(), [
-                'avi_id' => $avi->id,
-                'request_payload' => $request->all(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return response()->json(['message' => 'Sorry, there was an error updating the Avis.'], 500);
+            Log::error('Error updating review: ' . $e->getMessage(), ['avi_id' => $avi->id, 'payload' => $request->all(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Sorry, there was an error updating the review.'], 500);
         }
     }
 
-    public function destroy(Avi $avi) // Uses route model binding
+    public function destroy(Avi $avi)
     {
-        // Add authorization check here
+        // $this->authorize('delete', $avi);
         try {
             $avi->delete();
-            return response()->json(['message' => 'Avis deleted successfully.']);
+            return response()->json(null, 204);
         } catch (\Exception $e) {
-            Log::error('Error deleting avi: ' . $e->getMessage(), ['avi_id' => $avi->id]);
-            return response()->json(['message' => 'Sorry, there was an error deleting the Avis.'], 500);
+            Log::error('Error deleting review: ' . $e->getMessage(), ['avi_id' => $avi->id, 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Sorry, there was an error deleting the review.'], 500);
         }
     }
 }

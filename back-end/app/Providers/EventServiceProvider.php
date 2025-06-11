@@ -2,8 +2,7 @@
 
 namespace App\Providers;
 
-use App\Events\BookingCompleted;             // <<< ADD THIS IMPORT
-use App\Listeners\CheckCampaignEligibility;   // <<< ADD THIS IMPORT
+// We only need the imports that are already there
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -20,9 +19,35 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        BookingCompleted::class => [           // <<< ADD THIS MAPPING
-            CheckCampaignEligibility::class,
+
+    // Any time an Operational Hold is saved or deleted...
+    'eloquent.saved: App\Models\OperationalHold' => [
+        \App\Listeners\OperationalHoldStatusTriggerListener::class,
+    ],
+    'eloquent.deleted: App\Models\OperationalHold' => [
+        \App\Listeners\OperationalHoldStatusTriggerListener::class,
+    ],
+
+    // Any time a Damage Report is saved or deleted...
+    'eloquent.saved: App\Models\DamageReport' => [
+        \App\Listeners\DamageReportStatusTriggerListener::class,
+    ],
+    'eloquent.deleted: App\Models\DamageReport' => [
+        \App\Listeners\DamageReportStatusTriggerListener::class,
+    ],
+        // --- THIS IS THE ONLY BLOCK YOU NEED TO ADD ---
+        // We use the full namespace path here, so no 'use' statement is needed at the top.
+        \App\Events\BookingCompleted::class => [
+            \App\Listeners\CheckLoyaltyAndGeneratePromoCode::class,
         ],
+           'eloquent.saved: App\Models\Booking' => [
+        \App\Listeners\BookingStatusTriggerListener::class,
+    ],
+    'eloquent.deleted: App\Models\Booking' => [
+        \App\Listeners\BookingStatusTriggerListener::class,
+    ],
+
+        // --- END OF THE NEW BLOCK ---
     ];
 
     /**
@@ -30,7 +55,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // No changes needed here
     }
 
     /**
@@ -38,6 +63,6 @@ class EventServiceProvider extends ServiceProvider
      */
     public function shouldDiscoverEvents(): bool
     {
-        return false; // Or true if you prefer auto-discovery, but explicit mapping is fine
+        return false; // This is fine, explicit mapping is more clear.
     }
 }

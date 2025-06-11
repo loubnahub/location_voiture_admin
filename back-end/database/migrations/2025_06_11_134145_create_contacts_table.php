@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email');
-            $table->string('phone')->nullable(); // Make phone nullable as it's optional
+            $table->string('phone')->nullable(); // Phone is optional based on your form
             $table->string('subject');
             $table->text('message');
-            $table->timestamps(); // Adds created_at and updated_at columns
+            $table->boolean('is_read')->default(false); // Optional: to mark if admin has read it
+            $table->text('admin_notes')->nullable();   // Optional: for admin to add notes
+            $table->timestamps();
         });
     }
 

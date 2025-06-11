@@ -132,7 +132,7 @@ class OperationalHoldController extends Controller
         $baseRules = [ /* ... as before ... */
             'vehicle_id' => 'required|uuid|exists:vehicles,id',
             'booking_id' => 'nullable|uuid|exists:bookings,id',
-            'start_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:now',
+            'start_date' => 'required|date_format:Y-m-d H:i:s',
             'end_date' => 'required|date_format:Y-m-d H:i:s|after:start_date',
             'reason' => 'required|string|max:255',
             'notes' => 'nullable|string|max:1000',

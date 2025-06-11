@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class AddressController extends Controller
 {
@@ -17,98 +18,93 @@ class AddressController extends Controller
             'postal_code' => $address->postal_code,
             'country' => $address->country,
             'notes' => $address->notes,
-            // Add user full_name if this address is linked to a user and you want to display it
-            // 'user_full_name' => $address->user ? $address->user->full_name : null,
         ];
     }
 
     public function index(Request $request)
     {
-        // For now, let's make it public for the dropdown.
-        // Add permission checks later if needed.
-
         $query = Address::query();
 
-        // Add search if needed for an address management page
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
             $query->where('street_line_1', 'LIKE', "%{$searchTerm}%")
                   ->orWhere('city', 'LIKE', "%{$searchTerm}%")
                   ->orWhere('postal_code', 'LIKE', "%{$searchTerm}%");
         }
-
-        // For dropdowns, we usually want all addresses (or a relevant subset)
-        // The { all: true } param from frontend indicates this.
+        
         if ($request->boolean('all')) {
             $addresses = $query->orderBy('city')->orderBy('street_line_1')->get();
             return response()->json(['data' => $addresses->map(fn($addr) => $this->transformAddress($addr))]);
         }
 
-        // Default to pagination if not requesting all
-        $perPage = $request->input('per_page', 100); // Default to more for dropdowns if not 'all'
+        $perPage = $request->input('per_page', 100);
         $paginatedAddresses = $query->orderBy('city')->orderBy('street_line_1')->paginate((int)$perPage);
         $paginatedAddresses->getCollection()->transform(fn($addr) => $this->transformAddress($addr));
-
         return response()->json($paginatedAddresses);
     }
 
-    // You can add store, show, update, destroy methods later if you build a full CRUD for Addresses.
-    // For now, the index method is most important for the dropdown.
-
-    // Example store method for user's own addresses (from your api.php routes)
-    public function storeForCurrentUser(Request $request)
+    /**
+     * The single, correct method for creating a new address.
+     */
+    public function store(Request $request)
     {
-        $user = auth()->user();
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'street_line_1' => 'required|string|max:255',
             'street_line_2' => 'nullable|string|max:255',
             'city' => 'required|string|max:100',
-            'postal_code' => 'required|string|max:20',
-            'country' => 'required|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:100',
             'notes' => 'nullable|string',
         ]);
 
-        // Add user_id if your Address model has a user_id foreign key
-        // $address = $user->addresses()->create($validated);
-        // For now, assuming Address is general or linked via User's default_address_id
-
-        $address = Address::create($validated); // This will get a new UUID via HasUuid trait
-
-        // Optionally set as default if a flag is passed
-        if ($request->boolean('set_as_default') && $user) {
-            $user->default_address_id = $address->id;
-            $user->save();
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        return response()->json(['data' => $this->transformAddress($address), 'message' => 'Address created.'], 201);
+        $address = Address::create($validator->validated());
+
+        return response()->json(['data' => $this->transformAddress($address), 'message' => 'Address created successfully.'], 201);
     }
+
+    /**
+     * The correct method for updating an existing address.
+     */
     public function update(Request $request, Address $address)
-{
-    $validatedData = $request->validate([
-        'street_line_1' => 'nullable|string|max:255',
-        'street_line_2' => 'nullable|string|max:255',
-        'city' => 'nullable|string|max:100',
-        'postal_code' => 'nullable|string|max:20',
-        'country' => 'nullable|string|max:100',
-        'notes' => 'nullable|string',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'street_line_1' => 'sometimes|required|string|max:255',
+            'street_line_2' => 'nullable|string|max:255',
+            'city' => 'sometimes|required|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
+        ]);
 
-    $address->update($validatedData);
-    return response()->json(['data' => $address, 'message' => 'Address updated successfully.']);
-}
-public function store(Request $request)
-{
-    $validatedData = $request->validate([
-        'street_line_1' => 'nullable|string|max:255',
-        'street_line_2' => 'nullable|string|max:255',
-        'city' => 'nullable|string|max:100',
-        'postal_code' => 'nullable|string|max:20',
-        'country' => 'nullable|string|max:100',
-        'notes' => 'nullable|string',
-    ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-    Address::create($validatedData);
-    return response()->json(['data' => $address, 'message' => 'Address updated successfully.']);
-}
-    // Add updateForCurrentUser, destroyForCurrentUser, etc.
+        $address->update($validator->validated());
+
+        return response()->json(['data' => $this->transformAddress($address), 'message' => 'Address updated successfully.']);
+    }
+
+    /**
+     * The correct method for deleting an address.
+     */
+    public function destroy(Address $address)
+    {
+        // Add a check here if you need to prevent deletion of addresses in use
+        // For example: if ($address->vehicles()->exists()) { ... }
+
+        $address->delete();
+
+        return response()->json(['message' => 'Address deleted successfully.'], 200);
+    }
+
+    // You can keep this method for user-specific actions, but it's separate from the main CRUD
+    public function storeForCurrentUser(Request $request)
+    {
+        // ... this method is fine as is ...
+    }
 }

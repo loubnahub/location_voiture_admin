@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf; // If using laravel-dompdf for PDF generation
+use Illuminate\Support\Facades\URL;
 
 class RentalAgreementController extends Controller
 {
@@ -126,7 +127,8 @@ class RentalAgreementController extends Controller
     'renter.defaultAddress', // Eager load the defaultAddress for the renter
     'vehicle.vehicleModel',
     'insurancePlan',
-    'bookingExtras', // Assuming 'extra' is the relationship on the pivot model or BookingExtra model
+    'bookingExtras',
+    'promotionCode' , // Assuming 'extra' is the relationship on the pivot model or BookingExtra model
 ])->find($bookingId);
 
         if (!$booking) {
@@ -144,7 +146,7 @@ class RentalAgreementController extends Controller
                 'agreement_signed_by_renter_at' => $validatedData['signed_by_renter_at'] ?? null,
                 'agreement_signed_by_platform_at' => $validatedData['signed_by_platform_at'] ?? null,
             ];
-            // Ensure you have: resources/views/pdfs/rental_agreement.blade.php
+            // Ensure you have: resources/views/apdfs/rental_agreement.blade.php
             $pdf = Pdf::loadView('pdfs.rental_agreement', $pdfData);
             $fileName = 'rental_agreement_' . $booking->id . '_' . time() . '.pdf';
             $filePath = 'rental_agreements/' . $fileName; // Relative to storage/app/public
@@ -251,13 +253,14 @@ class RentalAgreementController extends Controller
     /**
      * Send an in-app notification to the renter about their rental agreement.
      */
-    public function sendAgreementNotification(Request $request, RentalAgreement $rentalAgreement)
+       public function sendAgreementNotification(Request $request, RentalAgreement $rentalAgreement)
     {
-        // if (!auth()->user()->can('send rental agreement notification')) { abort(403); }
         Log::info('RentalAgreementController@sendAgreementNotification: Attempting for Agreement ID: ' . $rentalAgreement->id);
 
+        // Eager load necessary relationships
         $rentalAgreement->loadMissing('booking.renter');
 
+        // --- VALIDATION (Good to have) ---
         if (!$rentalAgreement->booking || !$rentalAgreement->booking->renter) {
             Log::warning('RentalAgreementController@sendAgreementNotification: Booking or Renter info missing for Agreement ID: ' . $rentalAgreement->id);
             return response()->json(['message' => 'Booking or Renter information is missing for this agreement.'], 404);
@@ -271,30 +274,39 @@ class RentalAgreementController extends Controller
         $bookingIdentifier = 'Booking #' . substr($rentalAgreement->booking_id, 0, 8);
 
         try {
-            Notification::create([
-                'user_id' => $renter->id,
-                'title' => 'Your Rental Agreement is Ready!',
-                'message' => "The rental agreement for your {$bookingIdentifier} is available. Please log in to your account to view and/or sign it.",
-                // 'type' => 'rental_agreement_ready', // Optional
-                // 'data' => json_encode([ // Optional: for deep linking in client app
-                //     'action' => 'view_rental_agreement',
-                //     'rental_agreement_id' => $rentalAgreement->id,
-                //     'client_route' => '/my-agreements/' . $rentalAgreement->id
-                // ]),
-                'timestamp' => now(),
-                'is_read' => false,
-            ]);
+            // --- THE SIMPLIFIED LOGIC ---
+            // 1. Generate the temporary, secure URL for the download route.
+            $secureDownloadUrl = URL::temporarySignedRoute(
+                'rental-agreements.download', // The name of your download route in api.php
+                now()->addDays(7),             // Link expiration time
+                ['rental_agreement' => $rentalAgreement->id]
+            );
 
-            Log::info('RentalAgreementController@sendAgreementNotification: In-app notification created for Renter ID: ' . $renter->id . ' for Agreement ID: ' . $rentalAgreement->id);
-            return response()->json(['message' => 'Notification sent to the renter about their rental agreement.']);
+            // 2. Create the notification message with the URL directly inside it.
+            // We use line breaks (\n) to make it easier for the frontend to parse or display.
+            $notificationMessage = "The rental agreement for your {$bookingIdentifier} is ready. " .
+                                   "Please review and sign it.\n\n" .
+                                   "Download Link: {$secureDownloadUrl}";
+
+            // 3. Create the notification record using your existing model and table structure.
+            Notification::create([
+                'user_id'   => $renter->id,
+                'title'     => 'Your Rental Agreement is Ready!',
+                'message'   => $notificationMessage, // The message now contains the URL
+                'timestamp' => now(),
+                'is_read'   => false,
+            ]);
+            // --- END OF SIMPLIFIED LOGIC ---
+
+            Log::info('RentalAgreementController@sendAgreementNotification: In-app notification created for Renter ID: ' . $renter->id);
+            return response()->json(['message' => 'Notification with download link has been sent to the renter.']);
 
         } catch (\Exception $e) {
-            Log::error('RentalAgreementController@sendAgreementNotification: Failed to create notification. Error: ' . $e->getMessage(), [
-                'agreement_id' => $rentalAgreement->id, 'renter_id' => $renter->id, 'exception' => $e
-            ]);
-            return response()->json(['message' => 'Failed to send rental agreement notification.', 'error_details' => $e->getMessage()], 500);
+            Log::error('RentalAgreementController@sendAgreementNotification: Failed to create notification. Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send rental agreement notification.'], 500);
         }
     }
+
 
     public function showForBooking(Booking $booking)
     {
@@ -310,4 +322,5 @@ class RentalAgreementController extends Controller
 
         return response()->json(['data' => $this->transformRentalAgreement($rentalAgreement)]);
     }
+       
 }

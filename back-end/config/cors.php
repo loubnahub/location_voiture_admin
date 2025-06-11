@@ -15,20 +15,25 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie','api/stream-glb/*','storage/*', 'rental-agreements/generate', 'rental-agreements/download', 'rental-agreements/send-notification'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie','api/stream-glb/*','storage/*', 'rental-agreements/generate', 'rental-agreements/download',
+     'rental-agreements/send-notification',
+   ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000'],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    // --- THIS IS THE MOST IMPORTANT PART TO FIX ---
+    // In config/cors.php
 
+'allowed_headers' => ['*'],
     'exposed_headers' => [],
 
     'max_age' => 0,
 
+    // --- ENSURE THIS IS `true` ---
     'supports_credentials' => true,
 
 ];

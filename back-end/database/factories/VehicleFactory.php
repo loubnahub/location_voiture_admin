@@ -52,7 +52,6 @@ class VehicleFactory extends Factory // Correct Class Name
         $colorIndex = $this->faker->numberBetween(0, count($colors) - 1);
 
         // Possible vehicle statuses from your VehicleStatus enum
-        $statuses = ['available', 'rented', 'maintenance', 'unavailable', 'pending_inspection', 'damaged'];
 
 
         return [
@@ -64,7 +63,7 @@ class VehicleFactory extends Factory // Correct Class Name
             'color' => $colors[$colorIndex],
             'hexa_color_code' => $hexColors[$colorIndex],
             'mileage' => $this->faker->numberBetween(1000, 250000),
-            'status' => $this->faker->randomElement($statuses), // Use values from your VehicleStatus enum
+            'status' => 'available', // Use values from your VehicleStatus enum
             'acquisition_date' => $this->faker->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
             // created_at and updated_at are handled by Eloquent timestamps
         ];
