@@ -24,14 +24,13 @@ class BookingController extends Controller
     protected function transformBooking(Booking $booking): array
     {
         $booking->loadMissing([
-            'renter:id,full_name',
+            'renter:id,full_name,email,phone',
             'vehicle:id,license_plate,vehicle_model_id',
             'vehicle.vehicleModel:id,title,brand',
             'insurancePlan:id,name,price_per_day',
             'promotionCode:id,code_string',
             'bookingExtras'
         ]);
-
         $bookingExtrasOutput = [];
         if ($booking->relationLoaded('bookingExtras') && $booking->bookingExtras) {
             $bookingExtrasOutput = $booking->bookingExtras->map(function (Extra $extra) {
@@ -49,9 +48,12 @@ class BookingController extends Controller
             'id' => $booking->id,
             'renter_user_id' => $booking->renter_user_id,
             'renter_name' => $booking->renter?->full_name,
+            'renter_email' => $booking->renter?->email,
+            'renter_phone' => $booking->renter?->phone,
+
             'vehicle_id' => $booking->vehicle_id,
             'vehicle_display' => $booking->vehicle?->vehicleModel
-                ? ($booking->vehicle->vehicleModel->brand ? $booking->vehicle->vehicleModel->brand . ' ' : '') . $booking->vehicle->vehicleModel->title . ($booking->vehicle->year ? ' ' . $booking->vehicle->year : '') . ' (' . $booking->vehicle->license_plate . ')'
+                ? $booking->vehicle->vehicleModel->title . ($booking->vehicle->year ? ' ' . $booking->vehicle->year : '') . ' (' . $booking->vehicle->license_plate . ')'
                 : ($booking->vehicle?->license_plate),
             'insurance_plan_id' => $booking->insurance_plan_id,
             'insurance_plan_name' => $booking->insurancePlan?->name,
@@ -76,7 +78,7 @@ class BookingController extends Controller
     public function index(Request $request)
     {
         $query = Booking::query()->with([
-            'renter:id,full_name',
+            'renter:id,full_name,email,phone',
             'vehicle:id,license_plate,vehicle_model_id',
             'vehicle.vehicleModel:id,title,brand,model',
             'insurancePlan:id,name',

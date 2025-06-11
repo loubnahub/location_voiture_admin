@@ -52,7 +52,7 @@ const BookingDetailModal = ({ show, onHide, booking }) => {
         const textClass = ['warning', 'info', 'light'].includes(variant) ? 'text-dark' : 'text-white';
         return <Badge bg={variant} className={`p-2 ${textClass}`}>{text}</Badge>;
     };
-
+console.log(booking)
     return (
         <Modal show={show} onHide={onHide} size="lg" centered dialogClassName="booking-detail-modal">
             <Modal.Header closeButton className=" text-white">
