@@ -4,76 +4,55 @@ namespace App\Services;
 
 use App\Models\Vehicle;
 use App\Enums\VehicleStatus;
-use App\Enums\BookingStatus;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class VehicleStatusService
 {
     /**
-     * Calculate and update the status for a given Vehicle based on a clear priority.
+     * The single source of truth for updating a vehicle's status based on a clear priority hierarchy.
+     * Priority: Operational Hold > Unresolved Damage > Active Booking > Available.
      *
-     * @param Vehicle|int|string $vehicle The Vehicle model or its ID (integer or UUID string).
+     * @param string $vehicleId The UUID of the vehicle to update.
+     * @return void
      */
-    public function updateStatus(Vehicle | int | string $vehicle): void
+    public function updateStatus(string $vehicleId): void
     {
-        $vehicleIdForLog = $vehicle instanceof Vehicle ? $vehicle->id : $vehicle;
-        Log::info("--- SERVICE: VehicleStatusService->updateStatus() CALLED for Vehicle ID: {$vehicleIdForLog} ---");
-
-        if (!$vehicle instanceof Vehicle) {
-            $vehicle = Vehicle::with(['damageReports', 'operationalHolds', 'bookings'])->find($vehicleIdForLog);
-        }
+        $vehicle = Vehicle::find($vehicleId);
 
         if (!$vehicle) {
-            Log::warning("VehicleStatusService: Vehicle not found with ID: {$vehicleIdForLog}");
+            Log::warning("VehicleStatusService: Could not find Vehicle with ID: {$vehicleId}");
             return;
         }
 
-        $vehicle->loadMissing(['damageReports', 'operationalHolds', 'bookings']);
-        
-        $now = Carbon::now();
+        $originalStatus = $vehicle->status;
         $newStatus = null;
 
-        // Priority 1: DAMAGED
-        if ($vehicle->damageReports()->where('damage_reports.status', 'open')->exists()) {
+        // PRIORITY 1: Check for active Operational Holds.
+        if ($vehicle->hasActiveOperationalHold()) {
+            $newStatus = VehicleStatus::MAINTENANCE;
+        }
+        // PRIORITY 2: Check for unresolved Damage Reports.
+        // This is where "damaged" status will dominate any booking status.
+        elseif ($vehicle->hasUnresolvedDamage()) {
             $newStatus = VehicleStatus::DAMAGED;
         }
-
-        // Priority 2: MAINTENANCE / UNAVAILABLE (due to a hold)
-        elseif ($activeHold = $vehicle->operationalHolds()->where('start_date', '<=', $now)->where('end_date', '>=', $now)->first()) {
-            $newStatus = ($activeHold->reason === 'Maintenance') ? VehicleStatus::MAINTENANCE : VehicleStatus::UNAVAILABLE;
-        }
-
-        // Priority 3: RENTED (currently with a customer)
-        elseif ($vehicle->bookings()->whereIn('status',['active','completed'] )->where('start_date', '<=', $now)->where('end_date', '>=', $now)->exists()) {
+        // PRIORITY 3: Check for an active Booking.
+        elseif ($vehicle->hasActiveBooking()) {
+            // Your enum uses 'rented', let's stick to that for consistency
             $newStatus = VehicleStatus::RENTED;
         }
-
-        // --- THIS IS THE NEW, CRITICAL LOGIC BLOCK ---
-        // Priority 4: UNAVAILABLE (reserved for a future booking)
-        elseif ($vehicle->bookings()
-                         ->whereIn('status', [
-                            BookingStatus::CONFIRMED,
-                            BookingStatus::PENDING_PAYMENT,
-                         ])
-                         ->where('end_date', '>', $now) // Any confirmed booking that hasn't ended yet
-                         ->exists()) 
-        {
-            $newStatus = VehicleStatus::UNAVAILABLE;
-        }
-        
-        // Default: AVAILABLE
+        // DEFAULT: If none of the above, the vehicle is available.
         else {
             $newStatus = VehicleStatus::AVAILABLE;
         }
 
-        if ($vehicle->status !== $newStatus) {
-            $originalStatus = $vehicle->status?->value ?? 'null';
+        // Only update the database if the status has actually changed.
+        if ($originalStatus !== $newStatus) {
+            Log::info("VehicleStatusService: Updating status for Vehicle ID {$vehicleId} from '{$originalStatus->value}' to '{$newStatus->value}'.");
             $vehicle->status = $newStatus;
             $vehicle->save();
-            Log::info("Vehicle Status Updated for Vehicle ID {$vehicle->id}: From '{$originalStatus}' to '{$newStatus->value}'.");
         } else {
-             Log::info("Vehicle Status check for Vehicle ID {$vehicle->id}: Status remains '{$vehicle->status->value}'. No update needed.");
+            Log::info("VehicleStatusService: Status for Vehicle ID {$vehicleId} remains '{$originalStatus->value}'. No update needed.");
         }
     }
 }

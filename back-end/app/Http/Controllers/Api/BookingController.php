@@ -120,7 +120,7 @@ return response()->json($paginator);
             'vehicle_id' => 'required|uuid|exists:vehicles,id',
             'insurance_plan_id' => 'nullable|uuid|exists:insurance_plans,id',
             'promotion_code_id' => ['nullable', 'uuid', Rule::exists('promotion_codes', 'id')->where('status', 'active')],
-            'start_date' => 'required|date|after_or_equal:now',
+            'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'status' => ['sometimes', 'required', Rule::in(array_column(BookingStatus::cases(), 'value'))],
             'calculated_base_price' => 'required|numeric|min:0',

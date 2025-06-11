@@ -95,7 +95,7 @@ Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedu
     Route::apiResource('operational-holds', OperationalHoldController::class)->parameters(['operational-holds' => 'operational_hold']);
     Route::apiResource('maintenance-records', MaintenanceRecordController::class)->parameters(['maintenance-records' => 'maintenance_record']);
     Route::apiResource('payments', PaymentController::class);
-    Route::apiResource('damage-reports', DamageReportController::class)->parameters(['damage-reports' => 'damage_report']);
+    Route::apiResource('damage-reports', DamageReportController::class)->parameters(['damage-reports' => 'damageReport']);
     Route::apiResource('rental-agreements', RentalAgreementController::class)->except(['store']);
     Route::apiResource('promotion-campaigns', PromotionCampaignController::class)->parameters(['promotion-campaigns' => 'promotion_campaign']);
     Route::apiResource('promotion-codes', PromotionCodeController::class)->parameters(['promotion-codes' => 'promotion_code']);
@@ -140,12 +140,13 @@ Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedu
     // ========================================================================
     // The request is first checked for a valid login (auth:sanctum),
     // THEN it's checked for the 'admin' role.
+
     Route::prefix('admin')
          ->name('admin.')
-         ->middleware('role:admin') // Spatie's role middleware
          ->group(function() {
-            Route::apiResource('users', AdminUserController::class);
              Route::get('users/{user}/rewards', [AdminUserController::class, 'getUserRewards']);
+             Route::apiResource('users', AdminUserController::class);
+
             Route::get('roles-list', [AdminUserController::class, 'fetchRoles'])->name('roles.list');
             Route::apiResource('system/roles', AdminRoleController::class)
                   ->parameters(['roles' => 'role'])

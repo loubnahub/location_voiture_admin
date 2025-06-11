@@ -77,39 +77,73 @@ const BookingModalForm = ({
     }, [isEditMode, formData?.promotion_code_string, formData?.promotion_code_id, formData?.discount_amount_applied]);
 
     // Effect 1: Fetch initial independent data
-    useEffect(() => {
-        const fetchInitialData = async () => {
-            setLoadingInitialData(true);
-            const vehiclesApiUrl = 'http://localhost:8000/api/vehicles?status=available&all=true';
-            try {
-                const [usersRes, vehiclesRes, plansRes] = await Promise.all([
-                    fetchAllUsers({ all: true }),
-                    axios.get(vehiclesApiUrl, { withCredentials: true, headers: { 'Accept': 'application/json' } }),
-                    fetchAllInsurancePlans({ all: true, active: true })
-                ]);
-                setUsers(extractArrayFromApiResponse(usersRes, "Users"));
-                setInsurancePlans(extractArrayFromApiResponse(plansRes, "Insurance Plans"));
+   useEffect(() => {
+    const fetchInitialData = async () => {
+        setLoadingInitialData(true);
+        try {
+            // --- COMMON DATA FETCH ---
+            // These are needed for both create and edit mode.
+            const [usersRes, plansRes] = await Promise.all([
+                fetchAllUsers({ all: true }),
+                fetchAllInsurancePlans({ all: true, active: true })
+            ]);
+
+            setUsers(extractArrayFromApiResponse(usersRes, "Users"));
+            setInsurancePlans(extractArrayFromApiResponse(plansRes, "Insurance Plans"));
+
+            // --- MODE-SPECIFIC VEHICLE FETCH ---
+            if (isEditMode && formData?.vehicle_id) {
+                // --- EDIT MODE LOGIC ---
+                // Fetch only the single, specific vehicle for this booking.
+                console.log(`EDIT MODE: Fetching single vehicle with ID: ${formData.vehicle_id}`);
+                const vehicleApiUrl = `http://localhost:8000/api/vehicles/${formData.vehicle_id}`;
+                const vehicleRes = await axios.get(vehicleApiUrl, { withCredentials: true, headers: { 'Accept': 'application/json' } });
+                
+                // The response for a single item is usually response.data.data
+                const singleVehicle = vehicleRes.data?.data; 
+
+                if (singleVehicle) {
+                    const processedVehicle = {
+                        ...singleVehicle,
+                        base_price_per_day: parseFloat(singleVehicle.base_price_per_day || 0),
+                        display_name: `${singleVehicle.model_details?.title  || 'Unknown Model'} (${singleVehicle.license_plate || 'N/A'}) - Status: ${singleVehicle.status_display || singleVehicle.status || 'N/A'}`
+                    };
+                    // Set the vehicles array to contain ONLY this one vehicle.
+                    setVehicles([processedVehicle]);
+                } else {
+                    console.error("EDIT MODE: Failed to fetch the specific vehicle.");
+                    setVehicles([]);
+                }
+
+            } else {
+                // --- CREATE MODE LOGIC ---
+                // Fetch all available vehicles.
+                console.log("CREATE MODE: Fetching all available vehicles.");
+                const vehiclesApiUrl = 'http://localhost:8000/api/vehicles?status=available&all=true';
+                const vehiclesRes = await axios.get(vehiclesApiUrl, { withCredentials: true, headers: { 'Accept': 'application/json' } });
+                
                 const rawVehicles = extractArrayFromApiResponse(vehiclesRes, "Vehicles");
                 const processedVehicles = rawVehicles.map(v => ({
                     ...v,
                     base_price_per_day: parseFloat(v.base_price_per_day || 0),
                     display_name: `${v.vehicle_model_title || v.vehicle_model?.title || 'Unknown Model'} (${v.license_plate || 'N/A'}) - Status: ${v.status_display || v.status || 'N/A'}`
                 }));
-                const filteredVehicles = processedVehicles.filter(v => v.status === 'available' || (isEditMode && formData && v.id === formData.vehicle_id));
-                setVehicles(filteredVehicles);
-            } catch (error) {
-                console.error("BookingModalForm: Error fetching initial data:", error);
-                setUsers([]);
-                setVehicles([]);
-                setInsurancePlans([]);
-            } finally {
-                setLoadingInitialData(false);
+                setVehicles(processedVehicles);
             }
-        };
-        fetchInitialData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditMode, formData?.vehicle_id]);
+        } catch (error) {
+            console.error("BookingModalForm: Error fetching initial data:", error);
+            // Reset state in case of an error
+            setUsers([]);
+            setVehicles([]);
+            setInsurancePlans([]);
+        } finally {
+            setLoadingInitialData(false);
+        }
+    };
 
+    fetchInitialData();
+    
+}, [isEditMode, formData?.vehicle_id]); 
     // Effect 2: Fetch VEHICLE-SPECIFIC Extras
     useEffect(() => {
         const fetchVehicleSpecificExtras = async (vehicleId) => {
@@ -373,13 +407,21 @@ const BookingModalForm = ({
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="bookingVehicleId">
-                <Form.Label>Vehicle <span className="text-danger">*</span></Form.Label>
-                <Form.Select name="vehicle_id" value={formData.vehicle_id || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.vehicle_id}>
-                    <option value="">Select Vehicle...</option>
-                    {vehicles.map(v => (<option key={v.id} value={v.id}>{v.display_name}</option>))}
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">{modalFormErrors?.vehicle_id?.join(', ')}</Form.Control.Feedback>
-            </Form.Group>
+    <Form.Label>Vehicle <span className="text-danger">*</span></Form.Label>
+    <Form.Select 
+        name="vehicle_id" 
+        value={formData.vehicle_id || ''} 
+        onChange={handleInputChange} 
+        required 
+        isInvalid={!!modalFormErrors?.vehicle_id}
+        // --- THIS IS THE CHANGE ---
+        disabled={isEditMode} 
+    >
+        <option value="">Select Vehicle...</option>
+        {vehicles.map(v => (<option key={v.id} value={v.id}>{v.display_name}</option>))}
+    </Form.Select>
+    <Form.Control.Feedback type="invalid">{modalFormErrors?.vehicle_id?.join(', ')}</Form.Control.Feedback>
+</Form.Group>
 
             <Row>
                 <Col md={6}>

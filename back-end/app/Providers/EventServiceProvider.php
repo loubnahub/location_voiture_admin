@@ -20,18 +20,6 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
 
-        // --- THIS IS THE ONLY BLOCK YOU NEED TO ADD ---
-        // We use the full namespace path here, so no 'use' statement is needed at the top.
-        \App\Events\BookingCompleted::class => [
-            \App\Listeners\CheckLoyaltyAndGeneratePromoCode::class,
-        ],
-           'eloquent.saved: App\Models\Booking' => [
-        \App\Listeners\BookingStatusTriggerListener::class,
-    ],
-    'eloquent.deleted: App\Models\Booking' => [
-        \App\Listeners\BookingStatusTriggerListener::class,
-    ],
-
     // Any time an Operational Hold is saved or deleted...
     'eloquent.saved: App\Models\OperationalHold' => [
         \App\Listeners\OperationalHoldStatusTriggerListener::class,
@@ -46,7 +34,19 @@ class EventServiceProvider extends ServiceProvider
     ],
     'eloquent.deleted: App\Models\DamageReport' => [
         \App\Listeners\DamageReportStatusTriggerListener::class,
-    ]
+    ],
+        // --- THIS IS THE ONLY BLOCK YOU NEED TO ADD ---
+        // We use the full namespace path here, so no 'use' statement is needed at the top.
+        \App\Events\BookingCompleted::class => [
+            \App\Listeners\CheckLoyaltyAndGeneratePromoCode::class,
+        ],
+           'eloquent.saved: App\Models\Booking' => [
+        \App\Listeners\BookingStatusTriggerListener::class,
+    ],
+    'eloquent.deleted: App\Models\Booking' => [
+        \App\Listeners\BookingStatusTriggerListener::class,
+    ],
+
         // --- END OF THE NEW BLOCK ---
     ];
 
