@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate,Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminLayout from './layouts/AdminLayout';
 
 // Pages
-import LoginPage from './pages/Auth/LoginPage';
+import LoginPage from './Clients/Compte/Login';
 import DashboardPage from './pages/DashboardPage';
 import VehicleModelPage from './pages/VehicleModelPage';
 import VehicleTypePage from './pages/VehicleTypePage';
@@ -26,45 +26,89 @@ import PaymentPage from './pages/payments/PaymentsPage';
 import VehicleModelDetailView from './components/VehicleModelDetailView';
 import VehicleInstanceDetailView from './components/VehicleInstanceDetailView';
 import VehicleDisplayGallery from './components/VehicleDisplayGallery';
-
-
-import LoginClient from './Clients/Compte/Login';
 import Home from './Clients/Home/Home';
-import SignUpClient from './Clients/Compte/Singup';
-import CarColorPage from './Clients/DetailsCars/DetailsCarColor';
-import CarDetails3d from './Clients/DetailsCars/DetailsCar3d';
-import CarDetailPage from './Clients/DetailsCars/DetailsModalCar';
-import OurServiceSection from './Clients/Home/Section/ServiceHome';
-import ContactPage from './Clients/Contact/Section/ContactPage';
-import About from './Clients/About/About';
-import BookingPageClient from './Clients/DetailsCars/RentNow';
-import Vehicle from './Clients/VEHICLE/Vehicle';
+import ClientLayout from './layouts/ClientLayout';
+import VehicleModelCreatePage from './pages/VehicleModelCreatePage';
+import VehicleCreatePage from './pages/VehicleCreatePage'
 
-// --- Protected Route Component ---
-const ProtectedRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+
+import Vehicle from './Clients/VEHICLE/Vehicle';
+import CarDetailPage from './Clients/DetailsCars/DetailsModalCar'; 
+import CarProductPage from './Clients/DetailsCars/DetailsCarColor'; 
+import Service from './Clients/Services/Service';
+import Contact from './Clients/Contact/Contact';
+import About from './Clients/About/About';
+import CarDetails3d from './Clients/DetailsCars/DetailsCar3d'; 
+import BookingPageClient from './Clients/DetailsCars/RentNow';
+import SignUpPage from './Clients/Compte/Singup';
+import NotificationsPage from './Clients/Compte/Notification';
+import FAQs from './Clients/FAQs/Faqs';
+import Blog from './Clients/Blog/Blog';
+import PrivacyPolicyPage from './Clients/Privacy/Section/PrivacyPage';
+
+import SignUpClient from './Clients/Compte/Singup'
+// In App.js
+
+
+// In App.js
+const ProtectedRoute = ({ requiredRole }) => {
+  const { isAuthenticated, isLoading, currentUser } = useAuth();
+
+
+
 
   if (isLoading) {
-    return <div>Loading authentication status...</div>;
+    return <div>Loading Application...</div>;
   }
-  // Render AdminLayout with Outlet for nested routes!
-  return isAuthenticated ? (
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!currentUser) {
+    return <div>Finalizing Session...</div>;
+  }
+
+  // --- THIS IS THE MOST IMPORTANT PART ---
+  // At this point, we have a user. Let's inspect them carefully.
+  
+  const userHasRole = currentUser.roles?.includes(requiredRole);
+  
+
+  if (!userHasRole) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
     <AdminLayout>
       <Outlet />
     </AdminLayout>
-  ) : (
-    <Navigate to="/login" replace />
   );
 };
 
-// --- Public Route Component ---
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, currentUser } = useAuth();
+
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  return isAuthenticated ? <Navigate to="/admin/dashboard" replace /> : children;
+
+  if (isAuthenticated) {
+    if (!currentUser) {
+      return <div>Finalizing Session...</div>;
+    }
+    
+    const isAdmin = currentUser.roles?.includes('admin');
+    if (isAdmin) {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else {
+      return <Navigate to="/" replace />;
+    }
+  }
+
+  // If we are not loading and not authenticated, show the child (the login page).
+  return children;
 };
 
 // --- Fallback Auth Redirect ---
@@ -73,28 +117,33 @@ const AuthRedirect = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  return isAuthenticated ? <Navigate to="/admin/dashboard" replace /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />;
 };
 
 function App() {
   return (
     <Router>
-          
+      
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/Singup" element={<SignUpPage />} />
           {/* Public Routes */}
-            <Route path="/LoginClient" element={<LoginClient />} />  
-            <Route path="/home" element={<Home />} />
-            <Route path="/Signup" element={<SignUpClient />} />
-            <Route path="/LoginClient" element={<LoginClient/>} />  // Example: Client login if different from admin
-            <Route path="/fleet" element={<Vehicle />} /> {/* Lists available vehicles/vehicle models */}   
+          <Route path="/" element={<ClientLayout />}>
+            <Route path="/Home" element={<Home />} />
+            <Route path="/Notification" element={<NotificationsPage />} />
+            <Route path="/fleet" element={<Vehicle />} /> 
             <Route path="/fleet/details/:vehicleId" element={<CarDetailPage />} />
             <Route path="/booking/:vehicleId" element={<BookingPageClient />} />
             <Route path="/fleet/details/:vehicleId/3d" element={<CarDetails3d />} />
-            <Route path="/fleet/details/:vehicleId/ar" element={<CarColorPage />} />
-            <Route path="/Services" element={<OurServiceSection />} />
-            <Route path="/Contact" element={<ContactPage />} />
+            <Route path="/fleet/details/:vehicleId/ar" element={<CarProductPage />} />
+            <Route path="/Services" element={<Service />} />
+            <Route path="/Contact" element={<Contact />} />
             <Route path="/About" element={<About />} />
+            <Route path="/FAQs" element={<FAQs />} />
+            <Route path="/Blog" element={<Blog />} />
+            <Route path="/PrivacyPolicy" element={<PrivacyPolicyPage/>} />
+          </Route>
           <Route
             path="/login"
             element={
@@ -103,8 +152,16 @@ function App() {
               </PublicRoute>
             }
           />
+<Route
+            path="/SignUp"
+            element={
+              <PublicRoute>
+                <SignUpClient />
+              </PublicRoute>
+            }
+          />
           {/* Protected Admin Routes */}
-          <Route path="/admin" element={<ProtectedRoute />}>
+          <Route path="/admin" element={<ProtectedRoute  requiredRole="admin"/>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="inventory/vehicles" element={<VehiclePage />} />
@@ -114,6 +171,7 @@ function App() {
             <Route path="fleet/vehicle-types" element={<VehicleTypePage />} />
             <Route path="fleet/features" element={<FeaturePage />} />
             <Route path="fleet/extras" element={<ExtraPage />} />
+            <Route path="fleet/vehicle-models/create" element={<VehicleModelCreatePage />} />
             <Route path="fleet/insurance-plans" element={<InsurancePlanPage />} />
             <Route path="/admin/inventory/bookings" element={<BookingPage />} />
             <Route path="operations/damage-reports" element={<DamageReportPage />} />
@@ -125,12 +183,14 @@ function App() {
             <Route path="marketing/promotion-codes" element={<PromotionCodePage />} />
             <Route path="financials/payments" element={<PaymentPage />} />
             <Route path="vehicle-instance/:instanceId" element={<VehicleInstanceDetailView />} />
+               <Route path="vehicles/create" element={<VehicleCreatePage />} />
 
             {/* Add other admin routes here */}
           </Route>
           {/* Fallback Route */}
           <Route path="*" element={<AuthRedirect />} />
         </Routes>
+        
       </AuthProvider>
     </Router>
   );

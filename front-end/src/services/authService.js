@@ -1,79 +1,92 @@
-import apiClient from './api'; // Your configured axios instance for /api endpoints
-import axios from 'axios'; // For direct requests outside apiClient's baseURL
+// src/contexts/AuthContext.js - FINAL CORRECTED VERSION
 
-const API_URL = '/api';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { login as apiLogin, logout as apiLogout, fetchCurrentUser } from '../services/api'; 
+import apiClient from '../services/api';
 
-// --- LOGIN ---
-export const loginUser = async (credentials) => {
-  try {
-    // Get CSRF cookie for Laravel Sanctum (cookie-based auth or just for security)
-    try {
-      await axios.get('http://localhost:8000/sanctum/csrf-cookie', { withCredentials: true });
-    } catch (csrfError) {
-      console.warn("CSRF cookie fetch failed, proceeding with login attempt...", csrfError);
-    }
+const AuthContext = createContext(null);
 
-    // Login via API (token-based or session-based)
-    const response = await apiClient.post('/login', credentials);
-    if (response.data && response.data.token && response.data.user) {
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('currentUser', JSON.stringify(response.data.user));
-    }
-    return response.data;
-  } catch (error) {
-    console.error("Login API error:", error.response?.data || error.message);
-    throw error.response?.data || { message: error.message || "Login failed" };
-  }
-};
+export const useAuth = () => useContext(AuthContext);
 
-// --- REGISTER ---
-export const registerUser = async (userData) => {
-  try {
-    await axios.get('http://localhost:8000/sanctum/csrf-cookie', { withCredentials: true });
-    const response = await apiClient.post('/register', userData);
-    return response.data;
-  } catch (error) {
-    console.error("Register API error:", error.response || error.message);
-    throw error.response?.data || { message: error.message || "Registration failed" };
-  }
-};
+export const AuthProvider = ({ children }) => {
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); // For initial auth check
+    const [authError, setAuthError] = useState(null);
+    const navigate = useNavigate();
 
-// --- LOGOUT ---
-export const logoutUser = async () => {
-  try {
-    await apiClient.post('/logout');
-  } catch (error) {
-    console.error("Logout API error:", error.response || error.message);
-  } finally {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
-  }
-};
+    useEffect(() => {
+        const checkAuthStatus = async () => {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                try {
+                    const response = await fetchCurrentUser(); 
+                    setCurrentUser(response.data);
+                    setIsAuthenticated(true);
+                } catch (error) {
+                    localStorage.removeItem('authToken');
+                    delete apiClient.defaults.headers.common['Authorization'];
+                }
+            }
+            setIsLoading(false);
+        };
+        checkAuthStatus();
+    }, []);
 
-// --- GET CURRENT USER ---
-export const getCurrentAuthenticatedUser = async () => {
-  try {
-    const response = await apiClient.get('/user');
-    if (response.data) {
-      localStorage.setItem('currentUser', JSON.stringify(response.data));
-      return response.data;
-    }
-    return null;
-  } catch (error) {
-    console.error("Get current user API error:", error.response || error.message);
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('currentUser');
-    }
-    throw error.response?.data || { message: error.message || "Failed to fetch user" };
-  }
-};
+    const login = useCallback(async (email, password) => {
+        setAuthError(null);
+        try {
+            const response = await apiLogin({ email, password }); 
+            const { token, user } = response.data;
 
-export const getToken = () => {
-  return localStorage.getItem('authToken');
-};
+            localStorage.setItem('authToken', token);
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-export const getStoredUser = () => {
-  const user = localStorage.getItem('currentUser');
-  return user ? JSON.parse(user) : null;
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+            
+            return user; 
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Login failed.';
+            setAuthError(errorMessage);
+            throw new Error(errorMessage);
+        }
+    }, []);
+
+    const logout = useCallback(async (redirectTo = '/login') => {
+        // In a real app, you might want to call an API endpoint to invalidate the token on the server
+        localStorage.removeItem('authToken');
+        delete apiClient.defaults.headers.common['Authorization'];
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+        if (redirectTo) {
+            navigate(redirectTo);
+        }
+    }, [navigate]);
+
+    const hasRole = useCallback((roleName) => {
+        if (!currentUser || !currentUser.roles) {
+            return false;
+        }
+        return currentUser.roles.includes(roleName);
+    }, [currentUser]);
+
+    const value = {
+        currentUser,
+        isAuthenticated,
+        isLoading,
+        authError,
+        setAuthError, // Function is now correctly exported
+        login,
+        logout,
+        hasRole,
+    };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };

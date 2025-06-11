@@ -1,31 +1,32 @@
-// ScheduleOverviewCard.jsx
-import React, { useState } from 'react';
+// src/components/vehicle/ScheduleOverviewCard.jsx
+
+import React, { useState, useMemo } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
+// Centralized color mapping for event types from your original code
 const eventColors = { 
-  primaryBooking: '#0D6EFD',    // Standard Booking
-  maintenance: '#FFC107',      // Maintenance
-  cleaning: '#61D4F7',          // Cleaning
-  operational_hold: '#6c757d',  // Operational Hold (maps to 'blocked' if needed)
-  damage: '#DC3545',            // Damage
+  primaryBooking: '#0D6EFD',
+  maintenance: '#FFC107',
+  cleaning: '#61D4F7',
+  operational_hold: '#6c757d',
+  damage: '#DC3545',            
   
-  // Example colors from Figma, map your event types to these if they are distinct categories
-  secondaryBooking: '#A8C5FF',  // e.g., A different kind of booking
-  blocked: '#495057',           // e.g., A specific type of hold
-  unavailable: '#ADB5BD',       // e.g., General unavailability note
+  secondaryBooking: '#A8C5FF',
+  blocked: '#495057',
+  unavailable: '#ADB5BD',
   
-  multipleEvents: '#7E57C2',    // A distinct purple for multiple different event types
+  multipleEvents: '#7E57C2',
   
-  defaultHighlight: '#0D6EFD', // Fallback if an event type doesn't have a color
-  default: '#FFFFFF',         // No background for non-event days
+  defaultHighlight: '#0D6EFD',
+  default: '#FFFFFF',
 };
+
 const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const ScheduleOverviewCard = ({ scheduleEvents = [] }) => {
-  const [currentDate, setCurrentDate] = useState(new Date()); // Default to current month
-
-  const getMonthName = (date) => date.toLocaleString('default', { month: 'long' });
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const handlePrevMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -35,62 +36,88 @@ const ScheduleOverviewCard = ({ scheduleEvents = [] }) => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
-  const getDaysInMonthGrid = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
+  // Memoize the grid calculation to avoid re-computing on every render
+  const monthGrid = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
     const firstDayOfMonth = new Date(year, month, 1).getDay();
-    const daysInSelectedMonth = new Date(year, month + 1, 0).getDate();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
     const grid = [];
+
+    // Add blank cells for days before the 1st of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
-      grid.push({ day: null, events: [] });
+      grid.push({ key: `empty-${i}`, day: null, events: [] });
     }
-    for (let dayCounter = 1; dayCounter <= daysInSelectedMonth; dayCounter++) {
-      const currentDateInLoop = new Date(year, month, dayCounter);
-      currentDateInLoop.setHours(0,0,0,0);
+
+    // Add cells for each day of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDate = new Date(year, month, day);
+      cellDate.setHours(0, 0, 0, 0); // Normalize to the start of the day
+
+      // Filter events that fall on this specific day
       const dayEvents = scheduleEvents.filter(event => {
-        if (!event.start || !event.end) return false;
+        if (!event.start) return false;
         const eventStart = new Date(event.start);
-        const eventEnd = new Date(event.end);
-        eventStart.setHours(0,0,0,0); 
-        eventEnd.setHours(0,0,0,0);   
-        return currentDateInLoop >= eventStart && currentDateInLoop <= eventEnd;
+        eventStart.setHours(0, 0, 0, 0);
+        const eventEnd = event.end ? new Date(event.end) : eventStart;
+        eventEnd.setHours(0, 0, 0, 0);
+        return cellDate >= eventStart && cellDate <= eventEnd;
       })
       .map(e => ({ 
-        ...e, // Keep all original event properties
-        // Ensure a displayable title/type for the tooltip
+        ...e,
         displayTitle: e.title || (e.type ? e.type.charAt(0).toUpperCase() + e.type.slice(1).replace(/_/g, ' ') : 'Scheduled Event') 
       }));
-      
-      grid.push({ day: dayCounter, events: dayEvents, date: currentDateInLoop });
-    }
-    return grid;
-  };
 
-  const monthGrid = getDaysInMonthGrid(currentDate);
-  
+      grid.push({ key: `${year}-${month}-${day}`, day, events: dayEvents });
+    }
+
+    return grid;
+  }, [currentDate, scheduleEvents]);
+
   const renderTooltip = (props, cellEvents) => {
     if (!cellEvents || cellEvents.length === 0) {
       return <div {...props} style={{ ...props.style, display: 'none' }} />;
     }
-    // Tooltip will now list the displayTitle of each event
     return (
-      <Tooltip id={`tooltip-${Math.random().toString(36).substr(2, 9)}`} {...props}>
+      <Tooltip id="schedule-tooltip" {...props}>
         {cellEvents.map((event, i) => (
           <div key={i} style={{ 
             marginBottom: cellEvents.length > 1 && i < cellEvents.length - 1 ? '0.3rem' : '0',
             textAlign: 'left'
           }}>
-            {/* You can add a small dot or icon based on event.type here if you want */}
-            {/* <span style={{color: eventColors[event.type] || eventColors.defaultHighlight}}>● </span> */}
             <strong>{event.displayTitle}</strong>
           </div>
         ))}
       </Tooltip>
     );
   };
+  
+  const getDayCellStyle = (events) => {
+    if (events.length === 0) return {};
+  
+    const uniqueEventTypes = [...new Set(events.map(e => e.type))];
+  
+    if (uniqueEventTypes.length > 1) {
+      return { backgroundColor: eventColors.multipleEvents, color: 'white' };
+    }
+    
+    const eventType = uniqueEventTypes[0];
+    let colorKey = 'defaultHighlight';
+  
+    if (eventType === 'booking') colorKey = 'primaryBooking';
+    else if (eventType === 'maintenance') colorKey = 'maintenance';
+    else if (eventType === 'cleaning') colorKey = 'cleaning';
+    else if (eventType === 'operational_hold') colorKey = 'operational_hold';
+    else if (eventType === 'damage') colorKey = 'damage';
+    // Add other mappings from your original code if needed
+  
+    return { backgroundColor: eventColors[colorKey] || eventColors.defaultHighlight, color: 'white' };
+  };
+
 
   return (
-    <div className="maquette-card schedule-card-maquette  h-100 d-flex flex-column">
+    <div className="maquette-card schedule-card-maquette h-100 d-flex flex-column">
       <div className="card-header">
         <h5 className="card-header-title">Schedule Overview</h5>
         <div className="header-divider"></div>
@@ -100,7 +127,9 @@ const ScheduleOverviewCard = ({ scheduleEvents = [] }) => {
           <span onClick={handlePrevMonth} className="schedule-nav-arrow">
             <LuChevronLeft size={24}/> 
           </span>
-          <strong className="schedule-month-display">{getMonthName(currentDate)}</strong>
+          <strong className="schedule-month-display">
+            {currentDate.toLocaleString('default', { month: 'long' })}
+          </strong>
           <span onClick={handleNextMonth} className="schedule-nav-arrow">
             <LuChevronRight size={24}/>
           </span>
@@ -113,61 +142,21 @@ const ScheduleOverviewCard = ({ scheduleEvents = [] }) => {
             ))}
           </div>
           <div className="calendar-body-grid">
-            {monthGrid.map((cell, index) => {
-              let cellStyle = {};
-              let isHighlighted = false;
-              const eventsForDay = cell.events || []; // All events for this day
-
-              if (cell.day && eventsForDay.length > 0) {
-                isHighlighted = true;
-                const uniqueEventTypes = [...new Set(eventsForDay.map(e => e.type))];
-
-                if (uniqueEventTypes.length > 1) {
-                  // Multiple DISTINCT event types on this day
-                  cellStyle = { backgroundColor: eventColors.multipleEvents, color: 'white' };
-                } else if (uniqueEventTypes.length === 1) {
-                  // Single event type on this day
-                  const eventType = uniqueEventTypes[0];
-                  let colorKey = 'defaultHighlight'; // Fallback
-
-                  // --- Your mapping from backend event.type to eventColors key ---
-                  if (eventType === 'booking') colorKey = 'primaryBooking';
-                  else if (eventType === 'maintenance') colorKey = 'maintenance';
-                  else if (eventType === 'cleaning') colorKey = 'cleaning';
-                  else if (eventType === 'operational_hold') colorKey = 'operational_hold'; // Map to 'operational_hold' if that's a key in eventColors, or 'blocked'
-                  else if (eventType === 'damage') colorKey = 'damage';
-                  // Add more specific types from your backend if they map to different colors
-                  // e.g., if (eventType === 'tentative_booking') colorKey = 'secondaryBooking';
-                  //       if (eventType === 'showroom_hold') colorKey = 'blocked';
-                  //       if (eventType === 'photoshoot_unavailable') colorKey = 'unavailable';
-                  
-                  cellStyle = { backgroundColor: eventColors[colorKey] || eventColors.defaultHighlight, color: 'white' };
-                }
-              } 
-              
-              const daySpan = (
-                <span className="day-number" style={cellStyle}>
-                  {cell.day}
-                </span>
-              );
+            {monthGrid.map((cell) => {
+              const cellStyle = getDayCellStyle(cell.events);
+              const daySpan = <span className="day-number" style={cellStyle}>{cell.day}</span>;
 
               return (
                 <div 
-                    key={index} 
-                    className={`calendar-cell calendar-day-cell ${cell.day === null ? 'empty' : ''} ${isHighlighted ? 'has-event' : ''}`}
+                    key={cell.key} 
+                    className={`calendar-cell calendar-day-cell ${cell.day === null ? 'empty' : ''} ${cell.events.length > 0 ? 'has-event' : ''}`}
                 >
                   {cell.day && (
-                    (isHighlighted && eventsForDay.length > 0) ? (
+                    (cell.events.length > 0) ? (
                       <OverlayTrigger
                         placement="top"
                         delay={{ show: 250, hide: 200 }} 
-                        overlay={(props) => renderTooltip(props, eventsForDay)}
-                        popperConfig={{ 
-                            modifiers: [
-                                { name: 'preventOverflow', options: { boundary: 'clippingParents', altBoundary: true, padding: 8 }},
-                                { name: 'flip', options: { fallbackPlacements: ['bottom', 'left', 'right']}}
-                            ]
-                        }}
+                        overlay={(props) => renderTooltip(props, cell.events)}
                       >
                         {daySpan}
                       </OverlayTrigger>
@@ -181,9 +170,8 @@ const ScheduleOverviewCard = ({ scheduleEvents = [] }) => {
           </div>
         </div>
       </div>
+      {/* --- THIS IS YOUR EXACT ORIGINAL STYLE BLOCK --- */}
       <style jsx>{`
-        /* --- Paste your existing <style jsx> for calendar layout and appearance --- */
-        /* It should be the one that makes the calendar look compact like Figma */
         .schedule-card-maquette {
           border-radius: 16px !important;
           background-color: #FFFFFF;
@@ -193,7 +181,6 @@ const ScheduleOverviewCard = ({ scheduleEvents = [] }) => {
         .schedule-card-maquette .card-header {
           background-color: #FFFFFF !important;
           border-radius: 16px !important;
-
           border-bottom: none; 
           padding: 1.25rem 1.5rem 0.75rem 1.5rem; 
         }

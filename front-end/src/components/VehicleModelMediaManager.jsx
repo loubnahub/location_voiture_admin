@@ -6,6 +6,7 @@ import {
   LuCheck, LuEye, LuGripVertical, LuFilter // Added LuFilter for color filter
 } from 'react-icons/lu';
 import { resolveStorageUrl } from './VehicleDisplayGallery';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 import { UploadCloud, Save, Edit3, CheckCircle as IconCheckCircleLucide } from 'lucide-react';
 import { ChromePicker } from 'react-color';

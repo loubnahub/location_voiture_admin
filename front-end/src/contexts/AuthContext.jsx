@@ -1,105 +1,115 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import {
-    loginUser as apiLogin,
-    logoutUser as apiLogout,
-    getCurrentAuthenticatedUser as apiGetCurrentUser,
-    getToken as storageGetToken,
-    getStoredUser as storageGetStoredUser
-} from '../services/authService'; // Adjust path as needed
-import { useNavigate } from 'react-router-dom'; // If using react-router v6
+import { useNavigate } from 'react-router-dom';
+import { login as apiLogin, fetchCurrentUser } from '../services/api'; 
+import apiClient from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(storageGetStoredUser());
-    const [authToken, setAuthToken] = useState(storageGetToken());
-    const [isLoading, setIsLoading] = useState(true); // For initial auth check
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); 
     const [authError, setAuthError] = useState(null);
     const navigate = useNavigate();
 
-    const isAuthenticated = !!authToken && !!currentUser;
-
-    // Check authentication status on initial load
+    // --- THIS IS THE OPTIMIZED EFFECT FOR INSTANT PERCEIVED LOGIN ---
     useEffect(() => {
         const checkAuthStatus = async () => {
-            setIsLoading(true);
-            const token = storageGetToken();
-            if (token) {
+            const token = localStorage.getItem('authToken');
+            const storedUser = localStorage.getItem('userData'); // Also check for stored user data
+
+            // --- KEY CHANGE 1: OPTIMISTIC STATE SET ---
+            // If we have a token AND stored user data, assume the user is logged in instantly.
+            if (token && storedUser) {
                 try {
-                    const userData = await apiGetCurrentUser(); // Fetches user from /api/user
-                    setCurrentUser(userData);
-                    setAuthToken(token);
+                    const parsedUser = JSON.parse(storedUser);
+                    // Set the state immediately from localStorage. This makes the UI update instantly.
+                    setCurrentUser(parsedUser);
+                    setIsAuthenticated(true);
+                    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+                    // --- KEY CHANGE 2: BACKGROUND VERIFICATION ---
+                    // Now, verify the session in the background to get fresh data or log out if the token is invalid.
+                    const response = await fetchCurrentUser();
+                    
+                    // Update state with fresh data from the server.
+                    setCurrentUser(response.data);
+                    // Also update localStorage with the fresh data.
+                    localStorage.setItem('userData', JSON.stringify(response.data));
+
                 } catch (error) {
-                    console.warn("Auth check failed, logging out:", error.message);
-                    // Token might be invalid or expired
-                    await apiLogout(); // This will clear localStorage via authService
+                    // This block runs if the stored token is invalid/expired.
+                    console.error("Session verification failed, logging out:", error);
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userData');
+                    delete apiClient.defaults.headers.common['Authorization'];
                     setCurrentUser(null);
-                    setAuthToken(null);
+                    setIsAuthenticated(false);
                 }
             }
+            
+            // We can now set loading to false much sooner.
             setIsLoading(false);
         };
+
         checkAuthStatus();
-    }, []);
+    }, []); // The empty dependency array ensures this runs only once.
 
     const login = useCallback(async (email, password) => {
-        setIsLoading(true);
         setAuthError(null);
         try {
-            const data = await apiLogin({ email, password });
-            setCurrentUser(data.user);
-            setAuthToken(data.token);
-            setIsLoading(false);
-            return data.user; // Return user data on successful login
+            const response = await apiLogin({ email, password }); 
+            const { token, user } = response.data;
+
+            // --- KEY CHANGE 3: STORE USER DATA ON LOGIN ---
+            // We must store the user object in localStorage on login for the optimistic check to work.
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('userData', JSON.stringify(user)); // <-- ADD THIS LINE
+
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+            return user; 
         } catch (error) {
-            console.error("AuthContext login error:", error);
-            setAuthError(error.message || (error.errors ? Object.values(error.errors).flat().join(' ') : 'Login failed. Please check your credentials.'));
-            setIsLoading(false);
-            throw error;
+            const errorMessage = error.response?.data?.message || 'Login failed.';
+            setAuthError(errorMessage);
+            throw new Error(errorMessage);
         }
     }, []);
 
     const logout = useCallback(async (redirectTo = '/login') => {
-        setIsLoading(true);
-        await apiLogout(); // Clears token from localStorage via authService
+        // Clear everything on logout
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData'); // <-- ADD THIS LINE
+        delete apiClient.defaults.headers.common['Authorization'];
         setCurrentUser(null);
-        setAuthToken(null);
-        setIsLoading(false);
-        if (redirectTo) {
-            navigate(redirectTo);
-        }
+        setIsAuthenticated(false);
+        if (redirectTo) navigate(redirectTo);
     }, [navigate]);
 
-    const hasRole = useCallback((roleNameOrNames) => {
+    const hasRole = useCallback((roleName) => {
         if (!currentUser || !currentUser.roles) return false;
-        const rolesToCheck = Array.isArray(roleNameOrNames) ? roleNameOrNames : [roleNameOrNames];
-        return rolesToCheck.some(role => currentUser.roles.includes(role));
+        return currentUser.roles.some(role => 
+            typeof role === 'string' ? role === roleName : role.name === roleName
+        );
     }, [currentUser]);
-
-    const hasPermission = useCallback((permissionNameOrNames) => {
-        if (!currentUser || !currentUser.permissions) return false;
-        const permissionsToCheck = Array.isArray(permissionNameOrNames) ? permissionNameOrNames : [permissionNameOrNames];
-        return permissionsToCheck.some(perm => currentUser.permissions.includes(perm));
-    }, [currentUser]);
-
 
     const value = {
         currentUser,
-        authToken,
         isAuthenticated,
-        isLoading, // For UI to show loading state during auth operations
+        isLoading,
         authError,
-        setAuthError, // To allow clearing errors from components
+        setAuthError,
         login,
         logout,
         hasRole,
-        hasPermission,
     };
 
     return (
         <AuthContext.Provider value={value}>
+            {/* We no longer need to wait for `isLoading` here, because the optimistic UI is so fast. */}
             {children}
         </AuthContext.Provider>
     );

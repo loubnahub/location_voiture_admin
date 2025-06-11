@@ -1,18 +1,29 @@
+// src/components/promotion_campaigns/PromotionCampaignModalFormFields.jsx
+
 import React from 'react';
 import { Form, Row, Col, FormCheck } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
-// Assuming your PromotionRewardType Enum from backend is available here
-// You might define this array based on your App\Enums\PromotionRewardType
 const rewardTypeOptions = [
     { value: 'percentage', label: 'Percentage Discount' },
     { value: 'fixed_amount', label: 'Fixed Amount Discount' },
-    // Add more if your enum supports them
 ];
 
 const PromotionCampaignModalFormFields = ({ formData, handleInputChange, modalFormErrors }) => {
     if (!formData) {
-        return <p>Loading form data...</p>; // Or a spinner
+        return <p>Loading form data...</p>;
     }
+
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            return date.toISOString().slice(0, 10); // Format as YYYY-MM-DD
+        } catch (e) {
+            return '';
+        }
+    };
 
     return (
         <>
@@ -43,21 +54,27 @@ const PromotionCampaignModalFormFields = ({ formData, handleInputChange, modalFo
             </Form.Group>
 
             <Row>
+                {/* --- THIS IS THE MODIFIED FIELD --- */}
                 <Col md={6}>
                     <Form.Group className="mb-3" controlId="pcRequiredRentalCount">
-                        <Form.Label>Required Rental Count <span className="text-danger">*</span></Form.Label>
+                        <Form.Label>Loyalty Points Threshold</Form.Label>
                         <Form.Control
                             type="number"
-                            name="required_rental_count"
+                            name="required_rental_count" // The DB column name remains the same
                             value={formData.required_rental_count || ''}
                             onChange={handleInputChange}
-                            required
                             min="1"
+                            placeholder="e.g., 500"
                             isInvalid={!!modalFormErrors?.required_rental_count}
                         />
+                        <Form.Text className="text-muted">
+                            Triggers reward when user crosses this point total. Leave blank for standard campaigns.
+                        </Form.Text>
                         <Form.Control.Feedback type="invalid">{modalFormErrors?.required_rental_count?.join(', ')}</Form.Control.Feedback>
                     </Form.Group>
                 </Col>
+                {/* --- END OF MODIFIED FIELD --- */}
+                
                 <Col md={6}>
                     <Form.Group className="mb-3" controlId="pcRewardValue">
                         <Form.Label>Reward Value <span className="text-danger">*</span></Form.Label>
@@ -68,7 +85,7 @@ const PromotionCampaignModalFormFields = ({ formData, handleInputChange, modalFo
                             onChange={handleInputChange}
                             required
                             min="0"
-                            step="0.01" // For decimal values
+                            step="0.01"
                             isInvalid={!!modalFormErrors?.reward_value}
                         />
                         <Form.Control.Feedback type="invalid">{modalFormErrors?.reward_value?.join(', ')}</Form.Control.Feedback>
@@ -108,7 +125,7 @@ const PromotionCampaignModalFormFields = ({ formData, handleInputChange, modalFo
                             isInvalid={!!modalFormErrors?.code_validity_days}
                         />
                         <Form.Text className="text-muted">
-                            How many days generated codes are valid. Leave blank if not applicable or if expiry is tied to campaign end date only.
+                            How many days generated codes are valid.
                         </Form.Text>
                         <Form.Control.Feedback type="invalid">{modalFormErrors?.code_validity_days?.join(', ')}</Form.Control.Feedback>
                     </Form.Group>
@@ -120,9 +137,9 @@ const PromotionCampaignModalFormFields = ({ formData, handleInputChange, modalFo
                     <Form.Group className="mb-3" controlId="pcStartDate">
                         <Form.Label>Start Date</Form.Label>
                         <Form.Control
-                            type="date" // Using 'date' for simplicity, use 'datetime-local' if time is needed
+                            type="date"
                             name="start_date"
-                            value={formData.start_date ? formData.start_date.substring(0, 10) : ''} // Assuming ISO string, take date part
+                            value={formatDateForInput(formData.start_date)}
                             onChange={handleInputChange}
                             isInvalid={!!modalFormErrors?.start_date}
                         />
@@ -135,7 +152,7 @@ const PromotionCampaignModalFormFields = ({ formData, handleInputChange, modalFo
                         <Form.Control
                             type="date"
                             name="end_date"
-                            value={formData.end_date ? formData.end_date.substring(0, 10) : ''}
+                            value={formatDateForInput(formData.end_date)}
                             onChange={handleInputChange}
                             isInvalid={!!modalFormErrors?.end_date}
                         />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { LuChevronDown, LuSettings2 } from 'react-icons/lu'; // Assuming LuSettings2 for extras
 import './ExtraList.css';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const ExtraList = ({ extras }) => {
   if (!extras || extras.length === 0) {

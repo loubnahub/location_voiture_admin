@@ -11,6 +11,7 @@ import { LuTicket, LuClock, LuBan } from 'react-icons/lu';
 import { Badge } from 'react-bootstrap';
 import { PromotionCodeStatus as PromotionCodeStatusEnum } from '../../Enums'; // Adjust path
 import { CheckCircle, XCircle } from 'lucide-react'; // Corrected import
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Columns for the Promotion Code Table ---
 const codeColumns = [
@@ -53,11 +54,7 @@ const codeColumns = [
     },
     { header: 'Issued At', key: 'issued_at', render: (item) => item.issued_at ? new Date(item.issued_at).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A' },
     { header: 'Expires At', key: 'expires_at', render: (item) => item.expires_at ? new Date(item.expires_at).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span className="text-muted-custom">Campaign End</span> },
-    {
-        header: 'Used On Booking',
-        key: 'booking_ref_used_on', // Make sure this key exists in your API response or transform
-        render: (item) => item.booking_ref_used_on || <span className="text-muted-custom">Not Used</span>
-    },
+   
 ];
 
 // --- Initial Form Data for the Modal ---

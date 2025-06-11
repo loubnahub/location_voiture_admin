@@ -5,6 +5,7 @@ import {
     fetchCampaignsForPromotionCodeDropdown
 } from '../../services/api'; // Adjust path
 import { PromotionCodeStatus as PromotionCodeStatusEnum } from '../../Enums'; // Adjust path
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // Prepare options for the Status dropdown from your Enum
 const statusOptions = Object.values(PromotionCodeStatusEnum || {}).map(status => ({

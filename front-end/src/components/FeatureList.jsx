@@ -1,6 +1,7 @@
 import React from 'react';
 import { LuChevronDown } from 'react-icons/lu'; // For a simple list, not full accordion yet
 import './FeatureList.css';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const FeatureList = ({ featuresGrouped }) => {
   if (!featuresGrouped || featuresGrouped.length === 0) {

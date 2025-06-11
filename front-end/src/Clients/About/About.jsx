@@ -17,7 +17,6 @@ export default function About() {
         <OurClinetSaying />
         <OurTeam />
         <Partners />
-        <Footer />
     </div>
   )
 }

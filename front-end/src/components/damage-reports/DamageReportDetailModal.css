@@ -1,0 +1,35 @@
+/* src/components/damage-reports/DamageReportDetailModal.css */
+
+.detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.detail-header {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.detail-section p {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.report-description {
+  white-space: pre-wrap; /* Preserves line breaks from the textarea */
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.report-image {
+  max-height: 500px;
+  width: 100%;
+  object-fit: contain; /* Use 'contain' to see the whole image without cropping */
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+}

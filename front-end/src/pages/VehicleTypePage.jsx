@@ -8,6 +8,7 @@ import {
 } from '../services/api';   // Your API service functions
 import { Form, Alert } from 'react-bootstrap'; // For rendering the modal form fields
 import { LuListTree } from 'react-icons/lu';   // Icon for the page title
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // 1. Define Columns for the DynamicTable (specific to Vehicle Types)
 const vehicleTypeColumns = [

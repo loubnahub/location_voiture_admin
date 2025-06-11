@@ -40,24 +40,34 @@ const Partners = () => {
   let scrollAnimation = useRef(null);
   
   const startScroll = () => {
-    if (scrollContainerRef.current) {
-      let scrollAmount = 0;
-      const speed = 3; // Adjust scroll speed
+    if (scrollContainerRef.current && scrollRef.current) { // Added check for scrollRef.current
+      let scrollAmount = scrollContainerRef.current.scrollLeft; // Start from current position
+      const speed = 1; // Adjusted scroll speed (pixels per frame)
       
       const scroll = () => {
-        if (scrollContainerRef.current) {
+        if (scrollContainerRef.current && scrollRef.current) { // Ensure refs are still valid
           scrollAmount += speed;
-          scrollContainerRef.current.scrollLeft = scrollAmount;
           
-          // Reset scroll position when reaching the first set of logos
-          if (scrollAmount >= scrollRef.current.offsetWidth) {
-            scrollAmount = 0;
+          // Reset scroll position when reaching the end of the first set of logos
+          // scrollRef.current.offsetWidth should be the width of ONE set of logos
+          // For this to work perfectly, scrollRef should ideally wrap only the first set.
+          // However, with the current structure where scrollRef wraps extendedBrands,
+          // this logic needs to be based on half the total width if extendedBrands is exactly 2x brands.
+          const singleSetWidth = scrollRef.current.scrollWidth / 2; 
+
+          if (scrollAmount >= singleSetWidth) {
+            scrollAmount -= singleSetWidth; // Jump back by the width of one set
           }
+          scrollContainerRef.current.scrollLeft = scrollAmount;
           
           scrollAnimation.current = requestAnimationFrame(scroll);
         }
       };
       
+      // Clear any existing animation frame before starting a new one
+      if (scrollAnimation.current) {
+        cancelAnimationFrame(scrollAnimation.current);
+      }
       scrollAnimation.current = requestAnimationFrame(scroll);
     }
   };
@@ -70,34 +80,37 @@ const Partners = () => {
   };
   
   useEffect(() => {
-    startScroll();
+    // Ensure the content is wide enough to scroll before starting
+    if (scrollContainerRef.current && scrollRef.current && scrollRef.current.scrollWidth > scrollContainerRef.current.offsetWidth) {
+      startScroll();
+    }
     
     return () => {
       stopScroll();
     };
-  }, []);
+  }, [extendedBrands]); // Re-run if extendedBrands changes (though it's static here)
 
   return (
     <div 
-      className="w-full bg-[#222222] py-5 overflow-hidden"
+      className="tw-w-full tw-bg-[#222222] tw-py-5 tw-overflow-hidden"
       onMouseEnter={stopScroll}
       onMouseLeave={startScroll}
     >
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-scroll  scrollbar-hide"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="tw-overflow-x-auto tw-whitespace-nowrap tw-scrollbar-hide" // Use -auto for conditional scroll, whitespace-nowrap for inline-flex behavior
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // Keep these for browsers not supporting scrollbar-hide
       >
         <div 
           ref={scrollRef}
-          className="inline-flex space-x-16 px-8"
+          className="tw-inline-flex tw-space-x-16 tw-px-8" // px-8 adds padding inside the scrollable area
         >
           {extendedBrands.map((brand, index) => (
-            <div key={index} className="w-28 h-28 flex items-center justify-center flex-shrink-0">
+            <div key={index} className="tw-w-28 tw-h-28 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
               <img 
                 src={brand.logoUrl}
                 alt={`${brand.name} logo`}
-                className="max-w-full max-h-full object-contain"
+                className="tw-max-w-full tw-max-h-full tw-object-contain"
               />
             </div>
           ))}

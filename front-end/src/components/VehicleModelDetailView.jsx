@@ -13,10 +13,11 @@ import {
     LuCamera as LuModelImagesIcon, 
     LuFeather as LuModelDetailsIcon 
 } from 'react-icons/lu'; 
-import './VehicleModelDetailView.css'; 
 import VehicleModelEditForm from './VehicleModelEditForm'; 
 import VehicleModelMediaManager from './VehicleModelMediaManager'; // <<<< IMPORTED
 import { updateVehicleModel, fetchVehicleModelById, deleteVehicleModel } from '../services/api';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import './VehicleModelDetailView.css'; 
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -304,7 +305,7 @@ const VehicleModelDetailView = ({
             {safeVehicleInstances.length > 0 && (
                 <Dropdown className="d-inline-block mb-3 ms-md-2 license-plate-dropdown-maquette ">
                 <Dropdown.Toggle variant="light" size="sm" id="license-plate-dropdown-btn" className="  rounded-2 px-4 py-1 text-dark dropdown-toggle-maquette license-plate-button">
-                    <LuListTree size={16} className="me-1" /> 
+                    <LuListTree size={16} className="me-1 d-inline" /> 
                     {activeInstanceId && safeVehicleInstances.find(inst => inst.id === activeInstanceId)?.license_plate 
                         ? `Instance: ${safeVehicleInstances.find(inst => inst.id === activeInstanceId).license_plate}` 
                         : "Select an Instance"}

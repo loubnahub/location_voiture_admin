@@ -1,311 +1,212 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import ResourcePage from '../components/ResourcePage'; // Adjust path if ResourcePage is in a general components folder
+import { Form, Row, Col, Spinner, Badge, Tabs, Tab } from 'react-bootstrap';
+import { LuUsers } from 'react-icons/lu';
 import {
-  fetchAllUsersForAdmin, // Renamed to reflect admin context
+  fetchAllUsersForAdmin,
   createUserAdmin,
   updateUserAdmin,
   deleteUserAdmin,
-  fetchAvailableRoles // To populate roles dropdown
-} from '../services/api'; // Adjust path
-import { Form, Row, Col, Spinner, Badge, ListGroup } from 'react-bootstrap'; // Added Badge, ListGroup
-import { LuUsers } from 'react-icons/lu'; // Icon for Users
+} from '../services/api';
+import ResourcePage from '../components/ResourcePage';
+import UserRewardsTab from '../pages/UserRewardsTab'; 
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-// --- Columns for the User Table ---
+// --- Columns for the User Table (No changes needed) ---
 const userColumns = [
+  { header: 'Name', key: 'full_name', render: (item) => item.full_name || <span className="text-muted-custom">N/A</span> },
+  { header: 'Email', key: 'email', render: (item) => item.email || <span className="text-muted-custom">N/A</span> },
+  { header: 'Phone', key: 'phone', render: (item) => item.phone || <span className="text-muted-custom">N/A</span> },
   {
-    header: 'Name',
-    key: 'full_name',
-    render: (item) => item.full_name || <span className="text-muted-custom">N/A</span>,
+    header: 'Role',
+    key: 'roles',
+    render: (item) => {
+      let roleName = 'customer'; // Default role
+      if (Array.isArray(item.roles) && item.roles.length > 0) {
+        // Find admin role, otherwise take the first role in the array
+        const adminRole = item.roles.find(r => r.name === 'admin');
+        roleName = adminRole ? adminRole.name : (item.roles[0]?.name || 'customer');
+      } else if (typeof item.roles === 'string') {
+        // Handle cases where the role is already a simple string
+        roleName = item.roles;
+      }
+      const badgeBg = roleName === 'admin' ? 'danger' : 'info';
+      return (
+        <Badge pill bg={badgeBg} className="text-white">
+          {roleName.charAt(0).toUpperCase() + roleName.slice(1)}
+        </Badge>
+      );
+    }
   },
-  {
-    header: 'Email',
-    key: 'email',
-    render: (item) => item.email || <span className="text-muted-custom">N/A</span>,
-  },
-  {
-    header: 'Phone',
-    key: 'phone',
-    render: (item) => item.phone || <span className="text-muted-custom">N/A</span>,
-  },
-  {
-    header: 'Roles',
-    key: 'roles', // The API response from transformUser includes a 'roles' array of objects {id, name}
-    render: (item) =>
-      item.roles && item.roles.length > 0
-        ? item.roles.map(role => (
-            <Badge pill bg="info" key={role.id} className="me-1 text-white">
-              {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-            </Badge>
-          ))
-        : <Badge pill bg="secondary" className="text-white">No Roles</Badge>,
-  },
-  {
-    header: 'Joined',
-    key: 'created_at',
-    render: (item) => item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
-  },
-  // Optional: Add columns for loyalty points, email verified, etc.
+  { header: 'Joined', key: 'created_at', render: (item) => item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A' },
 ];
 
-// --- Initial Form Data for User Modal ---
+// --- Initial Form Data (No changes needed) ---
 const initialUserData = {
-  id: null,
-  full_name: '',
-  email: '',
-  phone: '',
-  password: '',
-  password_confirmation: '',
-  profile_picture_url: '',
-  loyalty_points: 0,
-  roles: [], // Will store an array of role NAMES for submission (e.g., ['admin', 'editor'])
-               // Or an array of role IDs if your backend expects IDs for syncRoles.
-               // Spatie's syncRoles can accept names, IDs, or Role model instances. Names are often convenient.
+  id: null, full_name: '', email: '', phone: '',
+  password: '', password_confirmation: '', profile_picture_url: '',
+  loyalty_points: 0, 
+  roles: 'customer', // The default role is a simple string
 };
 
-// --- Modal Form Fields Component ---
-const UserModalFormFields = ({ formData, handleInputChange, modalFormErrors, isEditMode, setCurrentItemData }) => {
-  const [availableRoles, setAvailableRoles] = useState([]);
-  const [loadingRoles, setLoadingRoles] = useState(true);
-
-  // Fetch available roles for the dropdown/multi-select
-  useEffect(() => {
-    const loadRoles = async () => {
-      setLoadingRoles(true);
-      try {
-        const response = await fetchAvailableRoles();
-        const rolesData = response.data.data || response.data || []; // Adjust based on API response
-        setAvailableRoles(Array.isArray(rolesData) ? rolesData : []);
-      } catch (error) {
-        console.error("UserModalFormFields: Error fetching roles:", error);
-        setAvailableRoles([]);
-      } finally {
-        setLoadingRoles(false);
-      }
-    };
-    loadRoles();
-  }, []);
-
-  // Handle role selection (assuming multi-select or checkboxes)
-  // This example uses a multi-select approach with react-bootstrap's Form.Select multiple.
-  // For checkboxes, the logic would be slightly different.
-  const handleRoleChange = (event) => {
-    const selectedRoleNames = Array.from(event.target.selectedOptions, option => option.value);
-    // Update the formData in ResourcePage state
-    // `handleInputChange` from ResourcePage might not directly support setting an array for a non-checkbox multi-select.
-    // So, we use setCurrentItemData to directly update the 'roles' array in the parent's formData.
-    if (setCurrentItemData) {
-      setCurrentItemData(prev => ({ ...prev, roles: selectedRoleNames }));
-    } else {
-      // Fallback if setCurrentItemData is not passed (less ideal)
-      handleInputChange({ target: { name: 'roles', value: selectedRoleNames } });
-    }
-     if (modalFormErrors.roles) { // Clear role-specific error on change
-      handleInputChange({ target: { name: 'roles', value: selectedRoleNames, type:'custom_clear_error' } });
-    }
-  };
-
+// --- Modal Form Fields Component (No changes needed) ---
+const UserModalFormFields = ({ formData, handleInputChange, modalFormErrors, isEditMode }) => {
+  const availableRoles = [
+    { name: 'customer', label: 'Customer' },
+    { name: 'admin', label: 'Admin' },
+  ];
 
   return (
-    <>
-      <Form.Group className="mb-3" controlId="userFullName">
-        <Form.Label>Full Name <span className="text-danger">*</span></Form.Label>
-        <Form.Control
-          type="text"
-          name="full_name"
-          value={formData.full_name || ''}
-          onChange={handleInputChange}
-          required
-          isInvalid={!!modalFormErrors?.full_name}
-        />
-        <Form.Control.Feedback type="invalid">{modalFormErrors?.full_name?.join(', ')}</Form.Control.Feedback>
-      </Form.Group>
-
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="userEmail">
-            <Form.Label>Email <span className="text-danger">*</span></Form.Label>
-            <Form.Control
-              type="email"
-              name="email"
-              value={formData.email || ''}
-              onChange={handleInputChange}
-              required
-              isInvalid={!!modalFormErrors?.email}
-            />
-            <Form.Control.Feedback type="invalid">{modalFormErrors?.email?.join(', ')}</Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="userPhone">
-            <Form.Label>Phone</Form.Label>
-            <Form.Control
-              type="tel"
-              name="phone"
-              value={formData.phone || ''}
-              onChange={handleInputChange}
-              isInvalid={!!modalFormErrors?.phone}
-            />
-            <Form.Control.Feedback type="invalid">{modalFormErrors?.phone?.join(', ')}</Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="userPassword">
-            <Form.Label>{isEditMode ? 'New Password (Optional)' : 'Password'} <span className="text-danger">{!isEditMode ? '*' : ''}</span></Form.Label>
-            <Form.Control
-              type="password"
-              name="password"
-              value={formData.password || ''}
-              onChange={handleInputChange}
-              required={!isEditMode} // Required only on create
-              isInvalid={!!modalFormErrors?.password}
-              placeholder={isEditMode ? "Leave blank to keep current password" : "Enter password"}
-            />
-            <Form.Control.Feedback type="invalid">{modalFormErrors?.password?.join(', ')}</Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="userPasswordConfirmation">
-            <Form.Label>{isEditMode ? 'Confirm New Password' : 'Confirm Password'} <span className="text-danger">{!isEditMode || formData.password ? '*' : ''}</span></Form.Label>
-            <Form.Control
-              type="password"
-              name="password_confirmation"
-              value={formData.password_confirmation || ''}
-              onChange={handleInputChange}
-              required={!isEditMode || !!formData.password} // Required if creating or if new password is typed
-              isInvalid={!!modalFormErrors?.password_confirmation}
-              placeholder={isEditMode ? "Confirm new password if changing" : "Confirm password"}
-            />
-            <Form.Control.Feedback type="invalid">{modalFormErrors?.password_confirmation?.join(', ')}</Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      <Form.Group className="mb-3" controlId="userRoles">
-        <Form.Label>Roles</Form.Label>
-        {loadingRoles ? <Spinner animation="border" size="sm" /> : (
-          <Form.Select
-            multiple // Allows multiple selections
-            name="roles" // This name might not be directly used by handleInputChange if using setCurrentItemData
-            value={formData.roles || []} // formData.roles should be an array of selected role names (or IDs)
-            onChange={handleRoleChange} // Custom handler for multi-select
-            isInvalid={!!modalFormErrors?.roles || !!modalFormErrors?.['roles.*']}
-            htmlSize={Math.min(5, availableRoles.length + 1)} // Show a few roles at a time
+    <Tabs defaultActiveKey="details" id="user-modal-tabs" className="mb-3" unmountOnExit>
+      <Tab eventKey="details" title="User Details">
+        <Form.Group className="mb-3" controlId="userFullName">
+          <Form.Label>Full Name <span className="text-danger">*</span></Form.Label>
+          <Form.Control type="text" name="full_name" value={formData.full_name || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.full_name} />
+          <Form.Control.Feedback type="invalid">{modalFormErrors?.full_name?.join(', ')}</Form.Control.Feedback>
+        </Form.Group>
+        <Row>
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="userEmail">
+              <Form.Label>Email <span className="text-danger">*</span></Form.Label>
+              <Form.Control type="email" name="email" value={formData.email || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.email} />
+              <Form.Control.Feedback type="invalid">{modalFormErrors?.email?.join(', ')}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="userPhone">
+              <Form.Label>Phone</Form.Label>
+              <Form.Control type="tel" name="phone" value={formData.phone || ''} onChange={handleInputChange} isInvalid={!!modalFormErrors?.phone} />
+              <Form.Control.Feedback type="invalid">{modalFormErrors?.phone?.join(', ')}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="userPassword">
+              <Form.Label>{isEditMode ? 'New Password (Optional)' : 'Password'} <span className="text-danger">{!isEditMode ? '*' : ''}</span></Form.Label>
+              <Form.Control type="password" name="password" value={formData.password || ''} onChange={handleInputChange} required={!isEditMode} isInvalid={!!modalFormErrors?.password} placeholder={isEditMode ? "Leave blank to keep current" : "Enter password"} />
+              <Form.Control.Feedback type="invalid">{modalFormErrors?.password?.join(', ')}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="userPasswordConfirmation">
+              <Form.Label>{isEditMode ? 'Confirm New Password' : 'Confirm Password'} <span className="text-danger">{!isEditMode || formData.password ? '*' : ''}</span></Form.Label>
+              <Form.Control type="password" name="password_confirmation" value={formData.password_confirmation || ''} onChange={handleInputChange} required={!isEditMode || !!formData.password} isInvalid={!!modalFormErrors?.password_confirmation} placeholder={isEditMode ? "Confirm if changing" : "Confirm password"} />
+              <Form.Control.Feedback type="invalid">{modalFormErrors?.password_confirmation?.join(', ')}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        </Row>
+        <Form.Group className="mb-3" controlId="userRole">
+          <Form.Label>Role</Form.Label>
+          <Form.Select 
+            name="roles"
+            value={formData.roles || 'customer'}
+            onChange={handleInputChange}
+            isInvalid={!!modalFormErrors?.roles || !!modalFormErrors?.['roles.0']}
           >
-            {/* <option value="" disabled>Select Roles...</option> Not typical for multi-select */}
             {availableRoles.map(role => (
-              // Ensure your backend expects role names for syncRoles. If it expects IDs, value should be role.id
-              <option key={role.id} value={role.name}>
-                {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+              <option key={role.name} value={role.name}>
+                {role.label}
               </option>
             ))}
           </Form.Select>
-        )}
-        <Form.Control.Feedback type="invalid">
-            {modalFormErrors?.roles?.join(', ') || modalFormErrors?.['roles.*']?.join(', ')}
-        </Form.Control.Feedback>
-         <Form.Text className="text-muted">
-            Hold Ctrl (or Cmd on Mac) to select multiple roles.
-        </Form.Text>
-      </Form.Group>
-
-      <Form.Group className="mb-3" controlId="userProfilePictureUrl">
-        <Form.Label>Profile Picture URL</Form.Label>
-        <Form.Control
-          type="url"
-          name="profile_picture_url"
-          value={formData.profile_picture_url || ''}
-          onChange={handleInputChange}
-          placeholder="https://example.com/image.png"
-          isInvalid={!!modalFormErrors?.profile_picture_url}
-        />
-        <Form.Control.Feedback type="invalid">{modalFormErrors?.profile_picture_url?.join(', ')}</Form.Control.Feedback>
-      </Form.Group>
-
-      <Form.Group className="mb-3" controlId="userLoyaltyPoints">
-        <Form.Label>Loyalty Points</Form.Label>
-        <Form.Control
-          type="number"
-          name="loyalty_points"
-          value={formData.loyalty_points || 0}
-          onChange={handleInputChange}
-          min="0"
-          isInvalid={!!modalFormErrors?.loyalty_points}
-        />
-        <Form.Control.Feedback type="invalid">{modalFormErrors?.loyalty_points?.join(', ')}</Form.Control.Feedback>
-      </Form.Group>
-    </>
+          <Form.Control.Feedback type="invalid">
+            {modalFormErrors?.roles?.join(', ') || modalFormErrors?.['roles.0']?.join(', ')}
+          </Form.Control.Feedback>
+        </Form.Group>
+        
+        <Form.Group className="mb-3" controlId="userLoyaltyPoints">
+          <Form.Label>Loyalty Points</Form.Label>
+          <Form.Control type="number" name="loyalty_points" value={formData.loyalty_points || 0} onChange={handleInputChange} min="0" isInvalid={!!modalFormErrors?.loyalty_points} />
+          <Form.Control.Feedback type="invalid">{modalFormErrors?.loyalty_points?.join(', ')}</Form.Control.Feedback>
+        </Form.Group>
+      </Tab>
+      {isEditMode && formData.id && (
+        <Tab eventKey="rewards" title="Loyalty & Rewards">
+          <UserRewardsTab userId={formData.id} />
+        </Tab>
+      )}
+    </Tabs>
   );
 };
 
 
 // --- Main UserPage Component ---
 const UserPage = () => {
-  // Prepares data before sending to API (e.g., handle password, roles)
-  const processUserFormData = useCallback((data, isEditing) => {
-    const processed = { ...data };
 
-    // Handle password: only send if provided (for create or if changing on edit)
-    if (!isEditing && !processed.password) {
-      // This case should ideally be caught by 'required' validation on create
-      // but as a safeguard, could remove or error. For now, assume validation catches.
-    } else if (processed.password === '') { // If password field was touched and then cleared for update
-        delete processed.password;
-        delete processed.password_confirmation;
-    } else if (!processed.password && isEditing) { // If editing and password field is empty, don't send it
+  /**
+   * --- FIX #1: ROBUST TRANSFORMATION FUNCTION ---
+   * This function prepares data from the API to be used in the form.
+   * It is now robust and can handle both raw API data (roles as an array)
+   * and data that is already in the form's state (roles as a string).
+   * This prevents the role from being reset to 'customer' on every input change.
+   */
+  const transformDataForForm = (apiData) => {
+    if (!apiData) return initialUserData;
+    
+    let primaryRole = 'customer'; // Sensible default
+
+    // Case 1: The 'roles' property is already a simple string (from our form state)
+    if (typeof apiData.roles === 'string' && apiData.roles) {
+        primaryRole = apiData.roles;
+    } 
+    // Case 2: The 'roles' property is an array of objects (from the initial API fetch)
+    else if (Array.isArray(apiData.roles) && apiData.roles.length > 0) {
+      const adminRole = apiData.roles.find(r => r.name === 'admin');
+      primaryRole = adminRole ? adminRole.name : (apiData.roles[0]?.name || 'customer');
+    }
+
+    // Return a new object with all of the user's data, but ensure 'roles' is a simple string.
+    return {
+      ...initialUserData,
+      ...apiData,
+      roles: primaryRole,
+    };
+  };
+
+  /**
+   * --- FIX #2: SIMPLIFIED API PREPARATION FUNCTION ---
+   * This function takes the final state from the form and prepares it for the API.
+   * It correctly handles passwords and guarantees the 'roles' property is an array
+   * of strings, as expected by the Laravel backend.
+   */
+  const processDataForApi = (formData, isEditing) => {
+    const processed = { ...formData };
+
+    // If editing and the password field is empty, don't send it to the API.
+    if (isEditing && !processed.password) {
         delete processed.password;
         delete processed.password_confirmation;
     }
-    // If password is provided, password_confirmation is expected by backend validation.
+  
+    // The `formData.roles` value from our form will be a string like 'admin'.
+    // The API expects an array of role names, e.g., ['admin'].
+    processed.roles = [formData.roles];
 
-    // Ensure 'roles' is an array of role names (or IDs if backend expects that)
-    // formData.roles should already be an array of strings from the multi-select
-    if (!Array.isArray(processed.roles)) {
-        processed.roles = [];
-    }
-
-    // Remove id for create operations if it's null
-    if (!isEditing && (processed.id === null || processed.id === undefined)) {
+    // Clean up other fields
+    if (!isEditing) {
         delete processed.id;
     }
+    processed.loyalty_points = parseInt(processed.loyalty_points, 10) || 0;
 
-
-    // Convert loyalty_points to number
-    if (processed.loyalty_points !== undefined && processed.loyalty_points !== null) {
-        processed.loyalty_points = parseInt(processed.loyalty_points, 10);
-        if (isNaN(processed.loyalty_points)) {
-            processed.loyalty_points = 0; // Default or handle error
-        }
-    } else {
-        processed.loyalty_points = 0; // Default if not provided
-    }
-
-
-    console.log("UserPage: Processed user data for API:", JSON.stringify(processed, null, 2));
+    console.log("Sending to API:", processed);
     return processed;
-  }, []);
+  };
 
-  const renderUserModalForm = useCallback((formData, handleInputChange, modalFormErrors, isEditMode, setCurrentItemData) => {
-    // When editing, formData from ResourcePage (currentItemData) should already include 'roles' as an array of names
-    // if transformUser in the controller sends 'role_names'.
-    // Let's ensure initialUserData also aligns with this if using role_names for selection.
-    // The 'roles' field in formData for the multi-select value prop should be an array of selected role *names*.
-    const formDataForForm = {
-        ...formData,
-        roles: Array.isArray(formData.roles) // from API it's array of objects {id, name}
-               ? formData.roles.map(role => typeof role === 'object' ? role.name : role) // map to names
-               : (Array.isArray(formData.role_names) ? formData.role_names : []) // fallback to role_names if available
-    };
-
+  /**
+   * --- FIX #3: CORRECTLY RENDER THE FORM ---
+   * The function now correctly calls the robust transform function.
+   * This ensures the form always displays the correct data, even during re-renders.
+   */
+  const renderUserModalForm = useCallback((formData, handleInputChange, modalFormErrors, isEditMode) => {
+    // This transformation is now safe to call on every render.
+    const formDataForFields = transformDataForForm(formData);
+    
     return (
       <UserModalFormFields
-        formData={formDataForForm}
+        formData={formDataForFields}
         handleInputChange={handleInputChange}
         modalFormErrors={modalFormErrors}
         isEditMode={isEditMode}
-        setCurrentItemData={setCurrentItemData} // Pass this for role handling
       />
     );
   }, []);
@@ -318,12 +219,11 @@ const UserPage = () => {
       columns={userColumns}
       initialFormData={initialUserData}
       renderModalForm={renderUserModalForm}
-      fetchAllItems={fetchAllUsersForAdmin} // Use the admin-specific fetch
-      createItem={(data) => createUserAdmin(processUserFormData(data, false))}
-      updateItem={(id, data) => updateUserAdmin(id, processUserFormData(data, true))}
+      createItem={(data) => createUserAdmin(processDataForApi(data, false))}
+      updateItem={(id, data) => updateUserAdmin(id, processDataForApi(data, true))}
+      fetchAllItems={fetchAllUsersForAdmin}
       deleteItem={deleteUserAdmin}
       searchPlaceholder="Search by name, email, or phone..."
-      // itemsPerPage={10} // Optional
     />
   );
 };

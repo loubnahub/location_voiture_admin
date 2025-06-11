@@ -8,6 +8,7 @@ import {
 } from '../services/api';
 import { Form, InputGroup } from 'react-bootstrap';
 import { PlusSquare } from 'lucide-react';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // 1. Define Columns for the DynamicTable
 // This should use 'default_price_per_day' as the key from your API/transformExtra

@@ -12,6 +12,7 @@ import {
 } from 'react-bootstrap';
 import DynamicTable from './DynamicTable'; // Ensure this path is correct
 import { LuSearch, LuPlus } from 'react-icons/lu';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 import './ResourcePage.css'; // Ensure this path is correct
 
 const ITEMS_PER_PAGE_DEFAULT = 8;

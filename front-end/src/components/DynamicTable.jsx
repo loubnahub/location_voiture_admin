@@ -1,8 +1,9 @@
 import React from 'react';
 import { Table, Button, Spinner } from 'react-bootstrap';
 import { LuTrash2, LuEye } from 'react-icons/lu'; // Default action icons
-import './DynamicTable.css'; // Ensure this CSS file is created
 import { Edit } from 'lucide-react'; // Using Edit from lucide-react
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import './DynamicTable.css'; // Ensure this CSS file is created
 
 const DynamicTable = ({
   columns,
@@ -54,7 +55,7 @@ const DynamicTable = ({
               </th>
             ))}
             {hasAnyActions && (
-              <th className="text-end">Actions</th>
+              <th className="text-center">Actions</th>
             )}
           </tr>
         </thead>
@@ -107,13 +108,7 @@ const DynamicTable = ({
 
                     // Log the result of the shouldShow evaluation
                     // This log is crucial for debugging your "Send to Client" button visibility
-                    if (typeof customAction.shouldShow === 'function') { // Only log if shouldShow was actually a function
-                        console.log(
-                            `DynamicTable (${_resourceNameForDebug || 'Table'}): Custom Action: '${customAction.title}' (Item ID: ${getKey(item)})`,
-                            `\n  - shouldShow() was called and returned: ${showThisCustomAction}`
-                            // `\n  - Item data passed to shouldShow:`, JSON.parse(JSON.stringify(item)) // Avoid circular issues if item is complex
-                        );
-                    }
+                   
 
 
                     if (showThisCustomAction && customAction.handler) { // Ensure handler also exists

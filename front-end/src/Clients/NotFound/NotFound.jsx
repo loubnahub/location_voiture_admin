@@ -10,7 +10,7 @@ export default function NotFound() {
             <NotFounSection />
             <NotFound404 />
             <Partners />
-            <Footer />
+           
         </div>
     )
 }

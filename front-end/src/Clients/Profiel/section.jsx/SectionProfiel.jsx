@@ -1,5 +1,4 @@
 import React from 'react';
-import Header from '../../Header/Nav';
 
 const ProfielSection = () => {
   // IMPORTANT: Replace this with your actual hero image for services
@@ -7,7 +6,7 @@ const ProfielSection = () => {
 
   return (
     <div className="bg-[#1B1B1B] min-h-screen text-white">
-      <Header />
+    
       
       <div
         className="relative h-[50vh] sm:h-[60vh] md:h-96 lg:h-[550px] flex items-center justify-start bg-cover bg-center"

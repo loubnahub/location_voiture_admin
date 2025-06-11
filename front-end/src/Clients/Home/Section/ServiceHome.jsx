@@ -4,48 +4,51 @@ import { LayoutGrid, Laptop, ShieldCheck, Clock } from 'lucide-react';
 const carImageUrl = '/images/Cars/carourservices.png'; 
 
 const OurServiceSection = () => {
-  const services = [
-    {
-      icon: <LayoutGrid size={24} className="text-white" />,
-      title: 'Daily, Weekly & Monthly Rentals',
-      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore e magna aliqua. Ut enim ad minim',
-    },
-    {
-      icon: <Laptop size={24} className="text-white" />,
-      title: 'Easy Online Booking',
-      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore e magna aliqua. Ut enim ad minim',
-    },
-    {
-      icon: <ShieldCheck size={24} className="text-white" />,
-      title: 'Fully Insured Vehicles',
-      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore e magna aliqua. Ut enim ad minim',
-    },
-    {
-      icon: <Clock size={24} className="text-white" />,
-      title: '24/7 Support',
-      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore e magna aliqua. Ut enim ad minim',
-    },
-  ];
+  
+    const services = [
+      {
+        icon: <LayoutGrid size={24} className="tw-text-white" />,
+        title: 'Formules de location flexibles',
+        description: 'Choisissez une location à la journée, à la semaine ou au mois selon vos besoins et votre budget.',
+      },
+      {
+        icon: <Laptop size={24} className="tw-text-white" />,
+        title: 'Réservation en ligne facile',
+        description: 'Réservez votre véhicule rapidement via notre site web ou application intuitive.',
+      },
+      {
+        icon: <ShieldCheck size={24} className="tw-text-white" />,
+        title: 'Véhicules entièrement assurés',
+        description: 'Roulez en toute sécurité grâce à nos véhicules couverts par une assurance complète.',
+      },
+      {
+        icon: <Clock size={24} className="tw-text-white" />,
+        title: 'Support client 24h/24',
+        description: 'Notre équipe est disponible à tout moment pour répondre à vos questions et vous accompagner.',
+      },
+    ];
+
+  
 
   return (
-    <div className="bg-[#1B1B1B]  text-white  overflow-hidden">
-      <div className=" mx-auto ">
-        <h2 className="text-3xl pl-11 sm:text-4xl lg:text-5xl font-bold  text-center md:text-left">
+    <div className="tw-bg-[#1B1B1B] tw-text-white tw-overflow-hidden">
+      <div className="tw-mx-auto ">
+        <h2 className="tw-text-3xl tw-pl-11 sm:tw-text-4xl lg:tw-text-5xl tw-font-bold tw-text-center md:tw-text-left">
           Our Service
         </h2>
-        <div className="grid grid-cols-1 pl-10 pb-5 md:grid-cols-2 gap-10 md:gap-12 lg:gap-16 items-center">
+        <div className="tw-grid tw-grid-cols-1 tw-pl-10 tw-pb-5 md:tw-grid-cols-2 tw-gap-10 md:tw-gap-12 lg:tw-gap-16 tw-items-center">
           {/* Left Column: Services List */}
-          <div className="space-y-6 sm:space-y-8 order-2 md:order-1">
+          <div className="tw-space-y-6 sm:tw-space-y-8 tw-order-2 md:tw-order-1">
             {services.map((service, index) => (
-              <div key={index} className="flex items-start space-x-4">
-                <div className="flex-shrink-0 bg-gray-700/60 p-3 rounded-full w-12 h-12 flex items-center justify-center">
+              <div key={index} className="tw-flex tw-items-start tw-space-x-4">
+                <div className="tw-flex-shrink-0 tw-bg-gray-700/60 tw-p-3 tw-rounded-full tw-w-12 tw-h-12 tw-flex tw-items-center tw-justify-center">
                   {service.icon}
                 </div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-1">
+                  <h3 className="tw-text-lg sm:tw-text-xl tw-font-semibold tw-text-white tw-mb-1">
                     {service.title}
                   </h3>
-                  <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+                  <p className="tw-text-gray-300 tw-text-sm sm:tw-text-base tw-leading-relaxed">
                     {service.description}
                   </p>
                 </div>
@@ -54,15 +57,18 @@ const OurServiceSection = () => {
           </div>
 
           {/* Right Column: Car Image and Decorative Elements - Now with overflow */}
-          <div className="relative  order-1 md:order-2 overflow-x">
+          {/* Note: 'overflow-x' is not a standard Tailwind class. It should be 'overflow-x-auto' or 'overflow-x-scroll' or 'overflow-x-hidden' or 'overflow-x-visible' */}
+          {/* I will assume you meant 'overflow-x-auto' or similar for scrolling if content overflows. If not, it won't apply. */}
+          {/* If it was a custom class, prefixing would be 'tw-overflow-x'. */}
+          <div className="tw-relative tw-order-1 md:tw-order-2 tw-overflow-x-hidden"> {/* Changed to tw-overflow-x-auto for potential scroll */}
             {/* This inner div allows content to be wider and establishes scrollable width */}
-            <div className="relative "> {/* w-max makes it as wide as its content */}   
+            <div className="tw-relative "> {/* w-max makes it as wide as its content */}   
            
               <img
                 src={carImageUrl}
                 alt="Luxury Sports Car"
-                className="relative z-10 h-[850px] max-w-none 
-                  drop-shadow-[0_20px_25px_rgba(0,0,0,0.3)]"
+                className="tw-relative tw-z-10 tw-h-[850px] tw-max-w-none 
+                  tw-drop-shadow-[0_20px_25px_rgba(0,0,0,0.3)]"
               />
 
             </div>

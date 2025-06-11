@@ -9,8 +9,9 @@ import {
 } from '../services/api'; // Assuming fetchAllVehicleTypes is in this file
 import { Button, Form, InputGroup, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { LuSearch, LuFilter, LuChevronLeft, LuChevronRight, LuX, LuRotateCcw, LuPlus } from 'react-icons/lu';
-import './VehicleModelPage.css'; 
 
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import './VehicleModelPage.css'; 
 const ITEMS_PER_PAGE_DEFAULT = 10;
 
 const VehicleModelPage = () => {
@@ -129,8 +130,8 @@ const VehicleModelPage = () => {
   const handleDeleteAction = async (modelId) => {
     // Added a local 'isDeleting' flag if you have a spinner on the table's delete button
     // For now, using window.confirm as per your original code
-    if (window.confirm(`Are you sure you want to delete vehicle model ${modelId}? This action cannot be undone.`)) {
       // setListLoading(true); // Or a specific isDeletingModelId state
+         setListError(null); 
       try {
         await deleteVehicleModel(modelId);
         // Consider showing a success toast/message
@@ -141,9 +142,9 @@ const VehicleModelPage = () => {
       } finally {
         // setListLoading(false);
       }
-    }
+    
   };
-  const handleCreateModel = () => { navigate('/admin/fleet/vehicle-models/new'); };
+  const handleCreateModel = () => { navigate('/admin/fleet/vehicle-models/create') };
   
   const renderPaginationItems = () => { 
     if (totalPages <= 1 || totalItems === 0) return null;

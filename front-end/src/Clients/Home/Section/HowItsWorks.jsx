@@ -32,26 +32,30 @@ const jeepImageUrl = "/images/Cars/Howitsworks.png";
 
 const HowItWorksSection = () => {
   return (
-    <div className="bg-[#1B1B1B] text-white py-16 sm:py-20 md:py-24 overflow-x-hidden"> {/* Key: overflow-x-hidden to prevent horizontal scroll */}
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
-        <div className='w-1/2 m-auto'>
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center ">
+    <div className="tw-bg-[#1B1B1B] tw-text-white tw-py-16 sm:tw-py-20 md:tw-py-24 tw-overflow-x-hidden"> {/* Key: overflow-x-hidden to prevent horizontal scroll */}
+      <div className="tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8">
+        <div className='tw-w-1/2 tw-m-auto'>
+        <h2 className="tw-text-3xl sm:tw-text-4xl tw-font-bold tw-mb-4 tw-text-center ">
               How its works
             </h2>
-            <p className="text-howitworks-subtext mb-10 text-center  text-base sm:text-lg leading-relaxed  mx-auto lg:mx-0">
+            {/* Note: 'text-howitworks-subtext' and 'text-howitworks-list-title' are custom class names. */}
+            {/* If these are defined in your global CSS or via Tailwind plugins, they will work. */}
+            {/* If they are meant to be Tailwind utility classes, their names are not standard. */}
+            {/* I am prefixing them assuming they are custom classes you want Tailwind to potentially process or ignore gracefully. */}
+            <p className="tw-text-howitworks-subtext tw-mb-10 tw-text-center tw-text-base sm:tw-text-lg tw-leading-relaxed tw-mx-auto lg:tw-mx-0">
               Renting a luxury car has never been easier. Our streamlined process makes it simple for you to book and confirm your vehicle of choice online.
             </p>
         </div>
-        <div className="flex flex-col lg:flex-row items-center lg:gap-x-16 xl:gap-x-24">
+        <div className="tw-flex tw-flex-col lg:tw-flex-row tw-items-center lg:tw-gap-x-16 xl:tw-gap-x-24">
           
           {/* Image Column - Designed for overflow effect */}
-          <div className="lg:w-1/2 w-full  lg:mb-0 relative"> {/* Parent relative if needed for absolute positioning inside */}
+          <div className="lg:tw-w-1/2 tw-w-full lg:tw-mb-0 tw-relative"> {/* Parent relative if needed for absolute positioning inside */}
             <img
               src={jeepImageUrl}
               alt="Luxury Jeep rental process"
-              className="w-full  mx-auto lg:max-w-none lg:w-[100%] xl:w-[115%] 
-                         lg:-ml-12 xl:-ml-10 2xl:-ml-20 
-                          object-cover"
+              className="tw-w-full tw-mx-auto lg:tw-max-w-none lg:tw-w-[100%] xl:tw-w-[115%] 
+                         lg:tw--ml-12 xl:tw--ml-10 2xl:tw--ml-20 
+                         tw-object-cover"
               // w-[120%] makes image wider than its column
               // -ml-* pulls the oversized image to the left, creating the overflow effect
               // object-cover ensures the image covers the area without distortion if height is constrained
@@ -59,18 +63,18 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Text Content Column */}
-          <div className="lg:w-1/2 w-full">
+          <div className="lg:tw-w-1/2 tw-w-full">
             
-            <ul className="space-y-6">
+            <ul className="tw-space-y-6">
               {stepsData.map((step, index) => (
-                <li key={index} className="flex items-start">
+                <li key={index} className="tw-flex tw-items-start">
                   <span 
-                    className="flex-shrink-0 w-2.5 h-2.5 bg-blue-200 rounded-full mt-[7px] mr-3 sm:mr-4" 
+                    className="tw-flex-shrink-0 tw-w-2.5 tw-h-2.5 tw-bg-blue-200 tw-rounded-full tw-mt-[7px] tw-mr-3 sm:tw-mr-4" 
                     aria-hidden="true"
                   ></span>
                   <div>
-                    <h3 className="font-semibold text-md sm:text-lg text-howitworks-list-title">{step.title}</h3>
-                    <p className="text-howitworks-subtext text-sm mt-1 w-10/12 leading-relaxed">{step.description}</p>
+                    <h3 className="tw-font-semibold tw-text-md sm:tw-text-lg tw-text-howitworks-list-title">{step.title}</h3>
+                    <p className="tw-text-howitworks-subtext tw-text-sm tw-mt-1 tw-w-10/12 tw-leading-relaxed">{step.description}</p>
                   </div>
                 </li>
               ))}

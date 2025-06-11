@@ -13,8 +13,9 @@ import {
   fetchAllInsurancePlans,
   fetchAllVehicleTypes
 } from '../services/api';
-import './VehicleModelDetailView.css'; // Assuming this contains relevant styles
-
+ // Assuming this contains relevant styles
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import './VehicleModelDetailView.css';
 // --- ICON HELPERS --- (Keep as is)
 const formatPrice = (amount, currency = 'MAD') => {
   if (amount === null || amount === undefined) return 'N/A';
@@ -98,7 +99,7 @@ const VehicleModelEditForm = ({
     } else {
       setLocalVehicleTypes(vehicleTypeOptions);
     }
-  }, [vehicleTypeOptions]);
+  }, []);
 
   // Initialize form data and editable lists
   useEffect(() => {

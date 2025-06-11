@@ -13,6 +13,7 @@ import {
 import { LuCreditCard } from 'react-icons/lu'; // Example Icon
 import { Badge } from 'react-bootstrap';
 import { PaymentStatus as PaymentStatusEnum } from '../../Enums'; // Adjust path
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // --- Columns for the Payments Table ---
 const paymentColumns = [

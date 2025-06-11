@@ -8,6 +8,7 @@ import {
   LuMegaphone, LuTicket // Added LuMegaphone for Campaigns, LuTicket for Codes
 } from 'react-icons/lu';
 import { AlertTriangle ,LineChart} from 'lucide-react';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 import './Sidebar.css'; // Caustom CSS for theming
 
 // Replace with your actual logo
@@ -55,19 +56,7 @@ const Sidebar = () => {
             { name: 'Promotion Codes', icon: <LuTicket size={18} />, path: 'marketing/promotion-codes' },
         ]
     },
-    // --- END NEW GROUP ---
-    {
-        group: 'FINANCIALS',
-        items: [
-            { name: 'Payments', icon: <LuDollarSign size={18} />, path: 'financials/payments' },
-        ]
-    },
-    {
-        group: 'SYSTEM CONFIGURATION',
-        items: [
-            { name: 'User Roles', icon: <LuUsers size={18} />, path: 'users/roles' },
-        ]
-    }
+   
   ];
 
   return (

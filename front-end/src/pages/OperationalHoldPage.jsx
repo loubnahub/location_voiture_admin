@@ -9,8 +9,20 @@ import {
 } from '../services/api'; // Adjust path as needed
 import { Form, InputGroup, Row, Col, Spinner, FormCheck } from 'react-bootstrap';
 import { FaTools } from 'react-icons/fa';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
-// 1. Define Columns (No changes needed from your correct version)
+// --- NEW: Predefined reasons for the dropdown ---
+const HOLD_REASONS = [
+  'Maintenance',
+  'Inspection',
+  'Cleaning', // Added Cleaning
+  'Temporary Unavailability',
+  'Inspection',
+  'Relocation',
+  'Other',
+];
+
+// 1. Define Columns
 const operationalHoldColumns = [
   { header: 'Vehicle', key: 'vehicle_display', render: (item) => item.vehicle_display || <span className="text-muted-custom">N/A</span> },
   { header: 'Reason', key: 'reason', render: (item) => item.reason || <span className="text-muted-custom">N/A</span> },
@@ -28,12 +40,11 @@ const initialOperationalHoldData = {
   booking_id: '',
   start_date: '',
   end_date: '',
-  reason: '',
+  reason: HOLD_REASONS[0], // Use the first reason as the default
   notes: '',
   requires_maintenance: false,
   maintenance_record_attributes: null,
   existing_maintenance_record_id: null,
-  // maintenance_record: null, // This property will come from API on fetched items
 };
 
 // Helper to format date for datetime-local input
@@ -88,66 +99,46 @@ const OperationalHoldModalFormFields = ({ formData, handleInputChange, modalForm
 
     // Effect to initialize/reset local maintenanceData based on formData from parent
     useEffect(() => {
-        console.log("OHMFF: SyncEffect triggered. formData.id:", formData?.id, "isEditMode:", isEditMode);
-        console.log("OHMFF: SyncEffect - formData.requires_maintenance:", formData?.requires_maintenance);
-        console.log("OHMFF: SyncEffect - formData.maintenance_record:", JSON.stringify(formData?.maintenance_record, null, 2));
-
         if (formData?.requires_maintenance) {
             if (isEditMode && formData.maintenance_record && typeof formData.maintenance_record === 'object') {
-                // Editing and API provided existing maintenance record data
-                console.log("OHMFF: SyncEffect - Populating local maintenanceData from formData.maintenance_record for edit.");
                 setMaintenanceData({
                     description: formData.maintenance_record.description || '',
                     cost: formData.maintenance_record.cost !== null && formData.maintenance_record.cost !== undefined ? String(formData.maintenance_record.cost) : '',
                     notes: formData.maintenance_record.notes || '',
                 });
-                // Use ID from maintenance_record object first, fallback to existing_maintenance_record_id prop if somehow different
                 setCurrentExistingMRId(formData.maintenance_record.id || formData.existing_maintenance_record_id || null);
             } else {
-                // Creating new OR editing but no existing maintenance_record was provided from API
-                // (e.g., 'requires_maintenance' was true due to 'reason' but no record existed yet)
-                // Reset to initial empty form for maintenance if no specific data to prefill.
-                // This ensures that if user checks "requires_maintenance" but there's no existing data,
-                // they get a blank maintenance form section.
-                console.log("OHMFF: SyncEffect - Requires maintenance, but no existing record data from parent. Resetting to initial for new input.");
                 setMaintenanceData(initialMaintenanceRecordFormData);
                 setCurrentExistingMRId(null);
             }
         } else {
-            // Maintenance is NOT required according to formData
-            console.log("OHMFF: SyncEffect - Maintenance NOT required. Resetting local maintenanceData.");
             setMaintenanceData(initialMaintenanceRecordFormData);
             setCurrentExistingMRId(null);
         }
-    // Key dependencies: if the item being edited changes (formData.id), or if its maintenance status/data changes.
     }, [isEditMode, formData?.id, formData?.requires_maintenance, formData?.maintenance_record, formData?.existing_maintenance_record_id]);
 
 
     // Effect to update parent (ResourcePage's currentItemData) with current maintenance attributes
     useEffect(() => {
-        if (!setCurrentItemData) return; // Guard if prop not passed
+        if (!setCurrentItemData) return;
 
         if (formData?.requires_maintenance) {
-            // console.log("OHMFF: UpdateParentEffect - Pushing to parent. MaintenanceData:", maintenanceData, "Existing ID:", currentExistingMRId);
             setCurrentItemData(prev => ({
                 ...prev,
                 maintenance_record_attributes: { ...maintenanceData },
                 existing_maintenance_record_id: currentExistingMRId,
             }));
         } else {
-            // console.log("OHMFF: UpdateParentEffect - Clearing maintenance attributes in parent.");
             setCurrentItemData(prev => ({
                 ...prev,
                 maintenance_record_attributes: null,
                 existing_maintenance_record_id: null,
             }));
         }
-    // This runs whenever our local understanding of maintenance data changes OR when the overall
-    // 'requires_maintenance' flag (from parent formData) changes.
     }, [maintenanceData, currentExistingMRId, formData?.requires_maintenance, setCurrentItemData]);
 
 
-    if (loadingVehicles && vehicles.length === 0 && !isEditMode) { // Show loader for create mode if vehicles are essential
+    if (loadingVehicles && vehicles.length === 0 && !isEditMode) {
         return (
             <div className="text-center p-3">
                 <Spinner animation="border" size="sm" className="me-2" /> Loading vehicle options...
@@ -157,9 +148,39 @@ const OperationalHoldModalFormFields = ({ formData, handleInputChange, modalForm
 
     return (
         <>
-            <Form.Group className="mb-3" controlId="holdVehicleId"><Form.Label>Vehicle <span className="text-danger">*</span></Form.Label><Form.Select name="vehicle_id" value={formData.vehicle_id || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.vehicle_id} disabled={loadingVehicles && vehicles.length === 0}><option value="">{loadingVehicles && vehicles.length === 0 ? "Loading..." : "Select Vehicle..."}</option>{vehicles.map(vehicle => (<option key={vehicle.id} value={vehicle.id}>{`${vehicle.vehicle_model?.title || vehicle.make || vehicle.license_plate || 'Vehicle'} (${vehicle.license_plate || 'N/A'})`}</option>))}</Form.Select><Form.Control.Feedback type="invalid">{modalFormErrors?.vehicle_id?.join(', ')}</Form.Control.Feedback></Form.Group>
+            <Form.Group className="mb-3" controlId="holdVehicleId"><Form.Label>Vehicle <span className="text-danger">*</span></Form.Label><Form.Select name="vehicle_id" 
+            value={formData.vehicle_id || ''} 
+            onChange={handleInputChange} 
+            required isInvalid={!!modalFormErrors?.vehicle_id} 
+            disabled={loadingVehicles && vehicles.length === 0}><option value="">{loadingVehicles && vehicles.length === 0 ? "Loading..." : "Select Vehicle..."}</option>{vehicles.map(vehicle => (<option key={vehicle.id} value={vehicle.id}>{`${vehicle.license_plate || 'N/A'}`}</option>))}</Form.Select><Form.Control.Feedback type="invalid">{modalFormErrors?.vehicle_id?.join(', ')}</Form.Control.Feedback></Form.Group>
             <Row><Col md={6}><Form.Group className="mb-3" controlId="holdStartDate"><Form.Label>Start Date & Time <span className="text-danger">*</span></Form.Label><Form.Control type="datetime-local" name="start_date" value={formatDateForInput(formData.start_date)} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.start_date} /><Form.Control.Feedback type="invalid">{modalFormErrors?.start_date?.join(', ')}</Form.Control.Feedback></Form.Group></Col><Col md={6}><Form.Group className="mb-3" controlId="holdEndDate"><Form.Label>End Date & Time <span className="text-danger">*</span></Form.Label><Form.Control type="datetime-local" name="end_date" value={formatDateForInput(formData.end_date)} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.end_date} /><Form.Control.Feedback type="invalid">{modalFormErrors?.end_date?.join(', ')}</Form.Control.Feedback></Form.Group></Col></Row>
-            <Form.Group className="mb-3" controlId="holdReason"><Form.Label>Reason <span className="text-danger">*</span></Form.Label><Form.Control type="text" name="reason" value={formData.reason || ''} onChange={handleInputChange} required maxLength={255} placeholder="e.g., Scheduled Maintenance, Accident Repair" isInvalid={!!modalFormErrors?.reason} /><Form.Control.Feedback type="invalid">{modalFormErrors?.reason?.join(', ')}</Form.Control.Feedback></Form.Group>
+            
+            {/* --- MODIFIED REASON FIELD --- */}
+            <Form.Group className="mb-3" controlId="holdReason">
+                <Form.Label>Reason <span className="text-danger">*</span></Form.Label>
+                <Form.Select
+                    name="reason"
+                    value={formData.reason || ''}
+                    onChange={handleInputChange}
+                    required
+                    isInvalid={!!modalFormErrors?.reason}
+                >
+                    {/* Handle legacy values that might not be in the list */}
+                    {!HOLD_REASONS.includes(formData.reason) && formData.reason && (
+                        <option value={formData.reason} disabled>{formData.reason} (Legacy Value)</option>
+                    )}
+                    
+                    {/* Map over predefined reasons */}
+                    {HOLD_REASONS.map(reasonOption => (
+                        <option key={reasonOption} value={reasonOption}>
+                            {reasonOption}
+                        </option>
+                    ))}
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">
+                    {modalFormErrors?.reason?.join(', ')}
+                </Form.Control.Feedback>
+            </Form.Group>
 
             <Form.Group className="mb-3" controlId="holdRequiresMaintenance">
                 <Form.Check
@@ -225,25 +246,20 @@ const OperationalHoldPage = () => {
             processed.maintenance_record_attributes.cost = isNaN(cost) ? null : cost;
         }
     }
-    // We don't need to send the 'requires_maintenance' flag to the backend if the backend
-    // can infer the intent from the presence/absence or content of 'maintenance_record_attributes'.
-    // The backend controller provided earlier is designed to infer this.
     delete processed.requires_maintenance;
-    // Also remove the 'maintenance_record' object that came from API; we send 'maintenance_record_attributes'.
     delete processed.maintenance_record;
 
-    console.log("OperationalHoldPage: processFormDataForAPI - Data for submission:", JSON.stringify(processed, null, 2));
     return processed;
   }, []);
 
   const renderModalFormWithLogic = useCallback((formData, handleInputChange, modalFormErrors, isEditMode, setCurrentItemData) => {
     return (
         <OperationalHoldModalFormFields
-            formData={formData} // This is ResourcePage's currentItemData
-            handleInputChange={handleInputChange} // This is ResourcePage's handleModalInputChange
+            formData={formData}
+            handleInputChange={handleInputChange}
             modalFormErrors={modalFormErrors}
             isEditMode={isEditMode}
-            setCurrentItemData={setCurrentItemData} // This is ResourcePage's setCurrentItemData function
+            setCurrentItemData={setCurrentItemData}
         />
     );
   }, []);

@@ -1,82 +1,63 @@
-import React, { useState, useEffect } from 'react'; // Added useState, useEffect
-// Import Swiper React components
+// src/components/Sections/OurClientSaying.jsx
+import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-
-// Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
-
-// import required modules
 import { Pagination, Autoplay } from 'swiper/modules';
-
-import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa'; // For stars
+import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { ImQuotesLeft } from "react-icons/im";
 
-// API Endpoint
 const API_AVIS_ENDPOINT = (process.env.REACT_APP_API_URL || 'http://localhost:8000/api') + '/avis';
-
-// Accent color
-const ACCENT_COLOR = 'text-amber-400';
+const ACCENT_COLOR_CLASS = 'tw-text-amber-400';
 
 const TestimonialCard = ({ testimonial }) => {
-  // testimonial object is expected to have: id, name, avatarUrl (optional), rating, comment (as text)
-  // and carName (as title, optional)
-
+  // ... renderStars function remains the same ...
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0 && (rating - fullStars >= 0.5); // Check if half star is significant
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<FaStar key={`full-${testimonial.id}-${i}`} className={`w-5 h-5 ${ACCENT_COLOR}`} />);
-    }
-    if (hasHalfStar) {
-      stars.push(<FaStarHalfAlt key={`half-${testimonial.id}`} className={`w-5 h-5 ${ACCENT_COLOR}`} />);
-    }
+    const hasHalfStar = rating % 1 !== 0 && (rating - fullStars >= 0.5);
+    for (let i = 0; i < fullStars; i++) stars.push(<FaStar key={`full-${testimonial.id}-${i}`} className={`tw-w-5 tw-h-5 ${ACCENT_COLOR_CLASS}`} />);
+    if (hasHalfStar) stars.push(<FaStarHalfAlt key={`half-${testimonial.id}`} className={`tw-w-5 tw-h-5 ${ACCENT_COLOR_CLASS}`} />);
     const currentStarsCount = stars.length;
-    for (let i = 0; i < (5 - currentStarsCount); i++) {
-      stars.push(<FaRegStar key={`empty-${testimonial.id}-${i}`} className="w-5 h-5 text-gray-500" />);
-    }
+    for (let i = 0; i < (5 - currentStarsCount); i++) stars.push(<FaRegStar key={`empty-${testimonial.id}-${i}`} className="tw-w-5 tw-h-5 tw-text-gray-500" />);
     return stars;
   };
 
-  return (
-    <div className="bg-gradient-to-br from-neutral-800 via-neutral-900 to-neutral-800 p-6 md:p-8 rounded-xl shadow-xl h-full flex flex-col relative border border-neutral-700 min-h-[300px] sm:min-h-[320px]">
-      <ImQuotesLeft className="absolute top-5 right-5 sm:top-6 sm:right-6 text-4xl sm:text-5xl text-neutral-600 opacity-50" />
+  const avatarPlaceholderBgClass = ACCENT_COLOR_CLASS.replace('tw-text-', 'tw-bg-') + '/30';
 
-      <div className="flex items-center mb-4"> {/* Reduced bottom margin slightly */}
+  return (
+    <div className="tw-bg-gradient-to-br tw-from-neutral-800 tw-via-neutral-900 tw-to-neutral-800 tw-p-6 md:tw-p-8 tw-rounded-xl tw-shadow-xl tw-h-full tw-flex tw-flex-col tw-relative tw-border tw-border-neutral-700 tw-min-h-[300px] sm:tw-min-h-[320px]">
+      <ImQuotesLeft className="tw-absolute tw-top-5 tw-right-5 sm:tw-top-6 sm:tw-right-6 tw-text-4xl sm:tw-text-5xl tw-text-neutral-600 tw-opacity-50" />
+      <div className="tw-flex tw-items-center tw-mb-4">
+        {/* Since avatar_url is removed from backend for new entries, this will always show placeholder unless you have old data */}
         {testimonial.avatarUrl ? (
           <img
-            src={testimonial.avatarUrl}
+            src={testimonial.avatarUrl} // This will likely be the ui-avatars URL now
             alt={testimonial.name}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full mr-4 border-2 border-neutral-700 object-cover"
+            className="tw-w-14 tw-h-14 sm:tw-w-16 sm:tw-h-16 tw-rounded-full tw-mr-4 tw-border-2 tw-border-neutral-700 tw-object-cover"
           />
         ) : (
-          <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full mr-4 ${ACCENT_COLOR.replace('text-', 'bg-')}/30 flex items-center justify-center text-2xl ${ACCENT_COLOR}`}>
+          <div className={`tw-w-14 tw-h-14 sm:tw-w-16 sm:tw-h-16 tw-rounded-full tw-mr-4 ${avatarPlaceholderBgClass} tw-flex tw-items-center tw-justify-center tw-text-2xl ${ACCENT_COLOR_CLASS}`}>
             {testimonial.name ? testimonial.name.charAt(0).toUpperCase() : '?'}
           </div>
         )}
         <div>
-          <h4 className="font-semibold text-white text-lg sm:text-xl">{testimonial.name}</h4>
-          {/* Display carName as a subtitle if available */}
-          {testimonial.carName && <p className="text-xs text-neutral-400 mt-0.5">{testimonial.carName}</p>}
+          <h4 className="tw-font-semibold tw-text-white tw-text-lg sm:tw-text-xl">{testimonial.name}</h4>
+          {testimonial.carName && <p className="tw-text-xs tw-text-neutral-400 tw-mt-0.5">{testimonial.carName}</p>}
         </div>
       </div>
-
-      {/* Star Rating Display */}
-      <div className="flex mb-3"> {/* Added margin-bottom */}
+      <div className="tw-flex tw-mb-3">
         {renderStars(testimonial.rating)}
       </div>
-
-      <p className="text-neutral-300 text-sm sm:text-base leading-relaxed mb-6 flex-grow">
-        {testimonial.comment} {/* Use 'comment' field from API */}
+      <p className="tw-text-neutral-300 tw-text-sm sm:tw-text-base tw-leading-relaxed tw-mb-6 tw-flex-grow">
+        {testimonial.comment}
       </p>
     </div>
   );
 };
 
-const OurClinetSaying = () => {
+const OurClientSaying = () => {
   const [avisList, setAvisList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,50 +67,55 @@ const OurClinetSaying = () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Fetch only approved avis, usually for public display
-        const response = await fetch(`${API_AVIS_ENDPOINT}?approved=true&per_page=9`); // Fetch e.g., 9 latest approved
+        // The 'approved=true' query param is no longer needed as is_approved field is removed
+        const response = await fetch(`${API_AVIS_ENDPOINT}?per_page=9`); 
         if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.message || `HTTP error! status: ${response.status}`);
+          let errorMessage = `HTTP error! status: ${response.status}`;
+          try { const errData = await response.json(); errorMessage = errData.message || errorMessage; } catch (parseError) { /* Ignore */ }
+          throw new Error(errorMessage);
         }
         const result = await response.json();
-        // The API returns a paginated response. We need result.data.
-        // Map API data to the structure TestimonialCard expects
-        const formattedAvis = (result.data || []).map(avi => ({
+        const itemsToFormat = result.data || [];
+
+        if (!Array.isArray(itemsToFormat)) {
+            console.error("API did not return an array for avis list:", itemsToFormat);
+            throw new Error("Received invalid data format for testimonials.");
+        }
+
+        const formattedAvis = itemsToFormat.map(avi => ({
           id: avi.id,
-          name: avi.name,
-          // Use ui-avatars.com for dynamic avatars based on name if no avatarUrl is in your DB
-          avatarUrl: avi.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(avi.name)}&background=2A2A2A&color=FFA600&bold=true`,
-          rating: parseFloat(avi.rating) || 0, // Ensure rating is a number
-          comment: avi.comment,
-          carName: avi.carName || avi.car_name || null, // Handle both potential casings from API
+          name: avi.name || "Anonymous",
+          // avatarUrl will now always be the ui-avatars one as backend doesn't store it
+          avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(avi.name || "User")}&background=2A2A2A&color=FFA600&bold=true`,
+          rating: parseFloat(avi.rating) || 0,
+          comment: avi.comment || "No comment provided.",
+          carName: avi.carName || null, 
         }));
         setAvisList(formattedAvis);
       } catch (e) {
         console.error("Failed to fetch avis:", e);
-        setError(e.message);
+        setError(e.message || "An unknown error occurred while fetching testimonials.");
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchAvis();
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []);
 
+  // ... (isLoading and error JSX remains the same) ...
   if (isLoading) {
     return (
-      <section className="py-16 sm:py-20 bg-[#1B1B1B]">
-        <div className="container mx-auto px-4 text-center text-neutral-400">
+      <section className="tw-py-16 sm:tw-py-20 tw-bg-[#1B1B1B]">
+        <div className="tw-container tw-mx-auto tw-px-4 tw-text-center tw-text-neutral-400">
           Loading testimonials...
         </div>
       </section>
     );
   }
-
   if (error) {
     return (
-      <section className="py-16 sm:py-20 bg-[#1B1B1B]">
-        <div className="container mx-auto px-4 text-center text-red-400">
+      <section className="tw-py-16 sm:tw-py-20 tw-bg-[#1B1B1B]">
+        <div className="tw-container tw-mx-auto tw-px-4 tw-text-center tw-text-red-400">
           Could not load testimonials: {error}
         </div>
       </section>
@@ -137,13 +123,13 @@ const OurClinetSaying = () => {
   }
 
   return (
-    <section className="py-16 sm:py-20 bg-[#1B1B1B]">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="font-serif text-4xl sm:text-5xl font-medium text-white mb-3">
-            What Our <span className="text-[#1572D3]">Clients Saying</span>
+    <section className="tw-py-16 sm:tw-py-20 tw-bg-[#1B1B1B]">
+      <div className="tw-container tw-mx-auto tw-px-4">
+        <div className="tw-text-center tw-mb-12 sm:tw-mb-16">
+          <h2 className="tw-font-serif tw-text-4xl sm:tw-text-5xl tw-font-medium tw-text-white tw-mb-3">
+            What Our <span className="tw-text-[#1572D3]">Clients Saying</span>
           </h2>
-          <p className="text-neutral-400 text-base sm:text-lg">
+          <p className="tw-text-neutral-400 tw-text-base sm:tw-text-lg">
             Trusted by Elite Travelers Worldwide
           </p>
         </div>
@@ -153,37 +139,29 @@ const OurClinetSaying = () => {
             modules={[Pagination, Autoplay]}
             spaceBetween={30}
             slidesPerView={1}
-            loop={avisList.length > 2} // Loop only if enough slides for it to make sense
-            centeredSlides={false}
-            autoplay={{
-              delay: 5000,
-              disableOnInteraction: false,
-              pauseOnMouseEnter: true,
-            }}
-            pagination={{
-              clickable: true,
-              el: '.custom-swiper-pagination-clients', // Use a unique class
-            }}
+            loop={avisList.length > ((window.innerWidth >= 1024 ? 3 : (window.innerWidth >= 768 ? 2 : 1)) * 2 - 1) && avisList.length > 1}
+            centeredSlides={false} 
+            autoplay={{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+            pagination={{ clickable: true, el: '.custom-swiper-pagination-clients' }}
             breakpoints={{
               640: { slidesPerView: 1, spaceBetween: 30 },
               768: { slidesPerView: 2, spaceBetween: 30 },
               1024: { slidesPerView: 3, spaceBetween: 30 },
             }}
-            className="!pb-12 sm:!pb-16" // Add padding-bottom for pagination dots
+            className="!tw-pb-12 sm:!tw-pb-16"
           >
             {avisList.map((avi) => (
-              <SwiperSlide key={avi.id} className="self-stretch">
+              <SwiperSlide key={avi.id} className="tw-self-stretch">
                 <TestimonialCard testimonial={avi} />
               </SwiperSlide>
             ))}
           </Swiper>
         ) : (
-          <p className="text-center text-neutral-500 text-xl">No testimonials available at the moment.</p>
+          !isLoading && <p className="tw-text-center tw-text-neutral-500 tw-text-xl">No testimonials available at the moment.</p>
         )}
-        <div className="custom-swiper-pagination-clients text-center mt-8"></div> {/* Unique class for pagination */}
+        {avisList.length > 0 && <div className="custom-swiper-pagination-clients tw-text-center tw-mt-8"></div>}
       </div>
     </section>
   );
 };
-
-export default OurClinetSaying;
+export default OurClientSaying;

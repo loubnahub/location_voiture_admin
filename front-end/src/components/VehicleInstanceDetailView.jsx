@@ -8,6 +8,7 @@ import {
     LuCamera as LuModelImagesIcon, 
     LuFeather as LuModelDetailsIcon 
 } from 'react-icons/lu'; 
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 import { fetchVehicle, fetchAllVehicles } from '../services/api'; 
 import './VehicleInstanceDetailView.css';

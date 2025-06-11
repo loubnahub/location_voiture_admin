@@ -1,5 +1,6 @@
 import React from 'react';
 import './InfoCard.css'; // We'll create this
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const InfoCard = ({ title, titleIcon, children, className, titleRightContent }) => {
   return (

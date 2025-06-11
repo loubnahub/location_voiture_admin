@@ -3,6 +3,7 @@ import React, { useState } from 'react'; // Added useState
 import { Badge, Modal, Button as BootstrapButton, Spinner } from 'react-bootstrap'; // Added Modal, BootstrapButton, Spinner
 import DynamicTable from './DynamicTable'; // Assuming DynamicTable.jsx is in the same folder
 import { AlertTriangle } from 'lucide-react'; // For modal title icon
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 // Helper to format price (can remain the same)
 const formatPrice = (amount, currency = 'MAD') => {

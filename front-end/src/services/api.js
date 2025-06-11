@@ -1,7 +1,8 @@
 // src/services/api.js
+
 import axios from 'axios';
 
-// Configure an Axios instance
+// Configure an Axios instance for your API endpoints
 const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api', // Your Laravel API URL
   withCredentials: true, // ESSENTIAL for Sanctum SPA cookie-based authentication
@@ -9,39 +10,61 @@ const apiClient = axios.create({
     'Accept': 'application/json',
   },
 });
-
-// Interceptor to dynamically set Content-Type for FormData
-apiClient.interceptors.request.use(config => {
-  if (config.data instanceof FormData) {
-    delete config.headers['Content-Type']; // Let Axios set it for FormData
-  } else if (!config.headers['Content-Type']) {
-    config.headers['Content-Type'] = 'application/json'; // Default for JSON
+export const fetchVehicleSchedule = (vehicleId) => {
+  if (!vehicleId) {
+    return Promise.reject(new Error("Vehicle ID is required to fetch schedule."));
   }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+  return apiClient.get(`/vehicles/${vehicleId}/schedule`);
+};
+// Interceptor to dynamically set Content-Type for FormData
+apiClient.interceptors.request.use(
+  (config) => {
+    // It gets the token from localStorage at the last possible moment.
+    const token = localStorage.getItem('authToken');
+    
+    // If a token exists, it attaches it to the request as a Bearer token.
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return config; // It returns the modified request config.
+  },
+  (error) => {
+    // If there's an error setting up the request, it's rejected.
+    return Promise.reject(error);
+  }
+);
+
 
 // --- Authentication Functions ---
 export const login = async (credentials) => {
-  await apiClient.get('/sanctum/csrf-cookie');
+  // --- THIS IS THE FIX ---
+  // Use a direct axios call for the CSRF cookie to bypass the '/api' prefix.
+  await axios.get('http://localhost:8000/sanctum/csrf-cookie');
+
+  // Then use the configured apiClient for the actual login request.
   return apiClient.post('/login', credentials);
 };
+
 export const fetchCurrentUser = () => apiClient.get('/user');
 export const logout = () => apiClient.post('/logout');
-
-// --- User Functions (Admin) ---
+// In src/services/api.js
+export const fetchBookingsForAgreementDropdown = () => apiClient.get('/bookings-for-agreement');
+export const fetchAdminDashboardStats = () => apiClient.get('/admin/dashboard-stats');
+export const fetchUserRewardsAdmin = (userId) => apiClient.get(`/admin/users/${userId}/rewards`);// --- User Functions (Admin) ---
 export const fetchAllUsersForAdmin = (params = {}) => apiClient.get('/admin/users', { params });
 export const createUserAdmin = (userData) => apiClient.post('/admin/users', userData);
 export const fetchUserAdmin = (id) => apiClient.get(`/admin/users/${id}`);
 export const updateUserAdmin = (id, userData) => {
   if (userData instanceof FormData) {
-    return apiClient.post(`/admin/users/${id}`, userData); // Laravel handles _method for POST
+    return apiClient.post(`/admin/users/${id}`, userData);
   }
   return apiClient.put(`/admin/users/${id}`, userData);
 };
 export const deleteUserAdmin = (id) => apiClient.delete(`/admin/users/${id}`);
 export const fetchAvailableRoles = () => apiClient.get('/admin/roles-list');
+
+// ... (The rest of your api.js file remains unchanged and is correct) ...
 
 // --- Role Functions (Admin) ---
 export const fetchAllRolesAdmin = (params = {}) => apiClient.get('/admin/system/roles', { params });
@@ -52,11 +75,17 @@ export const deleteRoleAdmin = (id) => apiClient.delete(`/admin/system/roles/${i
 
 // --- Vehicle Functions ---
 export const fetchAllVehicles = (params = {}) => apiClient.get('/vehicles', { params });
+export const fetchAvailableVehiclesForDropdown = (currentVehicleId = null) => {
+  const params = currentVehicleId ? { current_vehicle_id: currentVehicleId } : {};
+  return apiClient.get('/lov/vehicles-available', { params });
+};
+export const fetchActiveInsurancePlansForDropdown = () => apiClient.get('/lov/insurance-plans-active');
 export const fetchVehicle = (id) => apiClient.get(`/vehicles/${id}`);
 export const createVehicle = (vehicleData) => apiClient.post('/vehicles', vehicleData);
 export const updateVehicle = (id, vehicleData) => apiClient.put(`/vehicles/${id}`, vehicleData);
 export const deleteVehicle = (id) => apiClient.delete(`/vehicles/${id}`);
 export const updateAddress = (id, addressData) => apiClient.put(`/addresses/${id}`, addressData);
+export const deleteAddress = (id) => apiClient.delete(`/addresses/${id}`);
 // --- Vehicle Model Functions ---
 export const fetchAllVehicleModels = (params = {}) => apiClient.get('/vehicle-models', { params });
 export const fetchVehicleModelById = (id) => apiClient.get(`/vehicle-models/${id}`);
@@ -64,9 +93,6 @@ export const createVehicleModel = (data) => apiClient.post('/vehicle-models', da
 export const updateVehicleModel = (id, modelData) => {
   // If modelData could include file uploads and becomes FormData:
   if (modelData instanceof FormData) {
-    // For FormData with Laravel, often you POST and spoof PUT/PATCH.
-    // Ensure your backend route for update accepts POST if you do this.
-    // Example: modelData.append('_method', 'PUT'); // If not handled by a global interceptor or backend directly
     return apiClient.post(`/vehicle-models/${id}`, modelData);
   }
   // For regular JSON updates:
@@ -139,6 +165,7 @@ export const updateDamageReport = (id, data) => {
   return apiClient.put(`/damage-reports/${id}`, data);
 };
 export const deleteDamageReport = (id) => apiClient.delete(`/damage-reports/${id}`);
+export const fetchRentersForDropdown = () => apiClient.get('/lov/renters');
 
 // --- Rental Agreement Functions ---
 export const fetchAllRentalAgreements = (params = {}) => apiClient.get('/rental-agreements', { params });
@@ -180,36 +207,16 @@ export const fetchVehicleModelMediaList = (vehicleModelId) => {
   return apiClient.get(`/vehicle-models/${vehicleModelId}/media`);
 };
 
-/**
- * Uploads one or more media files for a specific vehicle model.
- * Corresponds to VehicleModelMediaController@store
- * POST /api/vehicle-models/{vehicleModelId}/media
- * @param {string} vehicleModelId - The ID of the vehicle model.
- * @param {FormData} formData - FormData object containing 'media_files[]' and optional 'captions[]', 'is_cover_flags[]', 'media_types[]'.
- * @returns {Promise<AxiosResponse<any>>}
- */
+
 export const uploadVehicleModelMedia = (vehicleModelId, formData) => {
   // Axios will set the Content-Type to multipart/form-data due to the interceptor
   return apiClient.post(`/vehicle-models/${vehicleModelId}/media`, formData);
 };
 
-/**
- * Updates a specific media item (e.g., caption, is_cover).
- * Corresponds to VehicleModelMediaController@update
- * PUT /api/media/{mediaId}
- * @param {string} mediaId - The ID of the media item to update.
- * @param {object} dataToUpdate - Object containing fields to update (e.g., { caption: "New Caption", is_cover: true }).
- * @returns {Promise<AxiosResponse<any>>}
- */
+
 export const updateVehicleModelMediaItem = (mediaId, dataToUpdate) => {
   return apiClient.put(`/media/${mediaId}`, dataToUpdate);
-  // Or use POST with _method if your server requires it for PUT with complex data,
-  // but for simple JSON like this, PUT is standard.
-  // If sending FormData for update (e.g. replacing file, less common for this partial update):
-  // if (dataToUpdate instanceof FormData) {
-  //   dataToUpdate.append('_method', 'PUT');
-  //   return apiClient.post(`/media/${mediaId}`, dataToUpdate);
-  // }
+ 
 };
 export const deleteVehicleModelMediaItem = (mediaId) => {
   return apiClient.delete(`/media/${mediaId}`);
@@ -224,7 +231,7 @@ export const reorderVehicleModelMedia = (vehicleModelId, orderedMediaIds) => {
 // Fetch all colors for a vehicle model
 export const fetchVehicleModelColors = (vehicleModelId) =>
   apiClient.get(`/vehicle-models/${vehicleModelId}/colors`);
-
+export const fetchAllVehicleModelsForDropdown = () => apiClient.get('/vehicle-models/list-all');
 // Add a color to a vehicle model
 export const addVehicleModelColor = (vehicleModelId, colorData) =>
   apiClient.post(`/vehicle-models/${vehicleModelId}/colors`, colorData);

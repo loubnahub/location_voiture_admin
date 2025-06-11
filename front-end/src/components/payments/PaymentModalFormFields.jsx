@@ -3,6 +3,7 @@ import { Form, Row, Col, Spinner } from 'react-bootstrap';
 // Assuming you have an API service to fetch bookings for dropdown
 import { fetchBookingsForDropdown } from '../../services/api'; // Adjust path
 import { paymentStatusOptions } from '../../Enums'; // Adjust path
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 
 const PaymentModalFormFields = ({ formData, handleInputChange, modalFormErrors, isEditMode }) => {
     const [bookings, setBookings] = useState([]);
