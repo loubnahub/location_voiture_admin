@@ -68,7 +68,7 @@ console.log(booking)
                 <Row className="mb-4 align-items-center">
                     <Col>
                         <h4 className="mb-0 fs-4">{booking.vehicle_display || 'Vehicle Information'}</h4>
-                        <span className="text-muted ">Booking ID: {booking.id?.substring(0, 8)}...</span>
+                        <span className="text-muted ">Booking ID: {booking.id}</span>
                     </Col>
                     <Col xs="auto">
                         {getStatusInfo(booking.status)}

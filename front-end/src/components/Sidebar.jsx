@@ -56,19 +56,7 @@ const Sidebar = () => {
             { name: 'Promotion Codes', icon: <LuTicket size={18} />, path: 'marketing/promotion-codes' },
         ]
     },
-    // --- END NEW GROUP ---
-    {
-        group: 'FINANCIALS',
-        items: [
-            { name: 'Payments', icon: <LuDollarSign size={18} />, path: 'financials/payments' },
-        ]
-    },
-    {
-        group: 'SYSTEM CONFIGURATION',
-        items: [
-            { name: 'User Roles', icon: <LuUsers size={18} />, path: 'users/roles' },
-        ]
-    }
+   
   ];
 
   return (
