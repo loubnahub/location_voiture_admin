@@ -180,7 +180,7 @@ const StatusLocationCard = ({ instance, onDataChange }) => {
                     <Col md={6}><Form.Group className="mb-3" controlId="editVin"><Form.Label>VIN</Form.Label><Form.Control name="vin" type="text" value={formData.vin} onChange={handleInputChange} /></Form.Group></Col>
                 </Row>
                 <Row>
-                    <Col md={6}><Form.Group className="mb-3" controlId="editStatus"><Form.Label>Status</Form.Label><Form.Select name="status" value={formData.status} onChange={handleInputChange} required><option value="">-- Select Status --</option>{statusOptions.map(s_opt => (<option key={s_opt.value} value={s_opt.value}>{s_opt.label}</option>))}</Form.Select></Form.Group></Col>
+                    {/* <Col md={6}><Form.Group className="mb-3" controlId="editStatus"><Form.Label>Status</Form.Label><Form.Select name="status" value={formData.status} onChange={handleInputChange} required><option value="">-- Select Status --</option>{statusOptions.map(s_opt => (<option key={s_opt.value} value={s_opt.value}>{s_opt.label}</option>))}</Form.Select></Form.Group></Col> */}
                     <Col md={6}>
                         <Form.Group className="mb-3" controlId="editColorFromModel">
                             <Form.Label>Vehicle Color</Form.Label>

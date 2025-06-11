@@ -1,18 +1,18 @@
 import React from 'react'
 import CarPromoSection from '../Home/Section/CarPromoVedio'
 import OurClinetSaying from '../Home/Section/OurClinetSaying'
-import Footer from '../Home/Section/Footer'
-import AboutSection from './Section/AboutSection'
-import CarRentalSection from './Section/AboutCarRental'
+
 import OurTeam from '../Home/Section/OurTeam'
 import Partners from '../Home/Section/Partenrs'
+import FAQsSection from './section/FaqsSection'
+import CarInfoSection from './section/CarInfoFaqs'
 
 
-export default function About() {
+export default function FAQs() {
   return (
     <div>
-        <AboutSection />
-        <CarRentalSection />
+        <FAQsSection />
+        <CarInfoSection />
         <CarPromoSection />
         <OurClinetSaying />
         <OurTeam />

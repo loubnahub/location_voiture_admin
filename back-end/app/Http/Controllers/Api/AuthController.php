@@ -48,14 +48,10 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'phone' => 'nullable|string|max:25',
-            
-            // Address fields
             'address' => 'required|string|max:255', // This maps to 'street_line_1'
             'city' => 'required|string|max:255',
             'postalCode' => 'required|string|max:20',
             'country' => 'required|string|max:255',
-
-            // Profile Picture validation
             'profilePicture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
         ]);
 

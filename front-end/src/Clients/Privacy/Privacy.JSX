@@ -1,18 +1,17 @@
 import React from 'react'
 import CarPromoSection from '../Home/Section/CarPromoVedio'
 import OurClinetSaying from '../Home/Section/OurClinetSaying'
-import Footer from '../Home/Section/Footer'
-import AboutSection from './Section/AboutSection'
-import CarRentalSection from './Section/AboutCarRental'
 import OurTeam from '../Home/Section/OurTeam'
 import Partners from '../Home/Section/Partenrs'
+import PrivacySection from './Section/PrivacySection'
+import PrivacyPolicyPage from './Section/PrivacyPage'
 
 
-export default function About() {
+export default function Privacy() {
   return (
     <div>
-        <AboutSection />
-        <CarRentalSection />
+        <PrivacySection />
+        <PrivacyPolicyPage/>
         <CarPromoSection />
         <OurClinetSaying />
         <OurTeam />

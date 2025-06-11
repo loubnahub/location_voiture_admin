@@ -132,12 +132,12 @@ const RenderVehicleModalForm = ({
                     </InputGroup>
                   </Form.Group>
                 </Col>
-                <Col md={6}>
+                {/* <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Status <span className="text-danger">*</span></Form.Label>
                     <Form.Select name="status" value={formData.status || 'available'} onChange={handleInputChange} required>{statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</Form.Select>
                   </Form.Group>
-                </Col>
+                </Col> */}
               </Row>
               <Form.Group className="mb-3"><Form.Label>Acquisition Date</Form.Label><Form.Control type="date" name="acquisition_date" value={formData.acquisition_date || ''} onChange={handleInputChange} /></Form.Group>
             </Card.Body>

@@ -27,12 +27,12 @@ ChartJS.register(
 
 // --- A more stylish Stat Card Component ---
 const StatCard = ({ title, value, icon, colorClass }) => (
-  <Card className={`shadow-sm border-0 h-100 card-hover-effect bg-light-${colorClass}`}>
+  <Card className={`shadow-sm border-0 rounded-4 h-100  p-1 px-3 card-hover-effect bg-${colorClass}`}>
     <Card.Body>
-      <div className="d-flex justify-content-between align-items-center">
+      <div className="d-flex justify-content-between align-items-center ">
         <div className="flex-grow-1">
-          <p className={`text-${colorClass} mb-1 text-uppercase fw-bold small`}>{title}</p>
-          <h3 className="mb-0 fw-bolder">{value}</h3>
+          <p className={`text-white mb-1 text-uppercase fw-bold small`}>{title}</p>
+          <h1 className="mb-0 text-white fs-2  fw-bolder">{value}</h1>
         </div>
         <div className={`flex-shrink-0 ms-3 p-3 rounded-3 bg-white`}>
            {React.cloneElement(icon, { className: `text-${colorClass}` })}
@@ -138,20 +138,15 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="p-4" style={{ backgroundColor: '#f4f7f9' }}>
+    <div className="p-4" >
       <style type="text/css">
         {`
           .card-hover-effect { transition: all 0.3s ease-in-out; }
           .card-hover-effect:hover { transform: translateY(-5px); box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important; }
         `}
       </style>
-      <Container fluid>
-        <Row className="mb-4">
-          <Col>
-            <h1 className="h2 fw-bolder">Dashboard</h1>
-            <p className="text-muted">An overview of your rental business performance.</p>
-          </Col>
-        </Row>
+      <Container fluid className=''>
+        
 
         {/* KPI Cards */}
         <Row className="g-4 mb-4">

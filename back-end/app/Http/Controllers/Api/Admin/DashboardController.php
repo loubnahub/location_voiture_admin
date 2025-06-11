@@ -79,22 +79,33 @@ class DashboardController extends Controller
             });
             
         // --- 5. Revenue Over Time (This part is fine) ---
-        $revenueOverTime = Booking::whereIn('status', [BookingStatus::ACTIVE, BookingStatus::COMPLETED])
-            ->where('created_at', '>=', Carbon::now()->subDays(30))
-            ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(final_price) as revenue')
-            )
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'date' => Carbon::parse($item->date)->format('M d'),
-                    'revenue' => (float)$item->revenue
-                ];
-            });
+       // In getStats() method
 
+// --- 5. Revenue Over Time (CORRECTED AND MORE ROBUST) ---
+$revenueOverTime = Booking::query()
+    // First, filter the records we need
+    ->whereIn('status', [BookingStatus::ACTIVE, BookingStatus::COMPLETED])
+    ->where('start_date', '>=', Carbon::now()->subDays(30))
+    
+    // Use selectRaw to be explicit. This is cleaner than multiple DB::raw calls.
+    ->selectRaw('DATE(start_date) as date, SUM(final_price) as total_revenue')
+    
+    // Group by the actual expression, not the alias. This is more portable.
+    ->groupByRaw('DATE(start_date)')
+    
+    // Order by the date
+    ->orderBy('date', 'asc')
+    
+    // Execute the query
+    ->get()
+    
+    // The mapping logic is perfect and doesn't need to change.
+    ->map(function ($item) {
+        return [
+            'date' => Carbon::parse($item->date)->format('M d'),
+            'revenue' => (float) $item->total_revenue, // Use the correct alias from selectRaw
+        ];
+    });
         return response()->json([
             'data' => [
                 'kpis' => [

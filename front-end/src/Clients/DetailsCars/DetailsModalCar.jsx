@@ -3,15 +3,30 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchVehicleModelById } from '../../services/api'; // Adjust path as needed
 import {
-  ArrowLeft, X, Camera, Orbit, CarFront, FileText, Users, CalendarDays,
+  ArrowLeft, X, Camera, Orbit, CarFront, FileText, CalendarDays,
   Fuel, Settings2, Tag, DoorOpen, Armchair, Route, Shapes, Disc3, Feather,
-  ChevronDown, ChevronUp, Loader2, AlertTriangle,
+  ChevronDown, ChevronUp, Loader2, AlertTriangle, Users // Users was in 9fe but not used, kept for potential future use
 } from 'lucide-react';
 
-const DEFAULT_FALLBACK_IMAGE_URL = '/images/Cars/BentlyNobgc.png'; // Your updated path
+const DEFAULT_FALLBACK_IMAGE_URL = '/images/Cars/BentlyNobgc.png';
+
+// SpecItem Component (Merged: using tw- prefix consistently)
+const SpecItem = ({ icon: Icon, label, value }) => {
+    if (value === null || typeof value === 'undefined' || String(value).trim() === '') return null;
+    return (
+      <div className="tw-bg-white tw-text-neutral-800 tw-px-3 tw-py-2.5 tw-rounded-lg tw-flex tw-items-center tw-shadow-sm tw-border tw-border-neutral-200/80">
+        <Icon size={18} className="tw-mr-2.5 tw-text-neutral-500 tw-flex-shrink-0" />
+        <div>
+          <span className="tw-block tw-text-[11px] tw-text-neutral-500 tw-uppercase tw-tracking-wider">{label}</span>
+          <span className="tw-block tw-font-semibold tw-text-sm tw-leading-tight">{String(value)}</span>
+        </div>
+      </div>
+    );
+};
+
 
 const CarDetailPage = () => {
-  const { vehicleId } = useParams(); 
+  const { vehicleId } = useParams();
   const navigate = useNavigate();
 
   const [vehicleModel, setVehicleModel] = useState(null);
@@ -28,40 +43,30 @@ const CarDetailPage = () => {
       const loadVehicleModelDetails = async () => {
         setLoading(true);
         setError(null);
-        setVehicleModel(null); 
+        setVehicleModel(null);
         try {
           const response = await fetchVehicleModelById(vehicleId);
-          if (response.data && response.data.data) { // Check for the nested 'data' object from Laravel Resource
-            const modelData = response.data.data;
+          // Standardize response data access: try response.data.data (Laravel Resource), then response.data (direct object)
+          const modelData = response.data?.data || response.data;
+
+          if (modelData && typeof modelData === 'object' && !Array.isArray(modelData)) {
             setVehicleModel(modelData);
-            if (modelData.features_grouped && modelData.features_grouped.length > 0) {
+            if (modelData.features_grouped?.length > 0) {
               setSelectedFeatureCategory(modelData.features_grouped[0]?.category_name || '');
             } else {
               setSelectedFeatureCategory('');
             }
           } else {
-            // Handle cases where response.data is present but response.data.data is not (e.g. direct object)
-             if(response.data && typeof response.data === 'object' && !Array.isArray(response.data)){
-                const modelData = response.data;
-                setVehicleModel(modelData);
-                if (modelData.features_grouped && modelData.features_grouped.length > 0) {
-                  setSelectedFeatureCategory(modelData.features_grouped[0]?.category_name || '');
-                } else {
-                  setSelectedFeatureCategory('');
-                }
-             } else {
-                throw new Error("Vehicle model data not found or in unexpected format in API response.");
-             }
+            throw new Error("Vehicle model data not found or in unexpected format in API response.");
           }
         } catch (err) {
           console.error("Error fetching vehicle model details:", err);
-          // Attempt to get more specific error from Axios if available
           let errorMessage = "Failed to load vehicle details. Please try again.";
-          if (err.response) { // Axios error object
+          if (err.response) {
             errorMessage = `Request failed with status code ${err.response.status}: ${err.response.data?.message || err.message}`;
-          } else if (err.request) { // Request made but no response
+          } else if (err.request) {
             errorMessage = "No response from server. Check network connection.";
-          } else { // Something else happened
+          } else {
             errorMessage = err.message || "An unknown error occurred.";
           }
           setError(errorMessage);
@@ -78,8 +83,8 @@ const CarDetailPage = () => {
 
   const mainImage = useMemo(() => {
     if (!vehicleModel) return DEFAULT_FALLBACK_IMAGE_URL;
-    if (vehicleModel.main_image_url) return vehicleModel.main_image_url; // Ideal if backend provides this
-    if (vehicleModel.all_media && vehicleModel.all_media.length > 0) {
+    if (vehicleModel.main_image_url) return vehicleModel.main_image_url;
+    if (vehicleModel.all_media?.length > 0) {
       const coverImage = vehicleModel.all_media.find(media => media.is_cover);
       return coverImage ? coverImage.url : (vehicleModel.all_media[0]?.url || DEFAULT_FALLBACK_IMAGE_URL);
     }
@@ -88,9 +93,7 @@ const CarDetailPage = () => {
 
   const featureCategories = useMemo(() => {
     if (!vehicleModel || !vehicleModel.features_grouped) return [];
-    return vehicleModel.features_grouped
-             .map(group => group?.category_name)
-             .filter(Boolean); 
+    return vehicleModel.features_grouped.map(group => group?.category_name).filter(Boolean);
   }, [vehicleModel]);
 
   const displayedFeatures = useMemo(() => {
@@ -99,7 +102,7 @@ const CarDetailPage = () => {
     return category ? (category.items || []) : [];
   }, [vehicleModel, selectedFeatureCategory]);
 
-  const handleClose = () => navigate('/fleet');
+  const handleClose = () => navigate('/fleet'); // Standardized to navigate to /fleet
 
   const scrollbarStyles = `
     .custom-detail-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -109,36 +112,36 @@ const CarDetailPage = () => {
     .custom-detail-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.2) rgba(0,0,0,0.05); }
   `;
 
-  const activeViewClasses = "p-2 bg-white text-black rounded-full w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center";
-  const inactiveViewClasses = "p-1.5 sm:p-2 text-white hover:bg-neutral-500/50 rounded-full w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center";
+  const activeViewClasses = "tw-p-2 tw-bg-white tw-text-black tw-border-0 tw-rounded-full tw-w-8 tw-h-8 sm:tw-w-9 sm:tw-h-9 tw-flex tw-items-center tw-justify-center";
+  const inactiveViewClasses = "tw-p-1.5 sm:tw-p-2 tw-text-white tw-border-0 hover:tw-bg-neutral-500/50 tw-rounded-full tw-w-8 tw-h-8 sm:tw-w-9 sm:tw-h-9 tw-flex tw-items-center tw-justify-center";
 
-  if (loading) { /* ... (loading JSX is fine) ... */ 
+  if (loading) {
     return (
-      <div className="fixed inset-0 bg-white/[0.5] backdrop-blur-sm flex items-center justify-center z-[999] p-2 sm:p-4">
-        <div className="bg-[#FFFFFFCC] backdrop-blur-md text-neutral-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md p-10 flex flex-col items-center">
-          <Loader2 size={48} className="animate-spin text-blue-600 mb-4" />
-          <p className="text-lg font-semibold">Loading Vehicle Details...</p>
+      <div className="tw-fixed tw-inset-0 tw-bg-white/[0.5] tw-backdrop-blur-sm tw-flex tw-items-center tw-justify-center tw-z-[999] tw-p-2 sm:tw-p-4">
+        <div className="tw-bg-[#FFFFFFCC] tw-backdrop-blur-md tw-text-neutral-800 tw-rounded-xl sm:tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-md tw-p-10 tw-flex tw-flex-col tw-items-center">
+          <Loader2 size={48} className="tw-animate-spin tw-text-blue-600 tw-mb-4" />
+          <p className="tw-text-lg tw-font-semibold">Loading Vehicle Details...</p>
         </div>
       </div>
     );
   }
-  if (error) { /* ... (error JSX is fine) ... */ 
+  if (error) {
     return (
-      <div className="fixed inset-0 bg-white/[0.5] backdrop-blur-sm flex items-center justify-center z-[999] p-2 sm:p-4">
-        <div className="bg-red-50 text-red-700 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md p-10 flex flex-col items-center">
-          <AlertTriangle size={48} className="text-red-500 mb-4" />
-          <p className="text-lg font-semibold mb-2">Error Loading Details</p>
-          <p className="text-sm text-center mb-6">{error}</p>
-          <button onClick={handleClose} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">Return to Fleet</button>
+      <div className="tw-fixed tw-inset-0 tw-bg-white/[0.5] tw-backdrop-blur-sm tw-flex tw-items-center tw-justify-center tw-z-[999] tw-p-2 sm:tw-p-4">
+        <div className="tw-bg-red-50 tw-text-red-700 tw-rounded-xl sm:tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-md tw-p-10 tw-flex tw-flex-col tw-items-center">
+          <AlertTriangle size={48} className="tw-text-red-500 tw-mb-4" />
+          <p className="tw-text-lg tw-font-semibold tw-mb-2">Error Loading Details</p>
+          <p className="tw-text-sm tw-text-center tw-mb-6">{error}</p>
+          <button onClick={handleClose} className="tw-bg-red-600 hover:tw-bg-red-700 tw-text-white tw-font-semibold tw-py-2 tw-px-6 tw-rounded-lg tw-transition-colors">Return to Fleet</button>
         </div>
       </div>
     );
   }
-  if (!vehicleModel) { /* ... (no vehicleModel JSX is fine) ... */ 
+  if (!vehicleModel) { // This case should ideally be caught by error state if API fails
     return (
-        <div className="fixed inset-0 bg-white/[0.5] backdrop-blur-sm flex items-center justify-center z-[999] p-2 sm:p-4">
-          <p className="text-lg">Vehicle not found.</p>
-          <button onClick={handleClose} className="ml-4 text-blue-600 hover:underline">Go Back</button>
+        <div className="tw-fixed tw-inset-0 tw-bg-white/[0.5] tw-backdrop-blur-sm tw-flex tw-items-center tw-justify-center tw-z-[999] tw-p-2 sm:tw-p-4">
+          <p className="tw-text-lg tw-text-neutral-700">Vehicle not found or data is unavailable.</p>
+          <button onClick={handleClose} className="tw-ml-4 tw-text-blue-600 hover:tw-underline">Go Back</button>
         </div>
     );
   }
@@ -146,120 +149,124 @@ const CarDetailPage = () => {
   return (
     <>
       <style>{scrollbarStyles}</style>
-      <div className="fixed inset-0 bg-white/[0.5] backdrop-blur-sm flex items-center justify-center z-[999] p-2 sm:p-4 font-sans">
-        <div className="bg-[#FFFFFFCC] backdrop-blur-md text-neutral-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-7xl max-h-[95vh] flex flex-col relative">
-          {/* Top Navigation and Close Buttons (same as your previous code) */}
-          <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 z-10"> <div className="flex items-center gap-1.5 sm:gap-2 bg-neutral-700/60 backdrop-blur-sm p-1 sm:p-1.5 rounded-full shadow"> <button onClick={() => setActiveView('details')} className={activeView === 'details' ? activeViewClasses : inactiveViewClasses} title="Details"> <CarFront size={18} /> </button> <Link to={`/fleet/details/${vehicleId}/3d`} onClick={() => setActiveView('3d')}> <button className={activeView === '3d' ? activeViewClasses : inactiveViewClasses} title="3D View"> <Orbit size={18} /> </button> </Link> <Link to={`/fleet/details/${vehicleId}/ar`} onClick={() => setActiveView('ar')}> <button className={activeView === 'ar' ? activeViewClasses : inactiveViewClasses} title="Gallery / AR View"> <Camera size={18} /> </button> </Link> </div> </div>
-          <button onClick={handleClose} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 text-neutral-600 hover:text-neutral-800 bg-white/70 hover:bg-white p-1.5 rounded-full" aria-label="Close details"> <X size={20} /> </button>
-          <button onClick={handleClose} className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 text-neutral-800 bg-white shadow-md p-1.5 rounded-lg items-center justify-center flex" aria-label="Back"> <ArrowLeft size={20} /> </button>
+      <div className="tw-fixed tw-h-full tw-inset-0 tw-bg-white/[0.9] tw-backdrop-blur-sm tw-flex tw-items-center tw-justify-center tw-z-[999] tw-p-2 sm:tw-p-4 tw-font-sans">
+        <div className="tw-bg-[#FFFFFF] tw-text-neutral-800 tw-rounded-xl sm:tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-5xl xl:tw-max-w-7xl tw-max-h-[95vh] tw-flex tw-flex-col tw-relative">
 
-          <div className="flex-grow overflow-y-auto custom-detail-scrollbar pt-16 sm:pt-20 pb-6 px-4 sm:px-6 md:px-8">
-            <div className="md:flex md:gap-6 lg:gap-8">
+          {/* Top Navigation */}
+          <div className="tw-absolute tw-top-3 sm:tw-top-4 tw-left-1/2 -tw-translate-x-1/2 tw-z-10">
+            <div className="tw-flex tw-items-center tw-gap-1.5 sm:tw-gap-2 tw-bg-neutral-700/60 tw-backdrop-blur-sm tw-p-1 sm:tw-p-1.5 tw-rounded-full tw-shadow">
+              <button onClick={() => setActiveView('details')} className={activeView === 'details' ? activeViewClasses : inactiveViewClasses} title="Details"><CarFront size={18} /></button>
+              <Link to={`/fleet/details/${vehicleId}/3d`} onClick={() => setActiveView('3d')}><button className={activeView === '3d' ? activeViewClasses : inactiveViewClasses} title="3D View"><Orbit size={18} /></button></Link>
+              <Link to={`/fleet/details/${vehicleId}/ar`} onClick={() => setActiveView('ar')}><button className={activeView === 'ar' ? activeViewClasses : inactiveViewClasses} title="Gallery / AR View"><Camera size={18} /></button></Link>
+            </div>
+          </div>
+          <button onClick={handleClose} className="tw-absolute tw-border-0 tw-top-3 tw-right-3 sm:tw-top-4 sm:tw-right-4 tw-z-20 tw-text-neutral-600 hover:tw-text-neutral-800 tw-bg-white/70 hover:tw-bg-white tw-p-1.5 tw-rounded-full" aria-label="Close details"><X size={20} /></button>
+          <button onClick={() => navigate(-1)} className="tw-absolute tw-border-0 tw-top-3 tw-left-3 sm:tw-top-4 sm:tw-left-4 tw-z-20 tw-text-neutral-800 tw-bg-white tw-shadow-md tw-p-1.5 tw-rounded-lg tw-items-center tw-justify-center tw-flex" aria-label="Back"><ArrowLeft size={20} /></button>
+
+          <div className="tw-flex-grow tw-overflow-y-auto custom-detail-scrollbar tw-pt-16 sm:tw-pt-20 tw-pb-6 tw-px-4 sm:tw-px-6 md:tw-px-8">
+            <div className="md:tw-flex md:tw-gap-6 lg:tw-gap-8">
               {/* Left Column */}
-              <div className="md:w-[60%] lg:w-[62%] flex flex-col">
-                <div className="md:flex md:gap-4 lg:gap-6 mb-5 sm:mb-6">
-                  <div className="md:w-1/2 lg:w-[45%]">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">{vehicleModel.title || 'Vehicle Name'}</h1>
-                    {/* Changed "Car Type oussama" to dynamic */}
-                    <p className="text-md text-neutral-700 mb-3 sm:mb-4">{vehicleModel.vehicle_type?.name || 'Type N/A'}</p>
-                    <div className="mb-4 sm:mb-5">
-                      <h2 className="flex items-center text-lg font-semibold text-neutral-900 mb-1.5 sm:mb-2">
-                        <FileText size={20} className="mr-2 text-neutral-700" />Description
+              <div className="md:tw-w-[60%] lg:tw-w-[62%] tw-flex tw-flex-col">
+                <div className="md:tw-flex md:tw-gap-4 lg:tw-gap-6 tw-mb-5 sm:tw-mb-6">
+                  <div className="md:tw-w-1/2 lg:tw-w-[45%]">
+                    <h1 className="tw-text-2xl sm:tw-text-3xl tw-font-bold tw-text-neutral-900 tw-leading-tight">{vehicleModel.title || 'Vehicle Name'}</h1>
+                    <p className="tw-text-md tw-text-neutral-700 tw-mb-3 sm:tw-mb-4">{vehicleModel.vehicle_type?.name || 'Type N/A'}</p>
+                    <div className="tw-mb-4 sm:tw-mb-5">
+                      <h2 className="tw-flex tw-items-center tw-text-lg tw-font-semibold tw-text-neutral-900 tw-mb-1.5 sm:tw-mb-2">
+                        <FileText size={20} className="tw-mr-2 tw-text-neutral-700" />Description
                       </h2>
-                      <p className="text-sm text-neutral-700 leading-relaxed break-words">{vehicleModel.description || 'No description available.'}</p>
+                      <p className="tw-text-sm tw-text-neutral-700 tw-leading-relaxed tw-break-words">{vehicleModel.description || 'No description available.'}</p>
                     </div>
-                    <div className="flex gap-2 sm:gap-3">
-                      <Link to={`/booking/${vehicleId}`}> 
-                        <button className="bg-blue-600 text-white hover:bg-blue-700 font-semibold py-2.5 px-4 sm:px-6 rounded-lg text-sm flex-1 transition-colors"> Rent Now </button>
+                    <div className="tw-flex tw-gap-2 sm:tw-gap-3">
+                      <Link to={`/booking/${vehicleId}`} className="tw-flex-1">
+                        <button className="tw-w-full tw-bg-blue-600 tw-text-white hover:tw-bg-blue-700 tw-font-semibold tw-py-2.5 tw-px-4 sm:tw-px-6 tw-border-0 tw-rounded-lg tw-text-sm tw-transition-colors">Rent Now</button>
                       </Link>
-                      <button className="bg-white text-neutral-800 border border-neutral-300 hover:bg-neutral-50 font-semibold py-2.5 px-4 sm:px-6 rounded-lg text-sm flex-1 transition-colors"> Review </button>
                     </div>
                   </div>
-                  <div className="md:w-1/2 lg:w-[calc(55%+2rem)] xl:w-[calc(55%+4rem)] mt-4 md:mt-0 flex items-center justify-center md:-ml-8 lg:-ml-12 xl:-ml-16">
-                    <div className="w-full max-w-lg md:max-w-xl lg:max-w-2xl">
+                  <div className="md:tw-w-1/2 lg:tw-w-[calc(55%+2rem)] xl:tw-w-[calc(55%+4rem)] tw-mt-4 md:tw-mt-0 tw-flex tw-items-center tw-justify-center md:-tw-ml-8 lg:-tw-ml-12 xl:-tw-ml-16">
+                    <div className="tw-w-full tw-max-w-lg md:tw-max-w-xl lg:tw-max-w-2xl">
                       <img
-                        src={mainImage} // DYNAMIC
+                        src={mainImage}
                         alt={`${vehicleModel.title || 'Vehicle'} main view`}
-                        className="w-full h-auto max-h-[280px] sm:max-h-[340px] md:max-h-[400px] lg:max-h-[460px] object-contain transform scale-105 md:scale-110 lg:scale-125"
+                        className="tw-w-full tw-h-auto tw-max-h-[280px] sm:tw-max-h-[340px] md:tw-max-h-[400px] lg:tw-max-h-[460px] tw-object-contain tw-transform tw-scale-105 md:tw-scale-110 lg:tw-scale-125"
                         onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_FALLBACK_IMAGE_URL; }}
                       />
                     </div>
                   </div>
                 </div>
-                {/* Specs Grid - DYNAMIC */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-2.5 text-sm">
+                {/* Specs Grid */}
+                <div className="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 md:tw-grid-cols-4 lg:tw-grid-cols-5 tw-gap-2 sm:tw-gap-2.5 tw-text-sm">
                     <SpecItem icon={Shapes} label="Type" value={vehicleModel.vehicle_type?.name} />
                     <SpecItem icon={Disc3} label="Brand" value={vehicleModel.brand} />
-                    {/* API sends 'model', frontend expects 'model_name' from controller show method */}
-                    <SpecItem icon={Feather} label="Model" value={vehicleModel.model_name} /> 
+                    <SpecItem icon={Feather} label="Model" value={vehicleModel.model_name || vehicleModel.model} /> {/* Fallback to 'model' if 'model_name' not present */}
                     <SpecItem icon={CalendarDays} label="Year" value={vehicleModel.year?.toString()} />
                     <SpecItem icon={Tag} label="Price/Day" value={vehicleModel.base_price_per_day != null ? `$${parseFloat(vehicleModel.base_price_per_day).toFixed(2)}` : 'N/A'} />
                     <SpecItem icon={Fuel} label="Fuel Type" value={vehicleModel.fuel_type} />
                     <SpecItem icon={DoorOpen} label="Doors" value={vehicleModel.number_of_doors?.toString()} />
                     <SpecItem icon={Armchair} label="Seats" value={vehicleModel.number_of_seats?.toString()} />
                     <SpecItem icon={Settings2} label="Transmission" value={vehicleModel.transmission} />
-                    <SpecItem icon={Route} label="Mileage" value={vehicleModel.mileage ? `${vehicleModel.mileage.toLocaleString()} km` : undefined} /> 
+                    <SpecItem icon={Route} label="Mileage" value={vehicleModel.mileage ? `${vehicleModel.mileage.toLocaleString()} km` : undefined} />
                 </div>
               </div>
 
-              {/* Right Column: Features & Extras - DYNAMIC */}
-              <div className="md:w-[40%] lg:w-[38%] mt-8 md:mt-0">
-                <div className="bg-white/90 p-4 sm:p-5 rounded-lg shadow-lg text-neutral-800 sticky top-4 max-h-[calc(90vh-5rem)] overflow-y-auto custom-detail-scrollbar">
+              {/* Right Column: Features & Extras */}
+              <div className="md:tw-w-[40%] lg:tw-w-[38%] tw-mt-8 md:tw-mt-0">
+                <div className="tw-bg-white/90 tw-p-4 sm:tw-p-5 tw-rounded-lg tw-shadow-lg tw-text-neutral-800 tw-sticky tw-top-4 tw-max-h-[calc(90vh-5rem)] tw-overflow-y-auto custom-detail-scrollbar">
                   {/* Features Section */}
-                  {(vehicleModel.features_grouped && vehicleModel.features_grouped.length > 0) ? (
-                    <div className="mb-6">
-                      <div className="flex justify-between items-center mb-2 cursor-pointer" onClick={() => setFeaturesOpen(!featuresOpen)}>
-                        <h2 className="text-xl font-semibold text-neutral-900">Features</h2>
-                        <div className="flex items-center">
+                  {(vehicleModel.features_grouped?.length > 0) ? (
+                    <div className="tw-mb-6">
+                      <div className="tw-flex tw-justify-between tw-items-center tw-mb-2 tw-cursor-pointer" onClick={() => setFeaturesOpen(!featuresOpen)}>
+                        <h2 className="tw-text-xl tw-font-semibold tw-text-neutral-900">Features</h2>
+                        <div className="tw-flex tw-items-center">
                           {featureCategories.length > 1 && (
                             <select
                               value={selectedFeatureCategory}
                               onChange={(e) => setSelectedFeatureCategory(e.target.value)}
                               onClick={(e) => e.stopPropagation()}
-                              className="text-xs bg-neutral-200 text-neutral-700 border border-neutral-300 px-3 py-1.5 rounded-full shadow-sm hover:bg-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none mr-2"
+                              className="tw-text-xs tw-bg-neutral-200 tw-text-neutral-700 tw-border tw-border-neutral-300 tw-px-3 tw-py-1.5 tw-rounded-full tw-shadow-sm hover:tw-bg-neutral-300 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-blue-500 tw-cursor-pointer tw-appearance-none tw-mr-2"
                             >
                               {featureCategories.map(cat => ( <option key={cat} value={cat}>{cat || "General"}</option> ))}
                             </select>
                           )}
-                          {featuresOpen ? <ChevronUp size={20} className="text-neutral-500" /> : <ChevronDown size={20} className="text-neutral-500" />}
+                          {featuresOpen ? <ChevronUp size={20} className="tw-text-neutral-500" /> : <ChevronDown size={20} className="tw-text-neutral-500" />}
                         </div>
                       </div>
-                      <p className='border-b border-neutral-300 w-full mt-2 mb-3'></p>
+                      <p className='tw-border-b tw-border-neutral-300 tw-w-full tw-mt-2 tw-mb-3'></p>
                       {featuresOpen && (
-                        <div className="space-y-2 sm:space-y-2.5 mt-2 max-h-60 overflow-y-auto custom-detail-scrollbar pr-1">
+                        <div className="tw-space-y-2 sm:tw-space-y-2.5 tw-mt-2 tw-max-h-60 tw-overflow-y-auto custom-detail-scrollbar tw-pr-1">
                           {displayedFeatures.length > 0 ? (
                             displayedFeatures.map(feature => (
-                              <div key={feature.id} className="bg-neutral-100 p-2.5 sm:p-3 rounded-md shadow-sm">
-                                <p className="text-sm text-neutral-800 font-medium">{feature.name}</p>
-                                {feature.description && <p className="text-xs text-neutral-600 mt-0.5 break-words">{feature.description}</p>}
-                                {feature.pivot?.notes && <p className="text-xs text-blue-600 italic mt-0.5 break-words">Note: {feature.pivot.notes}</p>}
+                              <div key={feature.id} className="tw-bg-neutral-100 tw-p-2.5 sm:tw-p-3 tw-rounded-md tw-shadow-sm">
+                                <p className="tw-text-sm tw-text-neutral-800 tw-font-medium">{feature.name}</p>
+                                {feature.description && <p className="tw-text-xs tw-text-neutral-600 tw-mt-0.5 tw-break-words">{feature.description}</p>}
+                                {feature.pivot?.notes && <p className="tw-text-xs tw-text-blue-600 tw-italic tw-mt-0.5 tw-break-words">Note: {feature.pivot.notes}</p>}
                               </div>
                             ))
                           ) : (
-                            <p className="text-xs text-neutral-500 pl-1">No features listed for this category or selection.</p>
+                            <p className="tw-text-xs tw-text-neutral-500 tw-pl-1">No features listed for this category or selection.</p>
                           )}
                         </div>
                       )}
                     </div>
-                  ) : <p className="text-sm text-neutral-500 mb-6">No features listed for this model.</p>}
+                  ) : <p className="tw-text-sm tw-text-neutral-500 tw-mb-6">No features listed for this model.</p>}
 
                   {/* Possible Extras Section */}
-                  {(vehicleModel.extras_available && vehicleModel.extras_available.length > 0) ? (
+                  {(vehicleModel.extras_available?.length > 0) ? (
                     <div>
-                      <div className="flex justify-between items-center mb-2 cursor-pointer" onClick={() => setExtrasOpen(!extrasOpen)}>
-                        <h2 className="text-xl font-semibold text-neutral-900">Possible Extras</h2>
-                        {extrasOpen ? <ChevronUp size={20} className="text-neutral-500" /> : <ChevronDown size={20} className="text-neutral-500" />}
-                      </div>                     
-                      <p className='border-b border-neutral-300 w-full mt-2 mb-3'></p>
+                      <div className="tw-flex tw-justify-between tw-items-center tw-mb-2 tw-cursor-pointer" onClick={() => setExtrasOpen(!extrasOpen)}>
+                        <h2 className="tw-text-xl tw-font-semibold tw-text-neutral-900">Possible Extras</h2>
+                        {extrasOpen ? <ChevronUp size={20} className="tw-text-neutral-500" /> : <ChevronDown size={20} className="tw-text-neutral-500" />}
+                      </div>
+                      <p className='tw-border-b tw-border-neutral-300 tw-w-full tw-mt-2 tw-mb-3'></p>
                       {extrasOpen && (
-                        <div className="space-y-2 sm:space-y-2.5 mt-2 max-h-60 overflow-y-auto custom-detail-scrollbar pr-1">
+                        <div className="tw-space-y-2 sm:tw-space-y-2.5 tw-mt-2 tw-max-h-60 tw-overflow-y-auto custom-detail-scrollbar tw-pr-1">
                           {vehicleModel.extras_available.map(extra => (
-                            <div key={extra.id} className="bg-neutral-100 p-2.5 sm:p-3 rounded-md flex justify-between items-start shadow-sm">
-                              <div className="flex-grow mr-2">
-                                <p className="text-sm text-neutral-800 font-medium">{extra.name}</p>
-                                {extra.description && <p className="text-xs text-neutral-600 mt-0.5 break-words">{extra.description}</p>}
+                            <div key={extra.id} className="tw-bg-neutral-100 tw-p-2.5 sm:tw-p-3 tw-rounded-md tw-flex tw-justify-between tw-items-start tw-shadow-sm">
+                              <div className="tw-flex-grow tw-mr-2">
+                                <p className="tw-text-sm tw-text-neutral-800 tw-font-medium">{extra.name}</p>
+                                {extra.description && <p className="tw-text-xs tw-text-neutral-600 tw-mt-0.5 tw-break-words">{extra.description}</p>}
                               </div>
-                              <p className="text-xs text-neutral-600 flex-shrink-0 pt-0.5">
+                              <p className="tw-text-xs tw-text-neutral-600 tw-flex-shrink-0 tw-pt-0.5">
                                 {extra.default_price_per_day != null ? `$${parseFloat(extra.default_price_per_day).toFixed(2)}/day` : 'Price N/A'}
                               </p>
                             </div>
@@ -267,7 +274,7 @@ const CarDetailPage = () => {
                         </div>
                       )}
                     </div>
-                  ) : <p className="text-sm text-neutral-500">No optional extras available for this model.</p>}
+                  ) : <p className="tw-text-sm tw-text-neutral-500">No optional extras available for this model.</p>}
                 </div>
               </div>
             </div>
@@ -276,20 +283,6 @@ const CarDetailPage = () => {
       </div>
     </>
   )
-};
-
-// Helper component for spec items
-const SpecItem = ({ icon: Icon, label, value }) => {
-    if (value === null || typeof value === 'undefined' || String(value).trim() === '') return null; // Allow 0, but not empty strings
-    return (
-      <div className="bg-white text-neutral-800 px-3 py-2.5 rounded-lg flex items-center shadow-sm border border-neutral-200/80">
-        <Icon size={18} className="mr-2.5 text-neutral-500 flex-shrink-0" />
-        <div>
-          <span className="block text-[11px] text-neutral-500 uppercase tracking-wider">{label}</span>
-          <span className="block font-semibold text-sm leading-tight">{String(value)}</span>
-        </div>
-      </div>
-    );
 };
 
 export default CarDetailPage;

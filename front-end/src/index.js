@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-// import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
+import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
 // import './index.css'; // Should be second
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
