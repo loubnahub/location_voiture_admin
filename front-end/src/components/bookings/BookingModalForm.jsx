@@ -87,8 +87,13 @@ const BookingModalForm = ({
                 fetchAllUsers({ all: true }),
                 fetchAllInsurancePlans({ all: true, active: true })
             ]);
+                const allUsers = extractArrayFromApiResponse(usersRes, "Users");
+                console.log(allUsers)
+                const rentersOnly = allUsers.filter(user => 
+                     !user.roles || !user.roles.find(role => role.name === 'admin')
+                );
 
-            setUsers(extractArrayFromApiResponse(usersRes, "Users"));
+            setUsers(rentersOnly);
             setInsurancePlans(extractArrayFromApiResponse(plansRes, "Insurance Plans"));
 
             // --- MODE-SPECIFIC VEHICLE FETCH ---
