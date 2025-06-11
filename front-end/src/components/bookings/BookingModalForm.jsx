@@ -130,7 +130,7 @@ const BookingModalForm = ({
                 const rawVehicles = extractArrayFromApiResponse(vehiclesRes, "Vehicles");
                 const processedVehicles = rawVehicles.map(v => ({
                     ...v,
-                    base_price_per_day: parseFloat(v.base_price_per_day || 0),
+                    base_price_per_day:parseFloat(v.base_price_per_day) || 0,
                     display_name: `${v.vehicle_model_title || v.vehicle_model?.title || 'Unknown Model'} (${v.license_plate || 'N/A'}) - Status: ${v.status_display || v.status || 'N/A'}`
                 }));
                 setVehicles(processedVehicles);
@@ -234,31 +234,52 @@ const BookingModalForm = ({
     }, [selectedExtrasData, calculateAndUpdateParentExtras]);
 
     // Base Price Calculation
-    useEffect(() => {
-        if (!formData || !onFormDataChange || !vehicles?.length) {
-            if (formData && String(formData.calculated_base_price || "0.00") !== "0.00") onFormDataChange({ target: { name: 'calculated_base_price', value: "0.00" } });
-            return;
+// In BookingModalForm.js
+
+// --- NEW VERSION: Base Price Calculation ---
+useEffect(() => {
+    // FIX: If we are editing an existing booking, do NOT automatically recalculate the price.
+    // The price is considered fixed from when it was originally created. This prevents
+    // the correct, stored price from being overwritten with a calculated value of zero.
+    // The dependency array now includes `isEditMode` to trigger this check correctly.
+    if (isEditMode) {
+        return; 
+    }
+
+    // The original logic below will now ONLY run for NEW bookings.
+    if (!formData || !onFormDataChange || !vehicles?.length) {
+        if (formData && String(formData.calculated_base_price || "0.00") !== "0.00") {
+            onFormDataChange({ target: { name: 'calculated_base_price', value: "0.00" } });
         }
-        let newBasePrice = "0.00";
-        if (formData.vehicle_id && formData.start_date && formData.end_date) {
-            const selectedVehicle = vehicles.find(v => v.id === formData.vehicle_id);
-            if (selectedVehicle && selectedVehicle.base_price_per_day !== undefined && !isNaN(parseFloat(selectedVehicle.base_price_per_day))) {
-                const vehicleDailyPrice = parseFloat(selectedVehicle.base_price_per_day);
-                try {
-                    const startDate = new Date(formData.start_date); const endDate = new Date(formData.end_date);
-                    if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && endDate > startDate) {
-                        const dayDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-                        if (dayDiff > 0) newBasePrice = (dayDiff * vehicleDailyPrice).toFixed(2);
+        return;
+    }
+
+    let newBasePrice = "0.00";
+    if (formData.vehicle_id && formData.start_date && formData.end_date) {
+        const selectedVehicle = vehicles.find(v => v.id === formData.vehicle_id);
+        if (selectedVehicle && selectedVehicle.base_price_per_day !== undefined && !isNaN(parseFloat(selectedVehicle.base_price_per_day))) {
+            const vehicleDailyPrice = parseFloat(selectedVehicle.base_price_per_day);
+            try {
+                const startDate = new Date(formData.start_date); 
+                const endDate = new Date(formData.end_date);
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && endDate > startDate) {
+                    const dayDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+                    if (dayDiff > 0) {
+                        newBasePrice = (dayDiff * vehicleDailyPrice).toFixed(2);
                     }
-                } catch (e) { }
+                }
+            } catch (e) { 
+                // Error handling can be added here if needed
             }
         }
-        if (String(formData.calculated_base_price || "0.00") !== newBasePrice) {
-            onFormDataChange({ target: { name: 'calculated_base_price', value: newBasePrice } });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [formData?.vehicle_id, formData?.start_date, formData?.end_date, vehicles, onFormDataChange]);
+    }
 
+    if (String(formData.calculated_base_price || "0.00") !== newBasePrice) {
+        onFormDataChange({ target: { name: 'calculated_base_price', value: newBasePrice } });
+    }
+    
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [isEditMode, formData?.vehicle_id, formData?.start_date, formData?.end_date, vehicles, onFormDataChange]);
     // Insurance Price Calculation
     useEffect(() => {
         if (!formData || !onFormDataChange || !insurancePlans?.length) {
@@ -391,7 +412,7 @@ const BookingModalForm = ({
 
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
-
+console.log(formData)
     useEffect(() => { if (submissionError && clearSubmissionError) clearSubmissionError(); }, [formData, clearSubmissionError]);
 
     if (!formData) { return <Alert variant="danger">Form data is not available.</Alert>; }

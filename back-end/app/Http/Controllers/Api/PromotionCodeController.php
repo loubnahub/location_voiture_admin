@@ -42,7 +42,6 @@ class PromotionCodeController extends Controller
     public function index(Request $request)
     {
         // Add authorization
-        Log::info('PromotionCodeController@index: Fetching codes', $request->all());
         $query = PromotionCode::query()->with(['promotionCampaign:id,name', 'user:id,full_name,email']);
 
         if ($request->filled('search')) {
@@ -91,7 +90,6 @@ class PromotionCodeController extends Controller
     public function store(Request $request)
     {
         // Add authorization
-        Log::info('PromotionCodeController@store: Received data', $request->all());
 
         $validator = Validator::make($request->all(), [
             'promotion_campaign_id' => 'required|uuid|exists:promotion_campaigns,id',
@@ -103,7 +101,6 @@ class PromotionCodeController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::error('PromotionCodeController@store: Validation failed', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
@@ -123,7 +120,6 @@ class PromotionCodeController extends Controller
 
 
         $promotionCode = PromotionCode::create($validatedData);
-        Log::info('PromotionCodeController@store: Code created successfully', ['id' => $promotionCode->id]);
 
         return response()->json([
             'data' => $this->transformPromotionCode($promotionCode),
@@ -134,7 +130,6 @@ class PromotionCodeController extends Controller
     public function show(PromotionCode $promotionCode)
     {
         // Add authorization
-        Log::info('PromotionCodeController@show: Fetching code', ['id' => $promotionCode->id]);
         return response()->json(['data' => $this->transformPromotionCode($promotionCode)]);
     }
 
@@ -143,7 +138,6 @@ class PromotionCodeController extends Controller
     public function update(Request $request, PromotionCode $promotionCode)
     {
         // Add authorization
-        Log::info('PromotionCodeController@update: Received data for update', ['id' => $promotionCode->id, 'data' => $request->all()]);
 
         $validator = Validator::make($request->all(), [
             // 'promotion_campaign_id' => 'sometimes|required|uuid|exists:promotion_campaigns,id', // Usually not changed
@@ -154,7 +148,6 @@ class PromotionCodeController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::error('PromotionCodeController@update: Validation failed', ['id' => $promotionCode->id, 'errors' => $validator->errors()->toArray()]);
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
@@ -169,17 +162,9 @@ class PromotionCodeController extends Controller
 
     public function destroy(PromotionCode $promotionCode)
     {
-        // Add authorization
-        Log::info('PromotionCodeController@destroy: Attempting to delete code', ['id' => $promotionCode->id]);
-
-        // Business logic: Cannot delete if it has been used?
-        if ($promotionCode->status === PromotionCodeStatus::USED || $promotionCode->used_on_booking_id) {
-            Log.warn('PromotionCodeController@destroy: Attempt to delete used code', ['id' => $promotionCode->id]);
-            return response()->json(['message' => 'Cannot delete a promotion code that has already been used.'], 403);
-        }
+        
 
         $promotionCode->delete();
-        Log::info('PromotionCodeController@destroy: Code deleted successfully', ['id' => $promotionCode->id]);
 
         return response()->json(['message' => 'Promotion code deleted successfully.'], 200);
     }

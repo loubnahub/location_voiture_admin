@@ -325,59 +325,43 @@ public function destroy($id) // Changed from `Booking $booking` to `$id`
 // In BookingController.php
 
 public function completeBooking(Request $request, Booking $booking)
-{
-    if ($booking->status !== BookingStatus::ACTIVE) {
-        return response()->json(['message' => 'Only active bookings can be completed.'], 422);
+    {
+        if ($booking->status !== BookingStatus::ACTIVE) {
+            return response()->json(['message' => 'Only active bookings can be completed.'], 422);
+        }
+
+        Log::info("--- CONTROLLER: STARTING COMPLETE BOOKING FOR ID: {$booking->id} ---");
+
+        // The transaction should only handle the booking status change.
+        DB::transaction(function () use ($booking) {
+            $booking->status = BookingStatus::COMPLETED;
+            $booking->save();
+            Log::info("CONTROLLER: Booking status set to COMPLETED and saved.");
+        });
+
+        // Get a fresh instance of the booking with the renter relationship loaded
+        // to ensure the event has the most up-to-date data.
+        $freshBooking = Booking::with('renter')->find($booking->id);
+
+        if (!$freshBooking?->renter) {
+            Log::error("CONTROLLER: Could not find renter for Booking ID {$booking->id}. Cannot dispatch BookingCompleted event.");
+            // Return a successful response but log the error.
+            return response()->json([
+                'data' => $this->transformBooking($freshBooking),
+                'message' => 'Booking marked as completed, but loyalty processing was skipped due to missing renter data.'
+            ], 200);
+        }
+
+        // Dispatch the event. The listener will now handle ALL loyalty logic.
+        event(new BookingCompleted($freshBooking));
+        Log::info("CONTROLLER: Event dispatched. Listener will handle loyalty points calculation and rewards.");
+
+        return response()->json([
+            'data' => $this->transformBooking($freshBooking),
+            'message' => 'Booking marked as completed.'
+        ], 200);
     }
 
-    Log::info("--- STARTING COMPLETE BOOKING FOR ID: {$booking->id} ---");
-
-    DB::transaction(function () use ($booking) {
-        $booking->load('renter');
-        $renter = $booking->renter;
-
-        if ($renter) {
-            Log::info("Renter {$renter->id} found. Current points: {$renter->loyalty_points}. Booking final price: {$booking->final_price}");
-
-            // --- TEMPORARY TEST: Unconditionally award 1 point ---
-            $pointsToAward = 1; 
-            Log::info("TEST: Forcing pointsToAward to be {$pointsToAward}.");
-            // --- END TEMPORARY TEST ---
-
-            if ($pointsToAward > 0) {
-                $renter->increment('loyalty_points', $pointsToAward);
-                Log::info("Executing increment method.");
-            } else {
-                 Log::info("Condition (pointsToAward > 0) was FALSE. Skipping increment.");
-            }
-        } else {
-            Log::warning("No renter found for booking.");
-        }
-        
-        $booking->status = BookingStatus::COMPLETED;
-        $booking->save();
-        Log::info("Booking status set to COMPLETED and saved.");
-    });
-
-    $freshBooking = Booking::with('renter')->find($booking->id);
-
-    Log::info("--- TRANSACTION COMPLETE. FINAL CHECK ---", [
-        'renter_id' => $freshBooking->renter->id,
-        'points_in_db' => $freshBooking->renter->loyalty_points,
-    ]);
-
-    event(new BookingCompleted($freshBooking));
-    Log::info("Event dispatched.");
-
-    return response()->json([
-        'data' => $this->transformBooking($freshBooking),
-        'message' => 'Booking marked as completed and loyalty updated.'
-    ], 200);
-}
-public function forDropdown() {
-    $bookings = Booking::select('id')->orderBy('created_at', 'desc')->get();
-    return response()->json(['data' => $bookings]);
-}
 public function forAgreementDropdown()
     {
         // Fetch bookings that DO NOT HAVE a related rental agreement.

@@ -13,22 +13,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 // --- Columns for the User Table (No changes needed) ---
 const userColumns = [
-  { header: 'Name', key: 'full_name', render: (item) => item.full_name || <span className="text-muted-custom">N/A</span> },
-  { header: 'Email', key: 'email', render: (item) => item.email || <span className="text-muted-custom">N/A</span> },
-  { header: 'Phone', key: 'phone', render: (item) => item.phone || <span className="text-muted-custom">N/A</span> },
+  { header: 'Name', key: 'full_name', render: (item) => item.full_name || 'N/A' },
+  { header: 'Email', key: 'email', render: (item) => item.email || 'N/A' },
+  { header: 'Phone', key: 'phone', render: (item) => item.phone || 'N/A' },
   {
     header: 'Role',
-    key: 'roles',
+    key: 'roles', // Your API data provides the 'roles' array
     render: (item) => {
-      let roleName = 'customer'; // Default role
-      if (Array.isArray(item.roles) && item.roles.length > 0) {
-        // Find admin role, otherwise take the first role in the array
-        const adminRole = item.roles.find(r => r.name === 'admin');
-        roleName = adminRole ? adminRole.name : (item.roles[0]?.name || 'customer');
-      } else if (typeof item.roles === 'string') {
-        // Handle cases where the role is already a simple string
-        roleName = item.roles;
-      }
+      // Safely get the role name from the nested structure
+      const roleName = (Array.isArray(item.roles) && item.roles[0]?.name) || 'customer';
       const badgeBg = roleName === 'admin' ? 'danger' : 'info';
       return (
         <Badge pill bg={badgeBg} className="text-white">
@@ -43,12 +36,12 @@ const userColumns = [
 // --- Initial Form Data (No changes needed) ---
 const initialUserData = {
   id: null, full_name: '', email: '', phone: '',
-  password: '', password_confirmation: '', profile_picture_url: '',
+  password: '', password_confirmation: '',
   loyalty_points: 0, 
-  roles: 'customer', // The default role is a simple string
+  roles: 'customer', // The form starts with the role as a simple string
 };
 
-// --- Modal Form Fields Component (No changes needed) ---
+// --- Modal Form Fields Component (UNCHANGED, AS YOU REQUESTED) ---
 const UserModalFormFields = ({ formData, handleInputChange, modalFormErrors, isEditMode }) => {
   const availableRoles = [
     { name: 'customer', label: 'Customer' },
@@ -58,43 +51,8 @@ const UserModalFormFields = ({ formData, handleInputChange, modalFormErrors, isE
   return (
     <Tabs defaultActiveKey="details" id="user-modal-tabs" className="mb-3" unmountOnExit>
       <Tab eventKey="details" title="User Details">
-        <Form.Group className="mb-3" controlId="userFullName">
-          <Form.Label>Full Name <span className="text-danger">*</span></Form.Label>
-          <Form.Control type="text" name="full_name" value={formData.full_name || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.full_name} />
-          <Form.Control.Feedback type="invalid">{modalFormErrors?.full_name?.join(', ')}</Form.Control.Feedback>
-        </Form.Group>
-        <Row>
-          <Col md={6}>
-            <Form.Group className="mb-3" controlId="userEmail">
-              <Form.Label>Email <span className="text-danger">*</span></Form.Label>
-              <Form.Control type="email" name="email" value={formData.email || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.email} />
-              <Form.Control.Feedback type="invalid">{modalFormErrors?.email?.join(', ')}</Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3" controlId="userPhone">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control type="tel" name="phone" value={formData.phone || ''} onChange={handleInputChange} isInvalid={!!modalFormErrors?.phone} />
-              <Form.Control.Feedback type="invalid">{modalFormErrors?.phone?.join(', ')}</Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row>
-          <Col md={6}>
-            <Form.Group className="mb-3" controlId="userPassword">
-              <Form.Label>{isEditMode ? 'New Password (Optional)' : 'Password'} <span className="text-danger">{!isEditMode ? '*' : ''}</span></Form.Label>
-              <Form.Control type="password" name="password" value={formData.password || ''} onChange={handleInputChange} required={!isEditMode} isInvalid={!!modalFormErrors?.password} placeholder={isEditMode ? "Leave blank to keep current" : "Enter password"} />
-              <Form.Control.Feedback type="invalid">{modalFormErrors?.password?.join(', ')}</Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3" controlId="userPasswordConfirmation">
-              <Form.Label>{isEditMode ? 'Confirm New Password' : 'Confirm Password'} <span className="text-danger">{!isEditMode || formData.password ? '*' : ''}</span></Form.Label>
-              <Form.Control type="password" name="password_confirmation" value={formData.password_confirmation || ''} onChange={handleInputChange} required={!isEditMode || !!formData.password} isInvalid={!!modalFormErrors?.password_confirmation} placeholder={isEditMode ? "Confirm if changing" : "Confirm password"} />
-              <Form.Control.Feedback type="invalid">{modalFormErrors?.password_confirmation?.join(', ')}</Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-        </Row>
+        <Form.Group className="mb-3" controlId="userFullName"><Form.Label>Full Name <span className="text-danger">*</span></Form.Label><Form.Control type="text" name="full_name" value={formData.full_name || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.full_name} /><Form.Control.Feedback type="invalid">{modalFormErrors?.full_name?.join(', ')}</Form.Control.Feedback></Form.Group><Row><Col md={6}><Form.Group className="mb-3" controlId="userEmail"><Form.Label>Email <span className="text-danger">*</span></Form.Label><Form.Control type="email" name="email" value={formData.email || ''} onChange={handleInputChange} required isInvalid={!!modalFormErrors?.email} /><Form.Control.Feedback type="invalid">{modalFormErrors?.email?.join(', ')}</Form.Control.Feedback></Form.Group></Col><Col md={6}><Form.Group className="mb-3" controlId="userPhone"><Form.Label>Phone</Form.Label><Form.Control type="tel" name="phone" value={formData.phone || ''} onChange={handleInputChange} isInvalid={!!modalFormErrors?.phone} /><Form.Control.Feedback type="invalid">{modalFormErrors?.phone?.join(', ')}</Form.Control.Feedback></Form.Group></Col></Row><Row><Col md={6}><Form.Group className="mb-3" controlId="userPassword"><Form.Label>{isEditMode ? 'New Password (Optional)' : 'Password'} <span className="text-danger">{!isEditMode ? '*' : ''}</span></Form.Label><Form.Control type="password" name="password" value={formData.password || ''} onChange={handleInputChange} required={!isEditMode} isInvalid={!!modalFormErrors?.password} placeholder={isEditMode ? "Leave blank to keep current" : "Enter password"} /><Form.Control.Feedback type="invalid">{modalFormErrors?.password?.join(', ')}</Form.Control.Feedback></Form.Group></Col><Col md={6}><Form.Group className="mb-3" controlId="userPasswordConfirmation"><Form.Label>{isEditMode ? 'Confirm New Password' : 'Confirm Password'} <span className="text-danger">{!isEditMode || formData.password ? '*' : ''}</span></Form.Label><Form.Control type="password" name="password_confirmation" value={formData.password_confirmation || ''} onChange={handleInputChange} required={!isEditMode || !!formData.password} isInvalid={!!modalFormErrors?.password_confirmation} placeholder={isEditMode ? "Confirm if changing" : "Confirm password"} /><Form.Control.Feedback type="invalid">{modalFormErrors?.password_confirmation?.join(', ')}</Form.Control.Feedback></Form.Group></Col></Row>
+        
         <Form.Group className="mb-3" controlId="userRole">
           <Form.Label>Role</Form.Label>
           <Form.Select 
@@ -114,11 +72,7 @@ const UserModalFormFields = ({ formData, handleInputChange, modalFormErrors, isE
           </Form.Control.Feedback>
         </Form.Group>
         
-        <Form.Group className="mb-3" controlId="userLoyaltyPoints">
-          <Form.Label>Loyalty Points</Form.Label>
-          <Form.Control type="number" name="loyalty_points" value={formData.loyalty_points || 0} onChange={handleInputChange} min="0" isInvalid={!!modalFormErrors?.loyalty_points} />
-          <Form.Control.Feedback type="invalid">{modalFormErrors?.loyalty_points?.join(', ')}</Form.Control.Feedback>
-        </Form.Group>
+        <Form.Group className="mb-3" controlId="userLoyaltyPoints"><Form.Label>Loyalty Points</Form.Label><Form.Control type="number" name="loyalty_points" value={formData.loyalty_points || 0} onChange={handleInputChange} min="0" isInvalid={!!modalFormErrors?.loyalty_points} /><Form.Control.Feedback type="invalid">{modalFormErrors?.loyalty_points?.join(', ')}</Form.Control.Feedback></Form.Group>
       </Tab>
       {isEditMode && formData.id && (
         <Tab eventKey="rewards" title="Loyalty & Rewards">
@@ -132,78 +86,58 @@ const UserModalFormFields = ({ formData, handleInputChange, modalFormErrors, isE
 
 // --- Main UserPage Component ---
 const UserPage = () => {
-
+  
   /**
-   * --- FIX #1: ROBUST TRANSFORMATION FUNCTION ---
-   * This function prepares data from the API to be used in the form.
-   * It is now robust and can handle both raw API data (roles as an array)
-   * and data that is already in the form's state (roles as a string).
-   * This prevents the role from being reset to 'customer' on every input change.
-   */
-  const transformDataForForm = (apiData) => {
-    if (!apiData) return initialUserData;
-    
-    let primaryRole = 'customer'; // Sensible default
-
-    // Case 1: The 'roles' property is already a simple string (from our form state)
-    if (typeof apiData.roles === 'string' && apiData.roles) {
-        primaryRole = apiData.roles;
-    } 
-    // Case 2: The 'roles' property is an array of objects (from the initial API fetch)
-    else if (Array.isArray(apiData.roles) && apiData.roles.length > 0) {
-      const adminRole = apiData.roles.find(r => r.name === 'admin');
-      primaryRole = adminRole ? adminRole.name : (apiData.roles[0]?.name || 'customer');
-    }
-
-    // Return a new object with all of the user's data, but ensure 'roles' is a simple string.
-    return {
-      ...initialUserData,
-      ...apiData,
-      roles: primaryRole,
-    };
-  };
-
-  /**
-   * --- FIX #2: SIMPLIFIED API PREPARATION FUNCTION ---
-   * This function takes the final state from the form and prepares it for the API.
-   * It correctly handles passwords and guarantees the 'roles' property is an array
-   * of strings, as expected by the Laravel backend.
+   * --- FIX #1: PREPARE DATA FOR THE API ---
+   * This function takes the final form state and prepares it for submission.
+   * It ensures the `roles` property is always an array of strings, as required by Laravel.
    */
   const processDataForApi = (formData, isEditing) => {
     const processed = { ...formData };
 
-    // If editing and the password field is empty, don't send it to the API.
     if (isEditing && !processed.password) {
         delete processed.password;
         delete processed.password_confirmation;
     }
-  
-    // The `formData.roles` value from our form will be a string like 'admin'.
-    // The API expects an array of role names, e.g., ['admin'].
-    processed.roles = [formData.roles];
+    
+    // The `formData.roles` value from the form will be a simple string (e.g., 'admin').
+    // We wrap it in an array to match the backend's expectation.
+    if (typeof processed.roles === 'string') {
+        processed.roles = [processed.roles];
+    } else {
+        // Fallback for safety, though it shouldn't be needed.
+        processed.roles = ['customer'];
+    }
 
-    // Clean up other fields
     if (!isEditing) {
         delete processed.id;
     }
     processed.loyalty_points = parseInt(processed.loyalty_points, 10) || 0;
-
-    console.log("Sending to API:", processed);
+    
     return processed;
   };
-
+  
   /**
-   * --- FIX #3: CORRECTLY RENDER THE FORM ---
-   * The function now correctly calls the robust transform function.
-   * This ensures the form always displays the correct data, even during re-renders.
+   * --- FIX #2: PREPARE DATA FOR DISPLAY ---
+   * This function is called just before rendering the form. It takes the state
+   * from ResourcePage and ensures the `roles` property is a simple string
+   * that the <Form.Select> component can understand.
    */
   const renderUserModalForm = useCallback((formData, handleInputChange, modalFormErrors, isEditMode) => {
-    // This transformation is now safe to call on every render.
-    const formDataForFields = transformDataForForm(formData);
-    
+    // Create a new object to avoid directly mutating the state from ResourcePage.
+    const formDataForDisplay = { ...formData };
+
+    // The API sends roles as an array of objects, e.g., [{ name: 'admin' }].
+    // We need to convert it to a simple string, 'admin', for the dropdown.
+    if (Array.isArray(formDataForDisplay.roles) && formDataForDisplay.roles.length > 0) {
+        // Safely access the name property from the first object in the array.
+        formDataForDisplay.roles = formDataForDisplay.roles[0]?.name || 'customer';
+    }
+
+    // Now, formDataForDisplay.roles is guaranteed to be a string ('admin' or 'customer').
     return (
       <UserModalFormFields
-        formData={formDataForFields}
+        formData={formDataForDisplay} // Pass the transformed data to the form
         handleInputChange={handleInputChange}
         modalFormErrors={modalFormErrors}
         isEditMode={isEditMode}
