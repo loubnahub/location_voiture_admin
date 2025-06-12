@@ -12,7 +12,7 @@ import {
     ChevronLeft, // From 9fe for filter scroll
     ChevronRight // From 9fe for filter scroll
 } from 'lucide-react';
-import { fetchAllVehicleModels, fetchAllVehicleTypes } from '../../../services/api'; // Adjust path as needed
+import { useCars } from '../../../contexts/CarContext'; // Adjust path if needed
 
 const DEFAULT_IMAGE_URL = '/images/Cars/bentley.jpg'; // Ensure this path is valid
 const ITEMS_PER_PAGE_INCREMENT = 8;
@@ -20,17 +20,11 @@ const ITEMS_PER_PAGE_INCREMENT = 8;
 const baseFilters = [{ label: 'All', value: 'All' }]; // 'All' filter is common
 
 const VehicleFleet = () => {
+    const { allCarsData: vehicles, isLoading, error } = useCars();
+
   const [activeFilter, setActiveFilter] = useState('All'); // Stores the ID of the vehicle type or 'All'
   const [displayedItemsCount, setDisplayedItemsCount] = useState(ITEMS_PER_PAGE_INCREMENT);
 
-  const [vehicles, setVehicles] = useState([]); // This state holds vehicle models
-  const [loadingVehicles, setLoadingVehicles] = useState(true);
-  const [errorVehicles, setErrorVehicles] = useState(null);
-
-  const [vehicleTypes, setVehicleTypes] = useState([]);
-  const [loadingTypes, setLoadingTypes] = useState(true);
-  const [errorTypes, setErrorTypes] = useState(null);
-  
   // Note: currentPage state was in HEAD but not actively used for pagination logic in displayedVehicles.
   // Kept if pagination logic is to be more complex later.
   const [currentPage, setCurrentPage] = useState(1); 
@@ -40,68 +34,8 @@ const VehicleFleet = () => {
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   // --- DATA FETCHING for Vehicle Types ---
-  useEffect(() => {
-    const loadVehicleTypes = async () => {
-      try {
-        setLoadingTypes(true);
-        setErrorTypes(null);
-        const response = await fetchAllVehicleTypes();
-        // Standardized data extraction
-        let typesData = [];
-        if (response.data?.data && Array.isArray(response.data.data)) {
-            typesData = response.data.data;
-        } else if (response.data && Array.isArray(response.data)) {
-            typesData = response.data;
-        } else if (response && Array.isArray(response)) { 
-            typesData = response;
-        } else {
-          console.error("VehicleFleet: Vehicle types data is not in a recognized array format. Response:", response);
-          throw new Error("Vehicle types data format is invalid.");
-        }
-        setVehicleTypes(typesData.filter(type => type && type.name && typeof type.id !== 'undefined')); // Ensure ID is present
-      } catch (err) {
-        console.error("VehicleFleet: Error fetching vehicle types:", err);
-        setErrorTypes(err.message || 'Failed to load vehicle types.');
-        setVehicleTypes([]);
-      } finally {
-        setLoadingTypes(false);
-      }
-    };
-    loadVehicleTypes();
-  }, []);
 
-  // --- DATA FETCHING for Vehicles (Models) ---
-  useEffect(() => {
-    const loadVehicles = async () => {
-      try {
-        setLoadingVehicles(true);
-        setErrorVehicles(null);
-        const response = await fetchAllVehicleModels(); // This fetches vehicle models
-        let vehiclesData = [];
-        // Standardized data extraction
-        if (response.data?.data && Array.isArray(response.data.data)) {
-            vehiclesData = response.data.data;
-        } else if (response.data && Array.isArray(response.data)) {
-            vehiclesData = response.data;
-        } else if (response && Array.isArray(response)) {
-            vehiclesData = response;
-        } else {
-            console.error("VehicleFleet: Vehicles data not in recognized array format.", response);
-            throw new Error("Vehicles data format is invalid.");
-        }
-        // Ensure vehicle_type_id is present for filtering, and id is present for linking
-        const validVehicles = vehiclesData.filter(v => v && typeof v.id !== 'undefined' && typeof v.vehicle_type_id !== 'undefined');
-        setVehicles(validVehicles);
-      } catch (err) {
-        console.error("VehicleFleet: Error fetching vehicles:", err);
-        setErrorVehicles(err.message || 'Failed to load vehicles.');
-        setVehicles([]);
-      } finally {
-        setLoadingVehicles(false);
-      }
-    };
-    loadVehicles();
-  }, []);
+ 
 
   // Reset displayed items when filter changes
   useEffect(() => {
@@ -109,25 +43,26 @@ const VehicleFleet = () => {
     setCurrentPage(1); 
   }, [activeFilter]);
 
-  const dynamicFilters = useMemo(() => {
-    if (loadingTypes || errorTypes || !Array.isArray(vehicleTypes) || vehicleTypes.length === 0) {
-      return baseFilters;
+const dynamicFilters = useMemo(() => {
+    if (isLoading || error || !Array.isArray(vehicles) || vehicles.length === 0) {
+        return baseFilters;
     }
-    const filtersFromApi = vehicleTypes
-      .map(type => ({ 
-        label: type.name, 
-        value: String(type.id), // Use ID as value for filtering
-      }));
-    return [...baseFilters, ...filtersFromApi];
-  }, [vehicleTypes, loadingTypes, errorTypes]);
-
-  const filteredVehicles = useMemo(() => {
-    if (loadingVehicles) return [];
+    // Create a map to ensure unique types, then convert to the format you need.
+    const typesMap = new Map();
+    vehicles.forEach(vehicle => {
+        if (vehicle.type) { // 'type' is the vehicle type name from your API resource
+            typesMap.set(vehicle.type, { label: vehicle.type, value: vehicle.type });
+        }
+    });
+    return [...baseFilters, ...Array.from(typesMap.values())];
+}, [vehicles, isLoading, error]);
+ const filteredVehicles = useMemo(() => {
+    if (isLoading) return []; 
     if (activeFilter === 'All') return vehicles;
-    // Filter by vehicle_type_id (converted to string for comparison)
-    return vehicles.filter(vehicle => String(vehicle.vehicle_type_id) === String(activeFilter));
-  }, [activeFilter, vehicles, loadingVehicles]);
+    return vehicles.filter(vehicle => vehicle.type === activeFilter);
+  }, [activeFilter, vehicles,isLoading]);
 
+  // Create the paginated/sliced list for display
   const displayedVehicles = useMemo(() => {
     return filteredVehicles.slice(0, displayedItemsCount);
   }, [filteredVehicles, displayedItemsCount]);
@@ -135,7 +70,8 @@ const VehicleFleet = () => {
   const handleLoadMore = () => {
     setDisplayedItemsCount(prevCount => prevCount + ITEMS_PER_PAGE_INCREMENT);
   };
-
+  
+  
   // --- Filter Scroll Logic (from 9fe) ---
   const checkScrollability = () => {
     const container = filterScrollContainerRef.current;
@@ -151,7 +87,7 @@ const VehicleFleet = () => {
 
   useEffect(() => {
     const container = filterScrollContainerRef.current;
-    if (container && !loadingTypes && dynamicFilters.length > 1) { 
+    if (container && dynamicFilters.length > 1) { 
       checkScrollability(); // Initial check
       container.addEventListener('scroll', checkScrollability);
       window.addEventListener('resize', checkScrollability); // Re-check on resize
@@ -166,7 +102,7 @@ const VehicleFleet = () => {
       setCanScrollLeft(false);
       setCanScrollRight(false);
     }
-  }, [dynamicFilters, loadingTypes]); // Dependencies that affect the filter bar content or visibility
+  }, [dynamicFilters]); // Dependencies that affect the filter bar content or visibility
 
   const scrollFilters = (direction) => {
     const container = filterScrollContainerRef.current;
@@ -202,11 +138,8 @@ const VehicleFleet = () => {
   );
   
   // Combined loading state for initial page load
-  if (loadingTypes && loadingVehicles) { return ( <div className="tw-bg-[#1B1B1B] tw-text-white tw-py-16 tw-px-4 sm:tw-px-6 lg:tw-px-8 tw-min-h-screen"> <div className="tw-container tw-mx-auto tw-max-w-7xl"> {renderLoadingIndicator("Initializing fleet page...", "tw-h-64")} </div> </div> ); }
   // Error for types if it happens before vehicles load attempt (vehicles might depend on types)
-  if (errorTypes && !loadingTypes) { return ( <div className="tw-bg-[#1B1B1B] tw-text-white tw-py-16 tw-px-4 sm:tw-px-6 lg:tw-px-8 tw-min-h-screen"> <div className="tw-container tw-mx-auto tw-max-w-7xl"> {renderErrorIndicator(errorTypes, "vehicle categories for filtering", "tw-h-64")} </div> </div> ); }
   
-  const showVehicleLoadingState = loadingVehicles && !errorVehicles; // Only show vehicle loading if no prior error
 
   return (
     <div className="tw-bg-[#1B1B1B] tw-text-neutral-200 tw-py-16 tw-px-4 sm:tw-px-6 lg:tw-px-8 tw-min-h-screen">
@@ -229,10 +162,7 @@ const VehicleFleet = () => {
 
         {/* Filter Buttons with Scroll (from 9fe) */}
         <div className="tw-mb-12 sm:tw-mb-16"> {/* Standardized margin */}
-          {loadingTypes ? (
-            renderLoadingIndicator("Loading filters...", "tw-py-5")
-          ) : dynamicFilters.length > 1 ? ( // Only show scrollable filters if more than 'All'
-            <div className="tw-relative group">
+    <div className="tw-relative group">
               <button
                 onClick={() => scrollFilters('left')}
                 aria-label="Scroll filters left"
@@ -272,17 +202,16 @@ const VehicleFleet = () => {
                 <ChevronRight size={22} strokeWidth={2.5}/>
               </button>
             </div>
-          ) : ( // Case for "All" filter only or error loading types
-            !errorTypes && <p className="tw-text-neutral-500 tw-text-center sm:tw-text-left">No specific vehicle categories available for filtering.</p>
-          )}
+       
         </div>
         
         {/* Vehicle Grid */}
-        {showVehicleLoadingState ? (
-          renderLoadingIndicator("Loading vehicles...", "tw-h-96")
-        ) : errorVehicles ? (
-          renderErrorIndicator(errorVehicles, "vehicles", "tw-h-96")
-        ) : displayedVehicles.length > 0 ? (
+      {isLoading ? (
+    renderLoadingIndicator("Loading vehicles...", "tw-h-96")
+) : error ? (
+    renderErrorIndicator(error, "vehicles", "tw-h-96")
+) : displayedVehicles.length > 0 ? (
+    
           <>
             <div className="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-x-6 tw-gap-y-8 md:tw-gap-x-8 md:tw-gap-y-10">
               {displayedVehicles.map((vehicle) => ( // 'vehicle' here is a vehicle model
@@ -357,15 +286,24 @@ const VehicleFleet = () => {
                 </div>
               ))}
             </div>
-            
-          </>
-        ) : (
-          <p className="tw-text-center tw-text-neutral-400 tw-col-span-full tw-py-20 tw-text-lg">
-            {vehicles.length === 0 && activeFilter === 'All' && !loadingVehicles && !errorVehicles
-              ? 'No vehicles available at the moment.'
-              : `No vehicles found for the "${dynamicFilters.find(f => f.value === activeFilter)?.label || activeFilter}" filter.`}
-          </p>
+            {displayedVehicles.length < filteredVehicles.length && (
+            <div className="tw-text-center tw-mt-12 sm:tw-mt-16">
+                <button
+                  onClick={handleLoadMore}
+                  className="tw-bg-neutral-800 tw-text-neutral-300 tw-border tw-border-neutral-700 hover:tw-bg-neutral-700 hover:tw-text-amber-400 focus:tw-ring-amber-500 tw-px-8 tw-py-3 tw-rounded-xl tw-font-semibold tw-transition-colors"
+                >
+                  Load More
+                </button>
+            </div>
         )}
+          </>
+        ): (
+    <p className="tw-text-center tw-text-neutral-400 tw-col-span-full tw-py-20 tw-text-lg">
+        {vehicles.length > 0 && activeFilter !== 'All'
+            ? `No vehicles found for the "${activeFilter}" filter.`
+            : 'No vehicles available at the moment.'}
+    </p>
+)}
       </div>
     </div>
   );
