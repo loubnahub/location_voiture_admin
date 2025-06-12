@@ -6,9 +6,41 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Models\Vehicle;
 class AddressController extends Controller
 {
+     public function pruneUnused(Request $request)
+    {
+        try {
+            // 1. Get all IDs of addresses that ARE currently in use.
+            $usedByVehicleIds = Vehicle::whereNotNull('current_location_address_id')->pluck('current_location_address_id')->unique();
+
+            // 2. Merge the two collections of IDs and get a unique list.
+            $allUsedAddressIds = $usedByVehicleIds->unique();
+
+            // 3. Find all addresses whose IDs are NOT in the list of used IDs.
+            $query = Address::whereNotIn('id', $allUsedAddressIds);
+            
+            // Get the count before deleting for the response message.
+            $deletableCount = $query->count();
+            
+            if ($deletableCount > 0) {
+                // Perform the deletion.
+                $query->delete();
+                Log::info("Pruned {$deletableCount} unused addresses.");
+            }
+            
+            return response()->json([
+                'message' => "Successfully pruned {$deletableCount} unused addresses."
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error pruning unused addresses: ' . $e->getMessage());
+            return response()->json(['message' => 'An error occurred while pruning addresses.'], 500);
+        }
+    }
     protected function transformAddress(Address $address) {
         return [
             'id' => $address->id,

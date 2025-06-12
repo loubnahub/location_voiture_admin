@@ -1,0 +1,107 @@
+/* ================================================= */
+/*   Custom Styles for the Admin Profile Page        */
+/* ================================================= */
+
+/* --- Main Profile Card --- */
+.profile-card-custom {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  overflow: hidden; /* Ensures child borders don't poke out */
+}
+
+/* --- Profile Header (Avatar & Name) --- */
+.profile-header {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.avatar-wrapper {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  margin-right: 1.5rem;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #0d6efd; /* Bootstrap primary color */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.user-info h4 {
+  margin: 0;
+  font-weight: 600;
+  color: #212529;
+}
+
+.role-badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  background-color: #e0e7ff; /* A soft blue */
+  color: #4338ca; /* A darker blue */
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+/* --- Profile Body (Contact Details) --- */
+.profile-body {
+  padding: 1.5rem;
+}
+
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* --- Management Card & List --- */
+.management-card .list-group-item {
+  background-color: transparent;
+  border: none;
+  padding: 1rem 1.25rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.management-card .list-group-item:not(:last-child) {
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.management-card .list-group-item:hover {
+  background-color: #f8f9fa;
+}
+
+.management-card .list-group-item .btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.management-card .list-group-item:hover .btn {
+  transform: scale(1.05);
+}

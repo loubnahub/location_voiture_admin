@@ -42,9 +42,6 @@ const Header = () => {
                   <NavDropdown.Item as={Link} to="/admin/profile"> {/* Example profile link */}
                     Profile
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/settings"> {/* Example settings link */}
-                    Settings
-                  </NavDropdown.Item>
                   <NavDropdown.Divider />
                   <NavDropdown.Item onClick={handleLogout} className="text-danger">
                     <LuLogOut size={16} className="me-2 d-inline" />Logout

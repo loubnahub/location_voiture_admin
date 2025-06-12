@@ -218,7 +218,43 @@ export const clearReadNotifications = () => {
 export const clearAllNotifications = () => {
   return apiClient.delete('/notifications/clear-all');
 };
+export const fetchAllReviews = (params = {}) => {
+  return apiClient.get('/avis', { params });
+};
+export const deleteReview = (id) => {
+  return apiClient.delete(`/avis/${id}`);
+};
 
+
+// --- Contact Submission Functions (Admin) ---
+export const fetchAllContactSubmissions = (params = {}) => {
+  return apiClient.get('/contact-submissions', { params });
+};
+export const updateContactSubmission = (id, data) => {
+  // Used for marking as read/unread
+  return apiClient.put(`/contact-submissions/${id}`, data);
+};
+export const deleteContactSubmission = (id) => {
+  return apiClient.delete(`/contact-submissions/${id}`);
+};
+// ... add these to your api.js file
+
+// --- Admin Profile Functions ---
+export const updateAdminProfile = (profileData) => {
+  return apiClient.post('/admin/profile', profileData);
+};
+
+// ... add this function to your api.js file
+
+export const pruneUnusedAddresses = () => {
+  // Assuming the route is in the admin group
+  return apiClient.delete('/admin/addresses/prune-unused'); 
+};
+// --- Notification Management ---
+export const clearOldReadNotifications = (days = 30) => {
+  // Pass the number of days as a query parameter
+  return apiClient.delete(`/admin/notifications/clear-old-read?days=${days}`);
+};
 
 // --- Promotion Campaign Functions ---
 export const fetchAllPromotionCampaigns = (params = {}) => apiClient.get('/promotion-campaigns', { params });

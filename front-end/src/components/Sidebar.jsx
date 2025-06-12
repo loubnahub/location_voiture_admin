@@ -5,7 +5,8 @@ import { Nav } from 'react-bootstrap';
 import {
   LuLayoutDashboard, LuCar, LuListTree, LuSettings2, LuFileText, LuUsers,
   LuBriefcase, LuWarehouse, LuShieldCheck, LuWrench, LuDollarSign,
-  LuMegaphone, LuTicket // Added LuMegaphone for Campaigns, LuTicket for Codes
+  LuMegaphone, LuTicket ,
+  LuMail, LuMessageSquare, 
 } from 'react-icons/lu';
 import { AlertTriangle ,LineChart} from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Should be first
@@ -41,11 +42,13 @@ const Sidebar = () => {
         { name: 'Damage Reports', icon: <AlertTriangle size={18} />, path: 'operations/damage-reports' },
       ],
     },
-    {
+     {
       group: 'CUSTOMER RELATIONS',
       items: [
         { name: 'Users', icon: <LuUsers size={18} />, path: 'users/customers' },
         { name: 'Rental Agreements', icon: <LuFileText size={18} />, path: 'operations/rental-agreements' },
+        { name: 'Reviews', icon: <LuMessageSquare size={18} />, path: 'customer-relations/reviews' },
+        { name: 'Contact Messages', icon: <LuMail size={18} />, path: 'customer-relations/contact-messages' },
       ],
     },
     // --- NEW GROUP FOR PROMOTIONS ---

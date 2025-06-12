@@ -1,0 +1,90 @@
+/* Styling for the beautiful review details modal (LIGHT THEME) */
+
+.review-details-modal-content {
+  border-radius: 0.75rem;
+  border: none;
+  background-color: #f8f9fa; /* Light background for the modal */
+}
+
+.review-details-modal-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1.25rem 1.5rem;
+}
+
+.review-details-modal-header .modal-title {
+  font-weight: 600;
+  color: #343a40;
+}
+
+.review-details-modal-body {
+  padding: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.detail-icon {
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+  margin-top: 0.25rem;
+  color: #6c757d; /* Muted icon color */
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.1rem;
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #212529;
+  margin: 0;
+}
+
+.detail-comment-header {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 0.75rem;
+}
+
+.detail-comment-box {
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: #343a40;
+  background-color: #ffffff !important; /* Override default light-subtle if needed */
+  border-color: #e9ecef !important;
+}
+
+.review-details-modal-footer {
+    background-color: #ffffff;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+}
+
+/* 
+  NOTE: This selector is no longer used since the button is now a default action button,
+  but it's harmless to keep.
+*/
+.view-comment-btn {
+  color: #6c757d;
+  transition: color 0.2s ease-in-out;
+}
+
+.view-comment-btn:hover {
+  color: #0d6efd; /* Bootstrap primary color */
+}
+
+/* Make Bootstrap badges a bit more modern */
+.badge.bg-secondary-subtle {
+    border: 1px solid #ced4da;
+}

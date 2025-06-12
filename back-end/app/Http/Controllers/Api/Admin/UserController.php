@@ -208,6 +208,55 @@ public function getUserRewards(Request $request, User $user)
     /**
      * Update the specified resource in storage.
      */
+    // ... inside the Admin\UserController class
+
+    /**
+     * Update the currently authenticated admin's own profile.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        // Dynamically build validation rules
+        $rules = [
+            'full_name' => 'sometimes|required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8|confirmed',
+        ];
+
+        // Only validate for uniqueness if the email is actually being changed.
+        if ($request->input('email') !== $user->email) {
+            $rules['email'] = 'required|string|email|max:255|unique:users,email';
+        } else {
+            $rules['email'] = 'required|string|email|max:255';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $validatedData = $validator->validated();
+        
+        $user->update([
+            'full_name' => $validatedData['full_name'] ?? $user->full_name,
+            'email' => $validatedData['email'] ?? $user->email,
+            'phone' => $validatedData['phone'] ?? $user->phone,
+        ]);
+
+        if (!empty($validatedData['password'])) {
+            $user->password = Hash::make($validatedData['password']);
+            $user->save();
+        }
+
+        return response()->json([
+            'data' => $this->transformUser($user->fresh()),
+            'message' => 'Your profile has been updated successfully.'
+        ]);
+    }
+
+
    public function update(Request $request, User $user)
     {
         // --- THIS IS THE UPDATED VALIDATION ---

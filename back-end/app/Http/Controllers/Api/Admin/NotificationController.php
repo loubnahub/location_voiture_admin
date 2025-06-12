@@ -66,6 +66,40 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Could not retrieve notifications.'], 500);
         }
     }
+    // ... inside the NotificationController class
+
+    /**
+     * Clear all read notifications older than a specified number of days for the current user.
+     */
+    public function clearOldRead(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // Validate that 'days' is a number, default to 30 if not provided.
+        $days = $request->input('days', 30);
+        if (!is_numeric($days) || $days < 1) {
+            return response()->json(['message' => 'Invalid number of days specified.'], 422);
+        }
+
+        try {
+            $cutoffDate = now()->subDays((int)$days);
+
+            $deletedCount = \App\Models\Notification::where('user_id', $user->id)
+                ->where('is_read', true)
+                ->where('timestamp', '<=', $cutoffDate)
+                ->delete();
+
+            return response()->json([
+                'message' => "Successfully cleared {$deletedCount} read notifications older than {$days} days."
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to clear old read notifications for user ' . $user->id . ': ' . $e->getMessage());
+            return response()->json(['message' => 'An error occurred while clearing old notifications.'], 500);
+        }
+    }
 
     /**
      * Mark a specific notification as read.

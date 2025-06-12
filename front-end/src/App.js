@@ -49,6 +49,9 @@ import NotificationsPage from './Clients/Compte/Notification';
 import FAQs from './Clients/FAQs/Faqs';
 import Blog from './Clients/Blog/Blog';
 import PrivacyPolicyPage from './Clients/Privacy/Section/PrivacyPage';
+import ReviewsPage from './pages/ReviewsPage';
+import ContactSubmissionsPage from './pages/ContactSubmissionsPage';
+import AdminProfilePage from './pages/AdminProfilePage';
 
 // In App.js
 const ProtectedRoute = ({ requiredRole }) => {
@@ -131,6 +134,7 @@ function App() {
             <Route index element={<VedioStart />} />
                    <Route path='/Home' element={<Home />} />
   <Route path="/notification" element={<NotificationsPage />} />
+
                       <Route path="/fleet" element={<Vehicle />} /> 
                       <Route path="/fleet/details/:vehicleId" element={<CarDetailPage />} />
                       <Route path="/booking/:vehicleId" element={<BookingPageClient />} />
@@ -165,6 +169,9 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute  requiredRole="admin"/>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
+<Route path="customer-relations/reviews" element={<ReviewsPage />} />
+<Route path="profile" element={<AdminProfilePage />} />
+<Route path="customer-relations/contact-messages" element={<ContactSubmissionsPage />} />
             <Route path="inventory/vehicles" element={<VehiclePage />} />
             <Route path="fleet/vehicle-models" element={<VehicleModelPage />} />
             <Route path="fleet/vehicle-models/:modelId" element={<VehicleModelDetailView />} />

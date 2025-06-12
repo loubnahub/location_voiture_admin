@@ -180,14 +180,23 @@ Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedu
          ->group(function() {
              Route::get('users/{user}/rewards', [AdminUserController::class, 'getUserRewards']);
              Route::apiResource('users', AdminUserController::class);
+// ... inside Route::prefix('admin')->group(...)
 
+    // New route for updating the logged-in admin's own profile
+    Route::post('/profile', [AdminUserController::class, 'updateProfile'])->name('profile.update');
+
+    // New route for clearing old read notifications
+    Route::delete('notifications/clear-old-read', [NotificationController::class, 'clearOldRead'])->name('notifications.clear-old-read');
             Route::get('roles-list', [AdminUserController::class, 'fetchRoles'])->name('roles.list');
             Route::apiResource('system/roles', AdminRoleController::class)
                   ->parameters(['roles' => 'role'])
                   ->names('system.roles');
                   Route::delete('notifications/clear-all', [NotificationController::class, 'clearAll'])->name('admin.notifications.clear-all');
 Route::delete('notifications/clear-read', [NotificationController::class, 'clearRead'])->name('admin.notifications.clear-read');
+// ... inside Route::prefix('admin')->group(...)
 
+    // --- NEW ROUTE for pruning addresses ---
+    Route::delete('addresses/prune-unused', [AddressController::class, 'pruneUnused'])->name('addresses.prune-unused');
 Route::get('dashboard-stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats');
 Route::get('notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
 
