@@ -6,13 +6,13 @@ const teamMembersData = [
     id: 1,
     name: "Lahyane Oussama",
     role: "Fleet Manager",
-    imageUrl: "/images/Teams/Oussma.jpg",
+    imageUrl: "/images/Teams/ossama.jpg",
   },
   {
     id: 2,
     name: "Messoussi Loubna",
     role: "Lead Mechanic",
-    imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500&q=80",
+    imageUrl: "/images/Teams/loubna.jpg",
   },
   {
     id: 3,
@@ -22,9 +22,9 @@ const teamMembersData = [
   },
   {
     id: 4,
-    name: "Marcus Chen",
+    name: "Zaffou Nihad",
     role: "Marketing Head",
-    imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500&q=80",
+    imageUrl: "/images/Teams/nihad.jpg",
   },
   {
     id: 5,
