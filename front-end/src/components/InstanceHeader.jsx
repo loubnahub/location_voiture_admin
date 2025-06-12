@@ -32,8 +32,8 @@ const InstanceHeader = ({
 
   return (
     <div className="mb-4 instance-header-section">
-      <h1 className="instance-title">{modelTitle || 'Vehicle Details'}</h1>
-      <p className="instance-subtitle">{modelSubtitle || 'Instance specific view'}</p>
+      <h1 className="instance-title fs-1">{modelTitle || 'Vehicle Details'}</h1>
+      <p className="instance-subtitle fs-5 text-secondary p-2 ">{modelSubtitle || 'Instance specific view'}</p>
       
       {selectableInstances.length > 0 && ( 
         <Dropdown 

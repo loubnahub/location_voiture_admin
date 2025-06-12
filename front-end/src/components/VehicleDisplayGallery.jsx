@@ -281,7 +281,7 @@ const VehicleDisplayGallery = () => {
             <Button onClick={handleExitGallery} className="back-link-maquette bg-light text-dark p-2 mb-2 shadow-sm btn btn-link">
                 <LuArrowLeft size={22} className="me-1"/> 
             </Button>
-            <h2 className="text-start mb-3 gallery-vehicle-title">{vehicleTitle}</h2>
+            <h1 className="text-start mb-3 fs-1 gallery-vehicle-title">{vehicleTitle}</h1>
         </div>
  
         <Row className="g-3 g-lg-4 align-items-center">
@@ -325,7 +325,7 @@ const VehicleDisplayGallery = () => {
               <div className="color-swatches-container d-flex justify-content-end align-items-center mb-3 py-2 flex-wrap">
                 {availableColors.map((colorObj, index) => (
                   <Button key={`color-${index}-${colorObj.hex}`} variant="outline-light"
-                    className={`color-swatch m-1 ${selectedColorHex === colorObj.hex ? 'active' : ''}`}
+                    className={`color-swatch rounded-2 m-1 ${selectedColorHex === colorObj.hex ? 'active' : ''}`}
                     style={{ backgroundColor: colorObj.hex, width: '30px', height: '30px', border: selectedColorHex === colorObj.hex ? '2px solid #007bff' : '1px solid #ccc' }}
                     onClick={() => handleColorSwatchClick(colorObj.hex)} title={`${colorObj.name || 'Color'} (${colorObj.hex})`}
                   />

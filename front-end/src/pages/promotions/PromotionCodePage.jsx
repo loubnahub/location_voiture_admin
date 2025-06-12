@@ -24,25 +24,25 @@ const codeColumns = [
         textAlign: 'center',
         render: (item) => {
             let badgeBg = 'secondary';
-            let icon = <LuClock size={14} className="me-1" />;
+            let icon = <LuClock size={14} className="me-1 d-inline" />;
             const statusValue = (typeof item.status === 'object' && item.status !== null) ? item.status.value : item.status;
 
             switch (statusValue) {
                 case PromotionCodeStatusEnum.ACTIVE.value:
                     badgeBg = 'success';
-                    icon = <CheckCircle size={14} className="me-1" />;
+                    icon = <CheckCircle size={14} className="me-1 d-inline" />;
                     break;
                 case PromotionCodeStatusEnum.USED.value:
                     badgeBg = 'primary';
-                    icon = <CheckCircle size={14} className="me-1" />;
+                    icon = <CheckCircle size={14} className="me-1 d-inline" />;
                     break;
                 case PromotionCodeStatusEnum.EXPIRED.value:
                     badgeBg = 'warning';
-                    icon = <LuClock size={14} className="me-1" />;
+                    icon = <LuClock size={14} className="me-1 d-inline" />;
                     break;
                 case PromotionCodeStatusEnum.INACTIVE.value: // Assuming INACTIVE is defined in your enum
                     badgeBg = 'danger'; // Or 'secondary'
-                    icon = <LuBan size={14} className="me-1" />;
+                    icon = <LuBan size={14} className="me-1 d-inline" />;
                     break;
                 default: // For any other status or if item.status_display is not present
                     return <Badge bg="light" text="dark" pill>{item.status_display || statusValue || 'Unknown'}</Badge>;

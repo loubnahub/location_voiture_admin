@@ -315,7 +315,7 @@ const VehicleModelMediaManager = ({
       {globalSuccessMessage && <Alert variant="success" onClose={() => setGlobalSuccessMessage(null)} dismissible>{globalSuccessMessage}</Alert>}
 
       <Card className="mb-4">
-        <Card.Header><LuPalette className="me-2"/>Available Colors</Card.Header>
+        <Card.Header><LuPalette className="me-2 d-inline"/>Available Colors</Card.Header>
         <Card.Body>
           {colorError && <Alert variant="warning" size="sm" onClose={() => setColorError(null)} dismissible>{colorError}</Alert>}
           <Form onSubmit={handleAddNewColor} className="mb-3">
@@ -332,7 +332,7 @@ const VehicleModelMediaManager = ({
                  <Form.Control plaintext readOnly value={newColorHex.toUpperCase()} size="sm" style={{fontFamily: 'monospace'}} />
               </Col>
               <Col xs="auto">
-                <Button type="submit" variant="outline-success" size="sm"><LuPlus size={16} className="me-1"/>Add</Button>
+                <Button type="submit" variant="outline-success" size="sm"><LuPlus size={16} className="me-1 d-inline"/>Add</Button>
               </Col>
             </Row>
           </Form>
@@ -360,7 +360,7 @@ const VehicleModelMediaManager = ({
       </Modal>
 
       <Card className="mb-4">
-        <Card.Header><UploadCloud className="me-2"/>Upload New Media</Card.Header>
+        <Card.Header><UploadCloud className="me-2 d-inline"/>Upload New Media</Card.Header>
         <Card.Body>
           {/* ... Upload form ... */}
           <Form.Group controlId="mediaFileUpload" className="mb-3">
@@ -410,7 +410,7 @@ const VehicleModelMediaManager = ({
 
       <Card className="mb-4">
         <Card.Header className="d-flex justify-content-between align-items-center">
-          <span><LuImage className="me-2"/>Existing Media</span>
+          <span><LuImage className="me-2 d-inline"/>Existing Media</span>
           <DropdownButton
             id="color-filter-dropdown"
             title={selectedColorFilter ? colors.find(c => c.hex === selectedColorFilter)?.name || (selectedColorFilter === 'UNASSIGNED' ? 'Unassigned' : 'Filter Color') : 'All Colors'}
@@ -441,7 +441,7 @@ const VehicleModelMediaManager = ({
             
             {/* 3D Models Section (uses filteredMediaItems) */}
             {model3DMediaItems.length > 0 && <>
-                <h6 className="mb-2 mt-2"><LuBox className="me-2" />3D Models ({model3DMediaItems.length})</h6>
+                <h6 className="mb-2 mt-2"><LuBox className="me-2 d-inline" />3D Models ({model3DMediaItems.length})</h6>
                 <ListGroup variant="flush" className="mb-3">
                 {model3DMediaItems.map((item, index) => ( // index here is for the filtered list
                   <ListGroup.Item key={item._localId} className="p-2 media-manage-item existing-media-item">
@@ -456,7 +456,7 @@ const VehicleModelMediaManager = ({
                       </Col>
                       <Col>{/* ... Caption Edit ... */}
                         {editingCaptionItem?._localId === item._localId ? ( <InputGroup size="sm" className="mb-1"><Form.Control type="text" value={newCaption} onChange={e => setNewCaption(e.target.value)} autoFocus/><Button variant="outline-success" onClick={handleSaveCaptionAndColorLocal}><Save size={16} /></Button><Button variant="outline-secondary" onClick={() => setEditingCaptionItem(null)}><LuX size={16} /></Button></InputGroup>) 
-                        : (<span className="media-caption-display clickable" onClick={() => handleOpenEditCaptionModal(item)} title="Edit caption"><Edit3 size={16} className="ms-2 text-primary me-1" />{item.caption || <em className="text-muted">No caption</em>}</span>)}
+                        : (<span className="media-caption-display clickable" onClick={() => handleOpenEditCaptionModal(item)} title="Edit caption"><Edit3 size={16} className="ms-2 text-primary me-1 d-inline" />{item.caption || <em className="text-muted">No caption</em>}</span>)}
                         <small className="text-muted d-block">Order: {item.order} | Type: {item.media_type}</small>
                       </Col>
                       <Col xs={12} md="auto" className="mt-1 mt-md-0">{editingCaptionItem?._localId === item._localId ? null : (<Form.Select size="sm" value={item.color_hex || ''} onChange={e => handleColorChangeForMedia(item._localId, e.target.value)} disabled={colors.length === 0} style={{ minWidth: '120px' }} title="Assign Color"><option value="">No Color</option>{colors.map(c=><option key={c.hex} value={c.hex}>{c.name} ({c.hex})</option>)}</Form.Select>)}</Col>
@@ -469,7 +469,7 @@ const VehicleModelMediaManager = ({
 
             {/* Images Section (uses filteredMediaItems) */}
             {imageMediaItems.length > 0 && <>
-                <h6 className="mb-2 mt-3"><LuImage className="me-2" />Images ({imageMediaItems.length})</h6>
+                <h6 className="mb-2 mt-3"><LuImage className="me-2 d-inline" />Images ({imageMediaItems.length})</h6>
                 <ListGroup variant="flush">
                 {imageMediaItems.map((item, index) => ( // index here is for the filtered list
                   <ListGroup.Item key={item._localId} className="p-2 media-manage-item existing-media-item">
@@ -482,7 +482,7 @@ const VehicleModelMediaManager = ({
                       <Col xs={2} sm={1} className="text-center"><Image src={resolveStorageUrl(item.url)} alt={item.caption || 'Media'} thumbnail style={{ maxHeight: '40px', maxWidth: '60px' }} /></Col>
                       <Col>{/* ... Caption Edit ... */}
                         {editingCaptionItem?._localId === item._localId ? ( <InputGroup size="sm" className="mb-1"><Form.Control type="text" value={newCaption} onChange={e => setNewCaption(e.target.value)} autoFocus/><Button variant="outline-success" onClick={handleSaveCaptionAndColorLocal}><Save size={16} /></Button><Button variant="outline-secondary" onClick={() => setEditingCaptionItem(null)}><LuX size={16} /></Button></InputGroup>) 
-                        : (<span className="media-caption-display clickable" onClick={() => handleOpenEditCaptionModal(item)} title="Edit caption"><Edit3 size={16} className="ms-2 text-primary me-1" />{item.caption || <em className="text-muted">No caption</em>}</span>)}
+                        : (<span className="media-caption-display clickable" onClick={() => handleOpenEditCaptionModal(item)} title="Edit caption"><Edit3 size={16} className="ms-2 text-primary me-1 d-inline" />{item.caption || <em className="text-muted">No caption</em>}</span>)}
                         {item.is_cover && <Badge bg="success" pill className="ms-2">Cover</Badge>}
                         <small className="text-muted d-block">Order: {item.order} | Type: {item.media_type}</small>
                       </Col>
@@ -522,8 +522,8 @@ const VehicleModelMediaManager = ({
       <div className="mt-4 text-end">
         <Button variant="secondary" onClick={onHide} className="me-2" disabled={isSubmittingAll}>Cancel All</Button>
         <Button variant="success" size="lg" onClick={handleSubmitAllChanges} disabled={isSubmittingAll}>
-          {isSubmittingAll ? <><Spinner as="span" animation="border" size="sm" className="me-1"/> Submitting...</>
-           : <><Save size={18} className="me-1"/> Submit All Changes</>}
+          {isSubmittingAll ? <><Spinner as="span" animation="border" size="sm" className="me-1 d-inline"/> Submitting...</>
+           : <><Save size={18} className="me-1 d-inline"/> Submit All Changes</>}
         </Button>
       </div>
     </div>

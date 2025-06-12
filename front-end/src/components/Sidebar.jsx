@@ -62,9 +62,7 @@ const Sidebar = () => {
   return (
     <Nav className="col-md-3 col-lg-2 d-md-block sidebar_custom_bg text-white sidebar-sticky">
       <div className="sidebar-header-custom text-center py-4 mb-3">
-        <LogoPlaceholder />
-        <h1 className="sidebar-title-custom h5 mb-0 mt-2">LGO DRIVE</h1>
-        <p className="sidebar-subtitle-custom small">Management System</p>
+      <div className='d-flex justify-content-center flex-column align-items-center'> <img  src='/images/Logo/Logobe.png' width={170}/><span className='text-light-secondary'>Management System</span></div>
       </div>
       <div className="pt-3 sidebar-nav-custom">
         {menuItems.map((groupItem, index) => (

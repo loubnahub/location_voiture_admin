@@ -43,8 +43,8 @@ const campaignColumns = [
         textAlign: 'center',
         render: (item) => (
             item.is_active
-                ? <Badge bg="success" pill><CheckCircle size={14} className="me-1" /> Active</Badge>
-                : <Badge bg="secondary" pill><XCircle size={14} className="me-1" /> Inactive</Badge>
+                ? <Badge bg="success" pill><CheckCircle size={14} className="me-1 d-inline" /> Active</Badge>
+                : <Badge bg="secondary" pill><XCircle size={14} className="me-1 d-inline" /> Inactive</Badge>
         )
     },
     { header: 'Codes Issued', key: 'promotion_codes_count', textAlign: 'center' }

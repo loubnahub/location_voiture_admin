@@ -47,7 +47,7 @@ const Header = () => {
                   </NavDropdown.Item>
                   <NavDropdown.Divider />
                   <NavDropdown.Item onClick={handleLogout} className="text-danger">
-                    <LuLogOut size={16} className="me-2" />Logout
+                    <LuLogOut size={16} className="me-2 d-inline" />Logout
                   </NavDropdown.Item>
                 </NavDropdown>
               </>

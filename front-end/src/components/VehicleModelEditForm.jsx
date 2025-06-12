@@ -25,7 +25,7 @@ const formatPrice = (amount, currency = 'MAD') => {
 };
 const SpecIcon = ({ type }) => {
   const iconSize = 18;
-  const commonClasses = "me-2 text-muted spec-icon";
+  const commonClasses = "me-2 d-inline text-muted spec-icon";
   const iconMap = {
     type: <LuTag size={iconSize} className={commonClasses} />,
     brand: <LuGripVertical size={iconSize} className={commonClasses} />,
@@ -235,7 +235,7 @@ const VehicleModelEditForm = ({
                     className="manage-media-btn-maquette rounded-2 py-2 px-3"
                     disabled={isSavingParent}
                 >
-                    <LuGalleryHorizontal size={16} className="me-2" /> Manage Media & Colors
+                    <LuGalleryHorizontal size={16} className="me-2 d-inline" /> Manage Media & Colors
                 </Button>
             </Col>
         )}
@@ -293,7 +293,7 @@ const VehicleModelEditForm = ({
 
         <div className="mb-4 p-3 border rounded bg-light shadow-sm">
           <Form.Group controlId="formEditModelDescription">
-            <Form.Label className="description-title-maquette"><LuInfo size={20} className="me-2" /> Description</Form.Label>
+            <Form.Label className="description-title-maquette"><LuInfo size={20} className="me-2 d-inline" /> Description</Form.Label>
             <Form.Control as="textarea" rows={5} name="description" value={formData.description || ''} onChange={handleInputChange} placeholder="Model description" className="form-control-maquette" />
           </Form.Group>
         </div>
@@ -303,7 +303,7 @@ const VehicleModelEditForm = ({
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0 section-title-maquette">Features</h5>
             <Button variant="outline-primary" size="sm" onClick={() => { setSelectedFeaturesInModal([]); setShowAddFeatureModal(true); }} className="add-item-btn-maquette">
-              <PlusCircle size={16} className="me-1" /> Add Feature
+              <PlusCircle size={16} className="me-1 d-inline" /> Add Feature
             </Button>
           </div>
           <ListGroup variant="flush" className="editable-list-maquette">
@@ -324,7 +324,7 @@ const VehicleModelEditForm = ({
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0 section-title-maquette">Extras</h5>
             <Button variant="outline-primary" size="sm" onClick={() => { setSelectedExtrasInModal([]); setShowAddExtraModal(true); }} className="add-item-btn-maquette">
-              <PlusCircle size={16} className="me-1" /> Add Extra
+              <PlusCircle size={16} className="me-1 d-inline" /> Add Extra
             </Button>
           </div>
           <ListGroup variant="flush" className="editable-list-maquette">
@@ -344,7 +344,7 @@ const VehicleModelEditForm = ({
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="mb-0 section-title-maquette">Insurance Plans</h5>
             <Button variant="outline-primary" size="sm" onClick={() => { setSelectedPlansInModal([]); setShowAddInsurancePlanModal(true); }} className="add-item-btn-maquette">
-              <PlusCircle size={16} className="me-1" /> Add Insurance Plan
+              <PlusCircle size={16} className="me-1 d-inline" /> Add Insurance Plan
             </Button>
           </div>
           <ListGroup variant="flush" className="editable-list-maquette">
@@ -371,11 +371,11 @@ const VehicleModelEditForm = ({
 
 
         <div className="mt-4 pt-3 border-top text-end edit-actions-footer-maquette">
-          <Button variant="outline-secondary" type="button" onClick={onCancel} disabled={isSavingParent} className="me-2 cancel-btn-maquette">
-            <XCircle size={18} className="me-1" /> Cancel
+          <Button variant="outline-secondary" type="button" onClick={onCancel} disabled={isSavingParent} className="me-2 d-inline cancel-btn-maquette">
+            <XCircle size={18} className="me-1 d-inline" /> Cancel
           </Button>
           <Button variant="success" type="submit" disabled={isSavingParent} className="save-btn-maquette">
-            {isSavingParent ? <><Spinner as="span" animation="border" size="sm" /> Saving...</> : <><Save size={18} className="me-1" /> Save Changes</>}
+            {isSavingParent ? <><Spinner as="span" animation="border" size="sm" /> Saving...</> : <><Save size={18} className="me-1 d-inline" /> Save Changes</>}
           </Button>
         </div>
       </Form>
@@ -393,7 +393,7 @@ const VehicleModelEditForm = ({
                     <Form.Check type="checkbox" id={`modal-feat-${feature.id}`}
                       checked={selectedFeaturesInModal.includes(feature.id)}
                       onChange={() => handleToggleFeatureInModal(feature.id)}
-                      className="me-2"
+                      className="me-2 d-inline"
                     />
                     {feature.name} <small className="text-muted ms-1">({feature.category || 'General'})</small>
                   </ListGroup.Item>
@@ -422,7 +422,7 @@ const VehicleModelEditForm = ({
                     <Form.Check type="checkbox" id={`modal-extra-${extra.id}`}
                       checked={selectedExtrasInModal.includes(extra.id)}
                       onChange={() => handleToggleExtraInModal(extra.id)}
-                      className="me-2"
+                      className="me-2 d-inline"
                     />
                     {extra.name} - {formatPrice(extra.default_price_per_day)}
                   </ListGroup.Item>
@@ -451,7 +451,7 @@ const VehicleModelEditForm = ({
                     <Form.Check type="checkbox" id={`modal-plan-${plan.id}`}
                       checked={selectedPlansInModal.includes(plan.id)}
                       onChange={() => handleTogglePlanInModal(plan.id)}
-                      className="me-2"
+                      className="me-2 d-inline"
                     />
                     {plan.name} ({plan.provider || 'N/A'}) - {formatPrice(plan.price_per_day)}
                   </ListGroup.Item>

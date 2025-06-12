@@ -6,6 +6,13 @@
   width: 260px;
   flex-shrink: 0;
 }
+.text-light-secondary{
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.77rem;
+  color: #b4bcc5 !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
 
 .sidebar-sticky {
   position: sticky;

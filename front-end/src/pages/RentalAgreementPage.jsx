@@ -214,7 +214,7 @@ const fetchBookingsForDropdown = useCallback(async () => {
           return (
             <div className="d-flex flex-column align-items-center">
               <span  className="text-success">
-                <CheckCircle size={18} className="me-1" /> Signed
+                <CheckCircle size={18} className="me-1 d-inline" /> Signed
               </span>
               <small className="text-muted">{new Date(item.signed_by_renter_at).toLocaleDateString()}</small>
             </div>
@@ -246,7 +246,7 @@ const fetchBookingsForDropdown = useCallback(async () => {
           return (
             <div className="d-flex flex-column align-items-center">
                <span className="text-success">
-                <CheckCircle size={18} className="me-1" /> Signed
+                <CheckCircle size={18} className="me-1 d-inline" /> Signed
               </span>
               <small className="text-muted">{new Date(item.signed_by_platform_at).toLocaleDateString()}</small>
             </div>
@@ -311,7 +311,7 @@ const fetchBookingsForDropdown = useCallback(async () => {
         tableActionsConfig={customTableActions}
         customHeaderButton={
           <Button variant="success" onClick={handleOpenGenerateModal} className="ms-2">
-            <LuPrinter size={18} className="me-1" /> Generate New Agreement
+            <LuPrinter size={18} className="me-1 d-inline" /> Generate New Agreement
           </Button>
         }
       />
@@ -347,7 +347,7 @@ const fetchBookingsForDropdown = useCallback(async () => {
         <Modal.Footer>
           <Button variant="outline-secondary" onClick={handleCloseGenerateModal} disabled={isGenerating}>Cancel</Button>
           <Button variant="primary" onClick={handleGenerateAgreement} disabled={isGenerating || !selectedBookingForGeneration || loadingBookings}>
-            {isGenerating && <Spinner as="span" animation="border" size="sm" className="me-1"/>} Generate Agreement
+            {isGenerating && <Spinner as="span" animation="border" size="sm" className="me-1 d-inline"/>} Generate Agreement
           </Button>
         </Modal.Footer>
       </Modal>
