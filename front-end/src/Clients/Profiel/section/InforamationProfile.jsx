@@ -103,7 +103,7 @@ const UserProfile = () => {
                         <div className="tw-bg-brand-card/50 tw-rounded-xl tw-shadow-lg tw-border tw-border-white/10 tw-p-8 tw-flex tw-flex-col tw-items-center">
                             <div className="tw-relative tw-mb-6">
                                 <img
-                                    src={userData.profile_picture_url || 'https://i.imgur.com/8Km9tLL.png'}
+                                    src={`http://localhost:8000/storage/${userData.profile_photo_path}`|| '/images/Teams/yousef.jpg'}
                                     alt={userData.full_name}
                                     className="tw-w-32 tw-h-32 tw-rounded-full tw-object-cover tw-border-4 tw-border-brand-surface"
                                 />

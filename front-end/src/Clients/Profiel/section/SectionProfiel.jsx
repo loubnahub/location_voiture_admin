@@ -25,7 +25,7 @@ const ProfielSection = () => {
             P R O F I L E
           </p>
           <h1 className="tw-text-3xl sm:tw-text-4xl md:tw-text-5xl lg:tw-text-6xl tw-font-bold tw-leading-tight">
-            Page <span className="tw-text-brand-amber">Profile</span>
+             <span className="tw-text-brand-amber">Profile</span> Page
           </h1>
         </div>
       </div>

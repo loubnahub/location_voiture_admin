@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role; // For Spatie role validation
-
+use Illuminate\Support\Facades\Log;
 class UserController extends Controller
 {
     public function __construct()
@@ -76,7 +76,7 @@ class UserController extends Controller
             'profile_picture_url' => 'nullable|url|max:2048',
             'loyalty_points' => 'nullable|integer|min:0',
         ]);
-
+        Log::info('here');
         $user = User::create([
             'full_name' => $validatedData['full_name'],
             'email' => $validatedData['email'],
@@ -100,7 +100,8 @@ class UserController extends Controller
      */
     public function show(User $user) // Route model binding
     {
-        $user->load('roles', 'defaultAddress'); // Eager load desired relationships
+        $user->load('roles', 'defaultAddress'); 
+        Log::info('here :'.$user);// Eager load desired relationships
         return response()->json($user); // Return the user model directly
     }
 

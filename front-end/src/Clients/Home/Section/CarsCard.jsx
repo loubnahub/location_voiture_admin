@@ -269,7 +269,7 @@ const dynamicFilters = useMemo(() => {
                         <div className="tw-flex tw-flex-wrap tw-items-center tw-gap-x-2 sm:tw-gap-x-3 tw-gap-y-0.5 tw-text-neutral-300 tw-text-[10px] sm:tw-text-xs tw-min-w-0">
                           <span title="Seats" className="tw-flex tw-items-center tw-whitespace-nowrap">
                             <Users size={14} className="tw-mr-0.5 sm:tw-mr-1 tw-text-amber-500/80" strokeWidth={2} />
-                            {vehicle.number_of_seats || 'N/A'}
+                            {vehicle.seats || 'N/A'}
                           </span>
                           <span title="Transmission" className="tw-flex tw-items-center tw-whitespace-nowrap">
                             <Settings2 size={14} className="tw-mr-0.5 sm:tw-mr-1 tw-text-amber-500/80" strokeWidth={2} />
@@ -277,7 +277,7 @@ const dynamicFilters = useMemo(() => {
                           </span>
                           <span title="Doors" className="tw-flex tw-items-center tw-whitespace-nowrap"> {/* Briefcase used for Doors as in HEAD */}
                             <Briefcase size={14} className="tw-mr-0.5 sm:tw-mr-1 tw-text-amber-500/80" strokeWidth={2} />
-                            {vehicle.number_of_doors || 'N/A'} Doors
+                            {vehicle.doors || 'N/A'} Doors
                           </span>
                         </div>
                       </div>
