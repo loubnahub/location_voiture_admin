@@ -1,73 +1,62 @@
 // src/Clients/VedioStart/VedioStart.js
-import React, { useEffect, useRef, useState } from 'react'; // Added useState
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const VedioStart = () => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
-  const [showUnmuteButton, setShowUnmuteButton] = useState(false); // New state
+  
+  // This state now controls if the video is muted. We start it as muted.
+  const [isMuted, setIsMuted] = useState(true);
 
-  const videoSrc = "/vedio/vediocars.mp4";
+  const videoSrc = "/vedio/Recalo.mp4";
   const nextPage = "/home";
 
-  useEffect(() => {
-    const videoElement = videoRef.current;
-
-    if (videoElement) {
-      // Try to play with sound.
-      videoElement.muted = false; // Explicitly try to unmute
-      const playPromise = videoElement.play();
-
-      if (playPromise !== undefined) {
-        playPromise.then(_ => {
-          // Autoplay started with sound or browser muted it.
-          // If browser muted it, videoElement.muted will be true.
-          if (videoElement.muted) {
-            setShowUnmuteButton(true); // Show button if browser forced mute
-          }
-        }).catch(error => {
-          // Autoplay was prevented.
-          console.warn("Video autoplay with sound was prevented:", error);
-          // Often, if autoplay with sound is blocked, the browser might mute it and play,
-          // or not play at all. We'll offer an unmute button as a fallback.
-          videoElement.muted = true; // Ensure it's muted
-          setShowUnmuteButton(true);
-          videoElement.play().catch(e => console.error("Muted play failed too:", e)); // Try playing muted
-        });
-      }
+  // This function will run when the user clicks anywhere on the screen.
+  const handleScreenClick = () => {
+    // We only need to do this once.
+    if (isMuted) {
+      setIsMuted(false); // This will unmute the video.
     }
+  };
 
+  useEffect(() => {
+    // Navigate away after 20 seconds, regardless of sound.
     const timer = setTimeout(() => {
       navigate(nextPage);
-    }, 20000);
+    }, 10000);
 
     return () => clearTimeout(timer);
   }, [navigate, nextPage]);
 
-  const handleEnableSound = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = false;
-      setShowUnmuteButton(false); // Hide button after sound is enabled
-      // Optionally, try to play again if it wasn't playing
-      // videoRef.current.play().catch(e => console.error("Play after unmute failed:", e));
-    }
-  };
+
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-black">
+
+    <div 
+      className="tw-relative tw-w-screen tw-h-screen tw-overflow-hidden tw-bg-black tw-cursor-pointer"
+      onClick={handleScreenClick}
+    >
       <video
         ref={videoRef}
         autoPlay
         playsInline
-        // loop
-        // Muted state is handled programmatically now
-        className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto z-[1] -translate-x-1/2 -translate-y-1/2 object-cover"
+        // The `muted` property is now directly controlled by our `isMuted` state.
+        muted={isMuted} 
+        className="tw-absolute tw-top-1/2 tw-left-1/2 tw-min-w-full tw-min-h-full tw-w-auto tw-h-auto tw-z-[1] tw--translate-x-1/2 tw--translate-y-1/2 tw-object-cover"
       >
         <source src={videoSrc} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-     
+   
+      {isMuted && (
+        <div className="tw-absolute tw-inset-0 tw-z-10 tw-flex tw-items-center tw-justify-center tw-bg-black tw-bg-opacity-20">
+          <p className="tw-text-white tw-font-semibold tw-text-lg tw-p-4 tw-rounded-lg tw-bg-black tw-bg-opacity-50 tw-backdrop-blur-sm">
+            Click anywhere to enable sound
+          </p>
+        </div>
+      )}
     </div>
   );
 };

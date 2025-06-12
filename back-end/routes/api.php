@@ -166,7 +166,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('dashboard-stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats');
             Route::get('notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
         });
-
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // For regular users
+        Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+        Route::delete('/notifications/clear-read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read'); // User clears their own read
+        Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
 
     // ========================================================================

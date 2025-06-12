@@ -47,6 +47,7 @@ export const login = async (credentials) => {
 };
 
 export const fetchCurrentUser = () => apiClient.get('/user');
+
 export const logout = () => apiClient.post('/logout');
 // In src/services/api.js
 export const fetchBookingsForAgreementDropdown = () => apiClient.get('/bookings-for-agreement');

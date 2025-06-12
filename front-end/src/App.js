@@ -47,6 +47,9 @@ import Blog from './Clients/Blog/Blog';
 import PrivacyPolicyPage from './Clients/Privacy/Section/PrivacyPage';
 
 import SignUpClient from './Clients/Compte/Singup'
+import Profiel from './Clients/Profiel/Profiel';
+import Testiominals from './Clients/testiominals/testiominals';
+import VedioStart from './Clients/Vedio';
 // In App.js
 
 
@@ -126,7 +129,7 @@ function App() {
       
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<VedioStart />} />
           <Route path="/Singup" element={<SignUpPage />} />
           {/* Public Routes */}
           <Route path="/" element={<ClientLayout />}>
@@ -142,6 +145,8 @@ function App() {
             <Route path="/About" element={<About />} />
             <Route path="/FAQs" element={<FAQs />} />
             <Route path="/Blog" element={<Blog />} />
+            <Route path="/Testiominals" element={<Testiominals />} />
+            <Route path="/Profiel/:user_id" element={<Profiel />} />
             <Route path="/PrivacyPolicy" element={<PrivacyPolicyPage/>} />
           </Route>
           <Route

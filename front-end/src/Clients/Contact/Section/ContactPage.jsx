@@ -166,7 +166,7 @@ export default function ContactPage() {
                       <p className="tw-text-gray-500 tw-text-sm">{contactDetails.email.availability}</p>
                     </div>
                   </div>
-                  
+
                   {/* Office Hours */}
                   <div className="tw-flex tw-items-start">
                     <div className="tw-bg-gradient-to-br tw-from-blue-500 tw-to-teal-400 tw-p-3 tw-rounded-lg tw-text-white tw-mr-4 tw-flex-shrink-0">

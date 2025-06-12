@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             BookingSeeder::class,
             OperationalHoldSeeder::class,
             MaintenanceRecordSeeder::class,
+            AvisSeeder::class,
         ]);
     }
 }
