@@ -37,7 +37,8 @@
 <body>
     <div class="header-container">
         <div class="logo">
-            <h2>RECALO</h2>
+
+           <img src='{{$logo_base64}}' width='200px'/>
         </div>
         <div class="company-info">
             <h3>RECALO Car Rentals</h3>

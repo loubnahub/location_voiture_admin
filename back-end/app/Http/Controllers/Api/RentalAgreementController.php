@@ -135,11 +135,18 @@ class RentalAgreementController extends Controller
             Log::error('RentalAgreementController@store: Booking not found for ID: ' . $bookingId);
             return response()->json(['message' => 'Booking not found.'], 404);
         }
-
+  $logoPath = public_path('logo/Logobe.png');
+            
+            // 2. Base64 encode the image. This is the most reliable method
+            //    as it embeds the image directly into the HTML, bypassing all pathing issues.
+            $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $logoData = file_get_contents($logoPath);
+            $logoBase64 = 'data:image/' . $logoType . ';base64,' . base64_encode($logoData);
         // --- PDF Generation Logic ---
         try {
             $pdfData = [
                 'booking' => $booking,
+                        'logo_base64' => $logoBase64,
                  'agreement_id' => null, 
                  'agreement_date' => now(), // This is the generation date for the PDF view
 
