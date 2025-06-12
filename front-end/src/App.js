@@ -31,6 +31,9 @@ import ClientLayout from './layouts/ClientLayout';
 import VehicleModelCreatePage from './pages/VehicleModelCreatePage';
 import VehicleCreatePage from './pages/VehicleCreatePage'
 import SignUpClient from './Clients/Compte/Singup'
+import Profiel from './Clients/Profiel/Profiel';
+import Testiominals from './Clients/testiominals/testiominals';
+import VedioStart from './Clients/Vedio';
 // In App.js
 import { CarProvider } from './contexts/CarContext'
 import Vehicle from './Clients/VEHICLE/Vehicle';
@@ -125,9 +128,9 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<ClientLayout />}>
-            <Route index element={<Home />} />
-      
-                      <Route path="/Notification" element={<NotificationsPage />} />
+            <Route index element={<VedioStart />} />
+                   <Route path='/Home' element={<Home />} />
+  <Route path="/notification" element={<NotificationsPage />} />
                       <Route path="/fleet" element={<Vehicle />} /> 
                       <Route path="/fleet/details/:vehicleId" element={<CarDetailPage />} />
                       <Route path="/booking/:vehicleId" element={<BookingPageClient />} />
@@ -138,7 +141,9 @@ function App() {
                       <Route path="/About" element={<About />} />
                       <Route path="/FAQs" element={<FAQs />} />
                       <Route path="/Blog" element={<Blog />} />
-                      <Route path="/PrivacyPolicy" element={<PrivacyPolicyPage/>} />
+                         <Route path="/Testiominals" element={<Testiominals />} />
+                                  <Route path="/Profiel/:user_id" element={<Profiel />} />
+                                  <Route path="/PrivacyPolicy" element={<PrivacyPolicyPage/>} />
                     </Route>
           <Route
             path="/login"

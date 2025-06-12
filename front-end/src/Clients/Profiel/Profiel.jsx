@@ -1,16 +1,16 @@
 import React from 'react'
 
 
-import Footer from '../Home/Section/Footer'
-import ProfielSection from './section.jsx/SectionProfiel'
-import ClientProfilePage from './SectionPage'
+import ProfielSection from './section/SectionProfiel'
+import UserProfile from './section/InforamationProfile'
+
 
 export default function Profiel() {
   return (
     <div>
         <ProfielSection />
-        <ClientProfilePage />
-        <Footer />
+        <UserProfile />
+        
     </div>
   )
 }

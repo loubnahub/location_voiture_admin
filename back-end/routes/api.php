@@ -55,7 +55,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/vehicle-models/list-all', [VehicleModelController::class, 'listAll']);
     Route::get('/lov/renters', [AdminUserController::class, 'getRentersForDropdown']);
-
 // In routes/api.php, inside the `auth:sanctum` group but OUTSIDE the `admin` prefix group
         Route::apiResource('vehicle-types', VehicleTypeController::class)->parameters(['vehicle-types' => 'vehicle_type']);
     Route::apiResource('vehicle-models', VehicleModelController::class)->parameters(['vehicle-models' => 'vehicle_model']);
@@ -105,6 +104,11 @@ Route::delete('/contact-submissions/{contactSubmission}', [ContactSubmissionCont
     ->whereNumber('contactSubmission');
 Route::apiResource('avis', AvisController::class);
 Route::middleware('auth:sanctum')->group(function () {
+Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // For regular users
+        Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+        Route::delete('/notifications/clear-read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read'); // User clears their own read
+        Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
     // --- Core Authentication Routes ---
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');

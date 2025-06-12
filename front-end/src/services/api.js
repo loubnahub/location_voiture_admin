@@ -198,6 +198,27 @@ export const getRentalAgreementDownloadUrl = (agreementId) => {
   return `${baseUrl}/rental-agreements/${agreementId}/download`;
 };
 export const sendRentalAgreementNotification = async (agreementId) => apiClient.post(`/rental-agreements/${agreementId}/send-notification`);
+export const fetchClientNotifications = () => {
+  return apiClient.get('/notifications');
+};
+
+export const markNotificationAsRead = (notificationId) => {
+  return apiClient.post(`/notifications/${notificationId}/mark-as-read`);
+};
+
+export const markAllNotificationsAsRead = () => {
+  return apiClient.post('/notifications/mark-all-as-read');
+};
+
+// Based on your routes/api.php file, these use DELETE
+export const clearReadNotifications = () => {
+  return apiClient.delete('/notifications/clear-read');
+};
+
+export const clearAllNotifications = () => {
+  return apiClient.delete('/notifications/clear-all');
+};
+
 
 // --- Promotion Campaign Functions ---
 export const fetchAllPromotionCampaigns = (params = {}) => apiClient.get('/promotion-campaigns', { params });

@@ -143,7 +143,7 @@ class CheckLoyaltyAndGeneratePromoCode
     protected function createRewardNotification(User $user, PromotionCampaign $campaign, PromotionCode $promoCode): void
     {
         $title = "Congratulations! You've Earned a Reward!";
-        $message = "You've reached the {$campaign->required_rental_count} points milestone! As a thank you, here is a promotion code for your next rental: {$promoCode->code_string}.";
+        $message = "You've reached the {$campaign->required_rental_count} points milestone! As a thank you, here is a promotion code for your next rental: @{$promoCode->code_string}@.";
 
         try {
             Notification::create([

@@ -1,5 +1,5 @@
 import React from 'react';
-import CarSearchSection from './Searsh'; // Assuming Searsh.jsx is in the same directory
+import ExperienceBar from './ExperienceBar';
 
 // Icons are not used in this specific snippet of the hero's top part,
 // but keeping the import if you re-add the search bar section that might use them.
@@ -10,7 +10,7 @@ const CarRentalHero = () => {
     // Added overflow-x-hidden to prevent horizontal scrollbars
     <div className="tw-min-h-screen tw-bg-[#1B1B1B] tw-text-white  tw-flex tw-flex-col tw-justify-between tw-overflow-x-hidden tw-py-10">
       {/* Top Section: Hero Content + Car Image */}
-      <div className="tw-container tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8 tw-pt-12 sm:tw-pt-16 lg:tw-pt-36 tw-flex-grow">
+      <div className="tw-container tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8 tw-pt-12 sm:tw-pt-16 lg:tw-pt-20 tw-flex-grow">
         <div className="lg:tw-grid lg:tw-grid-cols-2 lg:tw-gap-8 tw-items-center">
           {/* Left Column: Text Content */}
           <div className="tw-mb-12 lg:tw-mb-0">
@@ -71,7 +71,7 @@ const CarRentalHero = () => {
           </div>
         </div>
       </div>
-      {/* <CarSearchSection /> */}
+      <ExperienceBar />
     </div>
   );
 };

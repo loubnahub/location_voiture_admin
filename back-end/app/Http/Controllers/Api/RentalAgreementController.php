@@ -293,7 +293,7 @@ class RentalAgreementController extends Controller
             // We use line breaks (\n) to make it easier for the frontend to parse or display.
             $notificationMessage = "The rental agreement for your {$bookingIdentifier} is ready. " .
                                    "Please review and sign it.\n\n" .
-                                   "Download Link: {$secureDownloadUrl}";
+                                   "Download Link: @{$secureDownloadUrl}@";
 
             // 3. Create the notification record using your existing model and table structure.
             Notification::create([

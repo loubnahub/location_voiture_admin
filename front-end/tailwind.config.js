@@ -15,8 +15,20 @@ module.exports = {
       },
        animation: {
         'spin-slow': 'spin 3s linear infinite',
+         'marquee': 'marquee 40s linear infinite',
+
       }
     },
+     resolve: {
+    extensions: ['.mjs', '.js', '.jsx', '.ts', '.tsx'], // .mjs is important
+  },
+    keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        }
+      },
+
   },
   plugins: [],
 }
