@@ -32,7 +32,7 @@ import VehicleModelCreatePage from './pages/VehicleModelCreatePage';
 import VehicleCreatePage from './pages/VehicleCreatePage'
 import SignUpClient from './Clients/Compte/Singup'
 // In App.js
-
+import { CarProvider } from './contexts/CarContext'
 import Vehicle from './Clients/VEHICLE/Vehicle';
 import CarDetailPage from './Clients/DetailsCars/DetailsModalCar'; 
 import CarProductPage from './Clients/DetailsCars/DetailsCarColor'; 
@@ -120,6 +120,8 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+                <CarProvider> 
+
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<ClientLayout />}>
@@ -184,7 +186,8 @@ function App() {
           {/* Fallback Route */}
           <Route path="*" element={<AuthRedirect />} />
         </Routes>
-        
+        </CarProvider> 
+
       </AuthProvider>
     </Router>
   );

@@ -1,7 +1,7 @@
 // src/pages/CarDetailPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { fetchVehicleModelById } from '../../services/api'; // Adjust path as needed
+import { fetchPublicVehicleModelById } from '../../services/api'; // Adjust path as needed
 import {
   ArrowLeft, X, Camera, Orbit, CarFront, FileText, CalendarDays,
   Fuel, Settings2, Tag, DoorOpen, Armchair, Route, Shapes, Disc3, Feather,
@@ -45,8 +45,7 @@ const CarDetailPage = () => {
         setError(null);
         setVehicleModel(null);
         try {
-          const response = await fetchVehicleModelById(vehicleId);
-          // Standardize response data access: try response.data.data (Laravel Resource), then response.data (direct object)
+ const response = await fetchPublicVehicleModelById(vehicleId);          // Standardize response data access: try response.data.data (Laravel Resource), then response.data (direct object)
           const modelData = response.data?.data || response.data;
 
           if (modelData && typeof modelData === 'object' && !Array.isArray(modelData)) {

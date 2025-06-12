@@ -53,8 +53,19 @@ export const register = async (credentials) => {
   // Then use the configured apiClient for the actual login request.
   return apiClient.post('/register', credentials);
 };
-
-
+export const fetchAllPublicCars = (params = {}) => {
+  return apiClient.get('/all-cars', { params });
+};
+export const fetchPublicVehicleModelById = (id) => {
+    return apiClient.get(`/vehicle-models-client/${id}`);
+};
+export const fetchPublic3dVehicleModelById = (id) => {
+    return apiClient.get(`/vehicle-models-3d/${id}`);
+};
+// This is a new function, different from the admin 'createBooking'
+export const createClientBooking = (bookingData) => {
+  return apiClient.post('/client-bookings', bookingData);
+};
 export const fetchCurrentUser = () => apiClient.get('/user');
 export const logout = () => apiClient.post('/logout');
 // In src/services/api.js

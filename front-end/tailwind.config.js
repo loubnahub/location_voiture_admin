@@ -13,6 +13,9 @@ module.exports = {
         'brand-card': '#2a2a2a', // Example for slightly lighter card bg
         'brand-surface': '#222222', // Another surface color
       },
+       animation: {
+        'spin-slow': 'spin 3s linear infinite',
+      }
     },
   },
   plugins: [],

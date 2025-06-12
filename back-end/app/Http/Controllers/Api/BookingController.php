@@ -389,4 +389,85 @@ public function forAgreementDropdown()
 
         return response()->json(['data' => $transformedBookings]);
     }
+    public function storeClientBooking(Request $request)
+{
+    Log::info('Client Booking Request Received:', $request->all());
+
+    // 1. VALIDATE THE INCOMING DATA
+    $validator = Validator::make($request->all(), [
+        // 'renter_user_id' is removed, we'll get it from the authenticated user
+        'vehicle_model_id' => 'required|uuid|exists:vehicle_models,id',
+        'insurance_plan_id' => 'nullable|uuid|exists:insurance_plans,id',
+        'start_date' => 'required|date_format:Y-m-d\TH:i:s.v\Z',
+        'end_date' => 'required|date_format:Y-m-d\TH:i:s.v\Z|after:start_date',
+        'final_price' => 'required|numeric|min:0',
+        'booking_extras' => 'nullable|array',
+        'calculated_base_price' => 'required|numeric|min:0',
+        'booking_extras.*.extra_id' => 'required_with:booking_extras|uuid|exists:extras,id',
+        'booking_extras.*.quantity' => 'required_with:booking_extras|integer|min:1',
+        'booking_extras.*.price_at_booking' => 'required_with:booking_extras|numeric|min:0',
+        'payment_method_preference' => ['required', 'string', Rule::in(['online_card', 'cash'])],
+    ]);
+    
+
+    if ($validator->fails()) {
+        Log::error('Client Booking Validation Failed:', $validator->errors()->toArray());
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+    $validatedData = $validator->validated();
+    
+    // --- TRANSACTION - to ensure data integrity ---
+    return DB::transaction(function () use ($validatedData, $request) {
+        $startDate = Carbon::parse($validatedData['start_date']);
+        $endDate = Carbon::parse($validatedData['end_date']);
+        
+        // 2. FIND AN AVAILABLE VEHICLE INSTANCE (No changes here)
+        $availableVehicle = Vehicle::query()
+            ->where('vehicle_model_id', $validatedData['vehicle_model_id'])
+            ->where('status', 'available')
+            ->whereDoesntHave('bookings', function ($query) use ($startDate, $endDate) {
+                $query->where(function ($q) use ($startDate, $endDate) {
+                    $q->where('start_date', '<', $endDate)->where('end_date', '>', $startDate);
+                })
+                ->whereNotIn('status', [BookingStatus::CANCELLED_BY_USER->value, BookingStatus::CANCELLED_BY_PLATFORM->value]);
+            })
+            ->first();
+
+        if (!$availableVehicle) {
+            Log::warning('No available vehicles found for model.', ['model_id' => $validatedData['vehicle_model_id'], 'dates' => [$startDate, $endDate]]);
+            throw new \Exception('Sorry, no cars of this model are available for the selected dates. Please try another date range.');
+        }
+
+        // 3. CREATE THE BOOKING RECORD (Corrected Logic)
+        $bookingInputData = collect($validatedData)->except(['booking_extras', 'vehicle_model_id', 'payment_method_preference'])->merge([
+            'renter_user_id' => auth()->id(), // <-- FIX: Get user ID directly from the authenticated session.
+            'vehicle_id' => $availableVehicle->id,
+            'status' => $validatedData['payment_method_preference'] === 'cash' 
+                ? BookingStatus::CONFIRMED->value 
+                : BookingStatus::PENDING_CONFIRMATION->value,
+        ])->all();
+
+        $booking = Booking::create($bookingInputData);
+        Log::info("Client Booking Created (ID: {$booking->id}) for Vehicle ID: {$availableVehicle->id}");
+
+        // 4. SYNC THE EXTRAS (No changes here)
+        if (!empty($validatedData['booking_extras'])) {
+            $extrasToSync = [];
+            foreach ($validatedData['booking_extras'] as $extraData) {
+                $extrasToSync[$extraData['extra_id']] = [
+                    'quantity' => $extraData['quantity'],
+                    'price_at_booking' => $extraData['price_at_booking']
+                ];
+            }
+            $booking->bookingExtras()->sync($extrasToSync);
+            Log::info('Extras synced for booking ID: ' . $booking->id);
+        }
+        
+        // 5. RETURN THE SUCCESSFUL RESPONSE (No changes here)
+        return response()->json([
+            'data' => $this->transformBooking($booking->refresh()),
+            'message' => 'Booking created successfully.'
+        ], 201);
+    });
+}
 }

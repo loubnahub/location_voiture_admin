@@ -6,10 +6,9 @@ import {
     AlertCircle, Loader2, ShoppingBag, CheckCircle, Wallet, LogIn // Wallet icon is good for cash
 } from 'lucide-react';
 import {
-    fetchVehicleModelById,
-    fetchAllExtras,
-    fetchAllInsurancePlans,
-    createBooking,
+    fetchPublicVehicleModelById,
+   
+ createClientBooking,
 } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -77,18 +76,24 @@ const BookingPageClient = () => {
         setDataLoading(true); setError(null); setVehicleModel(null);
         setAvailableExtras([]); setAvailableInsurancePlans([]);
         try {
-          const [vehicleRes, extrasRes, insuranceRes] = await Promise.all([
-            fetchVehicleModelById(vehicleId),
-            fetchAllExtras({ all: true }),
-            fetchAllInsurancePlans({all: true})
-          ]);
-          const modelData = vehicleRes.data?.data || vehicleRes.data;
-          if (modelData) setVehicleModel(modelData);
-          else throw new Error("Vehicle details could not be loaded.");
-          setAvailableExtras(Array.isArray(extrasRes.data?.data) ? extrasRes.data.data : (Array.isArray(extrasRes.data) ? extrasRes.data : []));
-          setAvailableInsurancePlans(Array.isArray(insuranceRes.data?.data) ? insuranceRes.data.data : (Array.isArray(insuranceRes.data) ? insuranceRes.data : []));
-        } catch (err) { setError(err.message || "Failed to load necessary data.");
-        } finally { setDataLoading(false); }
+  // We only need to make ONE API call to get all the data for the model.
+  const response = await fetchPublicVehicleModelById(vehicleId);
+  const modelData = response.data?.data || response.data;
+
+  if (modelData) {
+    setVehicleModel(modelData);
+    // The data we need is now nested inside the modelData object.
+    setAvailableExtras(modelData.extras_available || []);
+    setAvailableInsurancePlans(modelData.insurance_plans_associated || []);
+  } else {
+    throw new Error("Vehicle details could not be loaded.");
+  }
+} catch (err) {
+  setError(err.message || "Failed to load necessary data.");
+} finally {
+  setDataLoading(false);
+}
+        
       };
       loadInitialData();
     } else if (!isAuthenticated && !authIsLoading) {
@@ -202,35 +207,37 @@ const BookingPageClient = () => {
     if (!vehicleModel) { setFormError("Vehicle details are missing."); return; }
     setIsSubmitting(true); setFormError(''); setBookingSuccess(false);
 
-    const actualRenterUserId = currentUser.id;
-    const vehicleModelIdForBooking = vehicleId; 
-    const finalStartDateISO = new Date(`${startDate}T00:00:00Z`).toISOString();
-    const finalEndDateISO = new Date(`${endDate}T23:59:59Z`).toISOString();
+   const finalStartDateISO = new Date(`${startDate}T00:00:00Z`).toISOString();
+const finalEndDateISO = new Date(`${endDate}T23:59:59Z`).toISOString();
 
-    const bookingPayload = {
-      renter_user_id: actualRenterUserId,
-      vehicle_id: vehicleModelIdForBooking,
-      insurance_plan_id: selectedInsuranceId || null,
-      start_date: finalStartDateISO,
-      end_date: finalEndDateISO,
-      calculated_base_price: bookingPrices.base,
-      calculated_extras_price: bookingPrices.extras,
-      calculated_insurance_price: bookingPrices.insurance,
-      final_price: bookingPrices.final,
-      booking_extras: selectedExtras.map(ex => ({
-        extra_id: ex.id,
-        quantity: ex.quantity,
-        price_at_booking: ex.price_at_booking
-      })),
-      renter_details: { name: renterName, email: renterEmail, phone: renterPhone },
-      // Status is determined by payment method
-      status: paymentMethod === 'cash' ? 'confirmed' : 'pending_payment', // Backend might adjust this
-      payment_method_preference: paymentMethod,
-    };
+const bookingPayload = {
+  // The backend now gets the user ID from the session, so we don't send it.
+  // We send vehicle_model_id instead of vehicle_id.
+  vehicle_model_id: vehicleId,
+  insurance_plan_id: selectedInsuranceId || null,
+  start_date: finalStartDateISO,
+  end_date: finalEndDateISO,
+  
+  // These are calculated on the frontend, but the backend will use them.
+  // Your controller has defaults, so we don't strictly need them all, but it's good practice.
+  calculated_base_price: bookingPrices.base,
+  calculated_extras_price: bookingPrices.extras,
+  calculated_insurance_price: bookingPrices.insurance,
+  final_price: bookingPrices.final,
+
+  booking_extras: selectedExtras.map(ex => ({
+    extra_id: ex.id,
+    quantity: ex.quantity,
+    price_at_booking: ex.price_at_booking
+  })),
+  
+  // This tells the backend how to set the initial status.
+  payment_method_preference: paymentMethod,
+};
 
     try {
       console.log("Submitting Booking Payload:", bookingPayload); // Log payload
-      const bookingResponse = await createBooking(bookingPayload);
+      const bookingResponse = await createClientBooking(bookingPayload);
       const newBooking = bookingResponse.data.data;
       setCreatedBookingId(newBooking.id);
 

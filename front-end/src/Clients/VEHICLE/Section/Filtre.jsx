@@ -1,7 +1,7 @@
 // src/components/FiltersSidebar.jsx (or your path to it)
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
-import allCarsData from './Cars/CarsCardFiltre';
+import { useCars } from '../../../contexts/CarContext'; // <--- USE THE HOOK
 
 const ScrollableCheckboxList = ({ children, maxHeightClass = "tw-max-h-32" }) => {
   return (
@@ -53,6 +53,8 @@ const FiltersSidebar = ({ filters, setFilters, onApplyFilters, onResetFilters, t
     location: true, category: true, type: true, capacity: true,
     year: true, fuel: true, transmission: true, price: true,
   });
+  const { allCarsData, isLoading } = useCars(); 
+
 
   const priceRangeRef = useRef(null);
 

@@ -33,8 +33,11 @@ use App\Http\Controllers\Api\ContactSubmissionController;
 // --- Admin Controller Imports ---
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\RoleController as AdminRoleController;
-
-
+// in routes/api.php
+use App\Http\Controllers\Api\PublicFleetController; // Using a new, dedicated controller
+Route::get('/vehicle-models-client/{vehicleModel}', [PublicFleetController::class, 'show'])->name('public.vehicle-model.show');
+Route::get('/all-cars', [PublicFleetController::class, 'index'])->name('public.all-cars');
+Route::get('/vehicle-models-3d/{vehicleModel}', [PublicFleetController::class, 'show3d'])->name('public.vehicle-model.show3d');
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -68,7 +71,10 @@ Route::get('/stream-glb/{filepath}', function ($filepath) {
     if (!Storage::disk('local')->exists($fullStoragePath)) { abort(404, 'File not found.'); }
     return Storage::disk('local')->response($fullStoragePath);
 })->where('filepath', '.*');
+// In routes/api.php
 
+// Route for the new client-side booking creation
+Route::post('/client-bookings', [BookingController::class, 'storeClientBooking'])->name('client.bookings.store');
     Route::apiResource('insurance-plans', InsurancePlanController::class)->parameters(['insurance-plans' => 'insurance_plan']);
 Route::get('/my-rewards', [UserController::class, 'getMyRewards']);
 // ========================================================================

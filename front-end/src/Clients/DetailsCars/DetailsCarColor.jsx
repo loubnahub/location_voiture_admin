@@ -10,9 +10,9 @@ import {
   ChevronRightIcon as ChevronRightHero,
   DocumentTextIcon as DocumentTextOutlineIcon, // From CarProductPage
 } from '@heroicons/react/24/outline';
-import { fetchVehicleModelById } from '../../services/api'; // Adjust path if necessary
+import { fetchPublicVehicleModelById  } from '../../services/api'; // Adjust path if necessary
 
-const DEFAULT_FALLBACK_IMAGE_URL = '/images/Cars/placeholder_gallery.png'; // Unified placeholder
+const DEFAULT_FALLBACK_IMAGE_URL = '/images/Cars/1.jpg'; // Unified placeholder
 
 const scrollbarStyles = `
   .custom-detail-scrollbar::-webkit-scrollbar {
@@ -59,12 +59,12 @@ export default function CarGalleryPage() {
         setError(null);
         setVehicleModel(null);
         try {
-          const response = await fetchVehicleModelById(vehicleId);
+          const response = await fetchPublicVehicleModelById(vehicleId);
           if (response.data && response.data.data) {
             const modelData = response.data.data;
             setVehicleModel(modelData);
-            if (modelData.available_colors && modelData.available_colors.length > 0) {
-              setSelectedColorHex(modelData.available_colors[0].hex);
+            if (modelData.available_colors_from_model && modelData.available_colors_from_model.length > 0) {
+              setSelectedColorHex(modelData.available_colors_from_model[0].hex);
             } else {
               setSelectedColorHex(null);
             }
@@ -87,7 +87,7 @@ export default function CarGalleryPage() {
 
   // --- DERIVED DATA & IMAGE LOGIC ---
   const availableColorsFromAPI = useMemo(() => {
-    return vehicleModel?.available_colors || [];
+    return vehicleModel?.available_colors_from_model || [];
   }, [vehicleModel]);
 
   useEffect(() => {
