@@ -3,11 +3,11 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
     ArrowLeft, X, CalendarDays, Users, CreditCard, ShieldCheck, PlusCircle,
-    AlertCircle, Loader2, ShoppingBag, CheckCircle, Wallet, LogIn // Wallet icon is good for cash
+    AlertCircle, Loader2, ShoppingBag, CheckCircle, Wallet, LogIn ,Tag// Wallet icon is good for cash
 } from 'lucide-react';
 import {
     fetchPublicVehicleModelById,
-   
+   validatePromotionCode,
  createClientBooking,
 } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,7 +25,10 @@ const BookingPageClient = () => {
   const { vehicleId } = useParams();
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, isLoading: authIsLoading } = useAuth();
-
+const [promoCodeInput, setPromoCodeInput] = useState('');
+const [appliedPromo, setAppliedPromo] = useState(null); // Will hold the validated promo details
+const [promoError, setPromoError] = useState('');
+const [isPromoLoading, setIsPromoLoading] = useState(false);
   const [vehicleModel, setVehicleModel] = useState(null);
   const [availableExtras, setAvailableExtras] = useState([]);
   const [availableInsurancePlans, setAvailableInsurancePlans] = useState([]);
@@ -43,7 +46,6 @@ const BookingPageClient = () => {
   const [renterPhone, setRenterPhone] = useState('');
   const [createdBookingId, setCreatedBookingId] = useState(null);
   const [numberOfDays, setNumberOfDays] = useState(0);
-
   // --- MODIFIED: Default paymentMethod state ---
   const [paymentMethod, setPaymentMethod] = useState('online_card'); // Default to online, user can switch to cash
 
@@ -132,15 +134,62 @@ const BookingPageClient = () => {
         const qty = typeof extra.quantity === 'number' ? extra.quantity : 0;
         return acc + (price * qty);
     }, 0);
-    const finalTotal = base + insurance + extrasTotal;
+   const subtotal = base + insurance + extrasTotal;
+    
+    // --- THIS IS THE FIX ---
+    // Get the discount directly from the appliedPromo state object.
+    const discount = appliedPromo?.discount_amount || 0; 
+    
+    const finalTotal = Math.max(0, subtotal - discount);
+
     return {
         base: parseFloat(base.toFixed(2)),
         extras: parseFloat(extrasTotal.toFixed(2)),
         insurance: parseFloat(insurance.toFixed(2)),
-        final: parseFloat(Math.max(0, finalTotal).toFixed(2))
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        discount: parseFloat(discount.toFixed(2)),
+        final: parseFloat(finalTotal.toFixed(2))
     };
-  }, [vehicleModel, numberOfDays, selectedInsuranceId, selectedExtras, availableInsurancePlans]);
+}, [vehicleModel, numberOfDays, selectedInsuranceId, selectedExtras, availableInsurancePlans, appliedPromo]);
+const handlePromoCodeChange = (e) => {
+    setPromoCodeInput(e.target.value.toUpperCase());
+    setPromoError('');
+};
 
+const handleApplyPromoCode = async () => {
+    if (!promoCodeInput) {
+        setPromoError("Please enter a promotion code.");
+        return;
+    }
+    setIsPromoLoading(true);
+    setPromoError('');
+ // Inside handleApplyPromoCode...
+try {
+    
+    // Now we pass a single, correct object to the API call.
+    // This is now guaranteed to be the request body.
+    const response = await validatePromotionCode(promoCodeInput.trim(), {
+        booking_subtotal: bookingPrices.subtotal,
+        user_id: currentUser?.id || null,
+    });
+    
+    setAppliedPromo(response.data.data);
+    // Also update the discount based on the validated response
+
+} catch (err) {
+    const message = err.response?.data?.message || "Invalid or inapplicable promotion code.";
+    setPromoError(message);
+    setAppliedPromo(null);
+} finally {
+    setIsPromoLoading(false);
+}
+};
+
+const handleClearPromoCode = () => {
+    setPromoCodeInput('');
+    setAppliedPromo(null);
+    setPromoError('');
+};
   const handleInputChange = useCallback((setter) => (e) => {
     setter(e.target.value); if (formError) setFormError('');
   }, [formError]);
@@ -217,7 +266,9 @@ const bookingPayload = {
   insurance_plan_id: selectedInsuranceId || null,
   start_date: finalStartDateISO,
   end_date: finalEndDateISO,
-  
+    promotion_code_id: appliedPromo?.promotion_code_id || null,
+     discount_amount_applied: bookingPrices.discount,
+
   // These are calculated on the frontend, but the backend will use them.
   // Your controller has defaults, so we don't strictly need them all, but it's good practice.
   calculated_base_price: bookingPrices.base,
@@ -389,6 +440,12 @@ const bookingPayload = {
                     <div className="tw-flex tw-justify-between"><span>Base ({numberOfDays > 0 ? `${numberOfDays} day${numberOfDays !== 1 ? 's' : ''}` : `_ day(s)`})</span> <span className="tw-font-medium">${bookingPrices.base.toFixed(2)}</span></div>
                     <div className="tw-flex tw-justify-between"><span>Extras:</span> <span className="tw-font-medium">${bookingPrices.extras.toFixed(2)}</span></div>
                     <div className="tw-flex tw-justify-between"><span>Insurance:</span> <span className="tw-font-medium">${bookingPrices.insurance.toFixed(2)}</span></div>
+                     {bookingPrices.discount > 0 && (
+        <div className="tw-flex tw-justify-between tw-text-green-600">
+            <span>Discount ({appliedPromo?.code_string}):</span>
+            <span className="tw-font-medium">-${bookingPrices.discount.toFixed(2)}</span>
+        </div>
+    )}
                     <div className="tw-flex tw-justify-between tw-font-bold tw-text-gray-800 tw-text-lg tw-pt-2 tw-mt-2 tw-border-t"><span>Estimated Total:</span><span>${bookingPrices.final.toFixed(2)}</span></div>
                   </div>
                 </div>
@@ -427,6 +484,53 @@ const bookingPayload = {
                         {availableExtras.map((extraItem) => (<div key={extraItem.id} className={`${optionLabelClass} ${isExtraSelected(extraItem.id) ? selectedOptionClass : unselectedOptionClass} tw-justify-between tw-items-center`}><div><span className="tw-font-semibold tw-text-gray-800">{extraItem.name}</span><span className="tw-text-sm tw-text-gray-600 tw-ml-1">(+${(typeof extraItem.price === 'number' ? extraItem.price : (typeof extraItem.default_price_per_day === 'number' ? extraItem.default_price_per_day : 0)).toFixed(2)})</span>{extraItem.description && <p className="tw-text-xs tw-text-gray-500 tw-mt-0.5">{extraItem.description}</p>}</div><div className="tw-flex tw-items-center tw-space-x-2">{isExtraSelected(extraItem.id) && (<button type="button" onClick={() => handleExtraChange(extraItem, false)} className="tw-p-1.5 tw-text-red-500 hover:tw-text-red-700 tw-bg-red-100 hover:tw-bg-red-200 tw-rounded-full tw-transition-colors"> <X size={16}/> </button> )}<button type="button" onClick={() => handleExtraChange(extraItem, true)} className={`tw-p-1.5 tw-rounded-full tw-transition-colors ${isExtraSelected(extraItem.id) ? 'tw-bg-blue-500 tw-text-white hover:tw-bg-blue-600' : 'tw-bg-gray-200 tw-text-gray-700 hover:tw-bg-gray-300'}`}> <PlusCircle size={18}/> </button>{isExtraSelected(extraItem.id) && <span className="tw-text-sm tw-w-6 tw-text-center tw-font-medium">{getExtraQuantity(extraItem.id)}</span>}</div></div>))}
                     </div>
                 </section>)}
+                <section>
+    <h2 className={sectionTitleClass}>
+        <Tag size={24} className="tw-mr-3 tw-text-blue-600" /> Promotion Code
+    </h2>
+    <div className="tw-bg-white tw-p-4 sm:tw-p-5 tw-rounded-xl tw-border tw-border-gray-200 tw-shadow-sm">
+        {!appliedPromo ? (
+            <div className="tw-flex tw-items-start tw-gap-2">
+                <div className="tw-flex-grow">
+                    <label htmlFor="promoCode" className="tw-sr-only">Promotion Code</label>
+                    <input
+                        type="text"
+                        id="promoCode"
+                        value={promoCodeInput}
+                        onChange={handlePromoCodeChange}
+                        placeholder="Enter code here"
+                        className={`${inputBaseClass} tw-uppercase`}
+                        disabled={isPromoLoading}
+                    />
+                </div>
+                <button
+                    onClick={handleApplyPromoCode}
+                    disabled={isPromoLoading || !promoCodeInput}
+                    className="tw-flex-shrink-0 tw-px-4 tw-py-3 tw-bg-gray-700 tw-text-white tw-font-semibold tw-rounded-lg hover:tw-bg-gray-800 disabled:tw-bg-gray-400 tw-transition-colors tw-flex tw-items-center"
+                >
+                    {isPromoLoading ? <Loader2 size={18} className="tw-animate-spin" /> : 'Apply'}
+                </button>
+            </div>
+        ) : (
+            <div className="tw-p-3 tw-bg-green-50 tw-border tw-border-green-300 tw-rounded-lg tw-flex tw-items-center tw-justify-between">
+                <div>
+                    <p className="tw-font-semibold tw-text-green-800">
+                        <CheckCircle size={16} className="tw-inline tw-mr-2" /> Code Applied: {appliedPromo.code_string}
+                    </p>
+                    <p className="tw-text-sm tw-text-green-700 tw-pl-7">
+                        You saved ${bookingPrices.discount.toFixed(2)}!
+                    </p>
+                </div>
+                <button onClick={handleClearPromoCode} className="tw-p-1.5 tw-rounded-full tw-text-red-500 hover:tw-bg-red-100 tw-transition-colors">
+                    <X size={18} />
+                </button>
+            </div>
+        )}
+        {promoError && (
+            <p className="tw-text-xs tw-text-red-600 tw-mt-2">{promoError}</p>
+        )}
+    </div>
+</section>
                 {/* --- MODIFIED: Payment Details Section with "Pay with Cash" option --- */}
                 <section>
                     <h2 className={sectionTitleClass}>

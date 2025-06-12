@@ -401,6 +401,7 @@ public function forAgreementDropdown()
         'start_date' => 'required|date_format:Y-m-d\TH:i:s.v\Z',
         'end_date' => 'required|date_format:Y-m-d\TH:i:s.v\Z|after:start_date',
         'final_price' => 'required|numeric|min:0',
+         'promotion_code_id' => ['nullable', 'uuid', Rule::exists('promotion_codes', 'id')->where('status', 'active')],
         'booking_extras' => 'nullable|array',
         'calculated_base_price' => 'required|numeric|min:0',
         'booking_extras.*.extra_id' => 'required_with:booking_extras|uuid|exists:extras,id',
@@ -446,10 +447,19 @@ public function forAgreementDropdown()
                 ? BookingStatus::CONFIRMED->value 
                 : BookingStatus::PENDING_CONFIRMATION->value,
         ])->all();
-
+    $bookingInputData['discount_amount_applied'] = $validatedData['discount_amount_applied'] ?? 0.00;
         $booking = Booking::create($bookingInputData);
         Log::info("Client Booking Created (ID: {$booking->id}) for Vehicle ID: {$availableVehicle->id}");
-
+if (!empty($validatedData['promotion_code_id'])) {
+            $promoCode = PromotionCode::find($validatedData['promotion_code_id']);
+            if ($promoCode && $promoCode->status === PromotionCodeStatus::ACTIVE) {
+                $promoCode->status = PromotionCodeStatus::USED;
+                $promoCode->used_at = now();
+                $promoCode->used_on_booking_id = $booking->id;
+                $promoCode->save();
+                Log::info("Promotion code {$promoCode->code_string} marked as USED for Booking ID: {$booking->id}");
+            }
+        }
         // 4. SYNC THE EXTRAS (No changes here)
         if (!empty($validatedData['booking_extras'])) {
             $extrasToSync = [];

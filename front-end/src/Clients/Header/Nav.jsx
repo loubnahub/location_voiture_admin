@@ -37,7 +37,7 @@ const Header = () => {
     setNotificationsOpen(false);
   };
   
-  const logoSrc = "/images/Logo/Logo.png";
+  const logoSrc = "/images/Logo/Logobe.png";
 
   const toggleNotifications = () => {
     setNotificationsOpen(!notificationsOpen);

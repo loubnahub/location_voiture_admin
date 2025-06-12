@@ -103,24 +103,40 @@ class CheckLoyaltyAndGeneratePromoCode
         $expiresAt = null;
         if ($campaign->code_validity_days) {
             $expiresAt = Carbon::now()->addDays($campaign->code_validity_days);
-        } elseif ($campaign->end_date && $campaign->end_date->isFuture()) {
-            $expiresAt = $campaign->end_date;
         }
 
-        $promoCode = PromotionCode::create([
-            'promotion_campaign_id' => $campaign->id,
-            'user_id' => $user->id,
-            'code_string' => $codeString,
-            'status' => PromotionCodeStatus::ACTIVE,
-            'issued_at' => Carbon::now(),
-            'expires_at' => $expiresAt,
-        ]);
+        // --- THIS IS THE FIX ---
+        // Prepare the discount data based on the campaign's reward_type.
+        $discountData = [];
+        if ($campaign->reward_type->value === 'fixed') {
+            $discountData['discount_type'] = 'fixed';
+            $discountData['discount_amount'] = $campaign->reward_value;
+        } elseif ($campaign->reward_type->value === 'percentage') {
+            $discountData['discount_type'] = 'percentage';
+            $discountData['discount_percentage'] = $campaign->reward_value;
+        }
+        // --- END OF FIX ---
 
-        Log::info("LISTENER: Successfully generated loyalty promotion code for user.", ['user_id' => $user->id, 'code' => $codeString, 'campaign_id' => $campaign->id]);
+        $promoCode = PromotionCode::create(array_merge(
+            [
+                'promotion_campaign_id' => $campaign->id,
+                'user_id' => $user->id,
+                'code_string' => $codeString,
+                'status' => PromotionCodeStatus::ACTIVE,
+                'issued_at' => Carbon::now(),
+                'expires_at' => $expiresAt,
+            ],
+            $discountData // Merge the discount data into the create array
+        ));
+
+        Log::info("LISTENER: Successfully generated loyalty promo code with reward details.", [
+            'code_id' => $promoCode->id,
+            'campaign_id' => $campaign->id,
+            'discount_data' => $discountData,
+        ]);
 
         $this->createRewardNotification($user, $campaign, $promoCode);
     }
-
     /**
      * Creates a notification for the user about their new reward.
      */
