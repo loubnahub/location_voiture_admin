@@ -302,8 +302,6 @@ const fetchBookingsForDropdown = useCallback(async () => {
       <ResourcePage
         resourceName="Rental Agreement" resourceNamePlural="Rental Agreements" IconComponent={LuFileText}
         columns={agreementColumns}
-        initialFormData={initialAgreementEditData}
-        renderModalForm={EditAgreementModalFormFields}
         fetchAllItems={fetchAllRentalAgreements} canCreate={false}
         updateItem={(id, data) => updateRentalAgreement(id, processAgreementUpdateData(data))}
         deleteItem={deleteRentalAgreement} searchPlaceholder="Search Agreements..."

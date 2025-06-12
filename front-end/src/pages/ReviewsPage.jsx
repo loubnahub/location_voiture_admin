@@ -39,7 +39,7 @@ const ReviewsPage = () => {
     { header: 'Name', key: 'name', className: 'fw-bold' },
     { header: 'Rating', key: 'rating', render: (item) => <StarRating rating={item.rating} /> },
     { header: 'Comment', key: 'comment', render: (item) => item.comment.substring(0, 70) + (item.comment.length > 70 ? '...' : '') },
-    { header: 'Car Name', key: 'car_name', render: (item) => item.car_name || <Badge bg="secondary-subtle" text="secondary-emphasis">N/A</Badge> },
+    { header: 'Car Name', key: 'carName', render: (item) => item.carName || <Badge bg="secondary-subtle" text="secondary-emphasis">N/A</Badge> },
     { header: 'Submitted', key: 'created_at', render: (item) => new Date(item.created_at).toLocaleDateString() },
   ];
   
@@ -105,7 +105,7 @@ const ReviewsPage = () => {
                     <Car size={18} className="detail-icon" />
                     <div>
                       <span className="detail-label">Car Name</span>
-                      <p className="detail-value">{selectedReview.car_name || 'Not specified'}</p>
+                      <p className="detail-value">{selectedReview.carName || 'Not specified'}</p>
                     </div>
                   </div>
                 </Col>
