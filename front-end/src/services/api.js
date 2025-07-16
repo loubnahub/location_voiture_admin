@@ -66,6 +66,13 @@ export const fetchPublic3dVehicleModelById = (id) => {
 export const createClientBooking = (bookingData) => {
   return apiClient.post('/client-bookings', bookingData);
 };
+// This function is already in your api.js file and is correct
+export const fetchUserBookings = (userId, params = {}) => {
+  if (!userId) {
+    return Promise.reject(new Error("User ID is required to fetch bookings."));
+  }
+  return apiClient.get(`/users/${userId}/bookings`, { params });
+};
 export const fetchCurrentUser = () => apiClient.get('/user');
 export const logout = () => apiClient.post('/logout');
 // In src/services/api.js

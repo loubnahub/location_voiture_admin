@@ -187,7 +187,7 @@ const CarDetailPage = () => {
                       <img
                         src={mainImage}
                         alt={`${vehicleModel.title || 'Vehicle'} main view`}
-                        className="tw-w-full tw-h-auto tw-max-h-[280px] sm:tw-max-h-[340px] md:tw-max-h-[400px] lg:tw-max-h-[460px] tw-object-contain tw-transform tw-scale-105 md:tw-scale-110 lg:tw-scale-125"
+                        className="tw-w-full tw-h-auto tw-max-h-[280px] sm:tw-max-h-[340px] md:tw-max-h-[400px] lg:tw-max-h-[400px] tw-object-contain tw-transform tw-scale-105 md:tw-scale-110 lg:tw-scale-125"
                         onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_FALLBACK_IMAGE_URL; }}
                       />
                     </div>

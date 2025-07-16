@@ -8,7 +8,7 @@ const FAQsSection = () => {
     <div className="tw-bg-[#1B1B1B] tw-min-h-screen tw-text-white">
       
       <div
-        className="tw-relative tw-h-[50vh] sm:tw-h-[60vh] md:tw-h-96 lg:tw-h-[690px] tw-flex tw-items-center tw-justify-start tw-bg-cover tw-bg-center tw-bg-fixed" // Added tw-bg-fixed
+        className="tw-relative tw-h-[100vh] sm:tw-h-[60vh] md:tw-h-96 lg:tw-h-[690px] tw-flex tw-items-center tw-justify-start tw-bg-cover tw-bg-center tw-bg-fixed" // Added tw-bg-fixed
         style={{ backgroundImage: `url(${heroBackgroundImage})` }}
       >
         <div className="tw-absolute tw-inset-0 tw-bg-black tw-opacity-40"></div> {/* Dark overlay */}

@@ -1,7 +1,10 @@
 <?php
 namespace App\Http\Controllers\Api;
 
+use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Traits\TransformsBookings;
+use App\Models\Booking;
 use App\Models\User; // Your existing User model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,10 +14,70 @@ use Spatie\Permission\Models\Role; // For Spatie role validation
 use Illuminate\Support\Facades\Log;
 class UserController extends Controller
 {
+    use TransformsBookings;
     public function __construct()
     {
         // Optional: Apply middleware for authorization
         // $this->middleware('role:admin')->except(['show']); // Example
+    }
+    public function getUserBookings(Request $request, User $user)
+    {
+        // --- CRITICAL SECURITY CHECK ---
+        // A user can only view their own bookings, unless they are an admin.
+        // We use a Policy for this, which is the best practice.
+        // Let's assume you have a UserPolicy with a 'viewBookingsOf' method.
+        // If not, you can do an inline check:
+        if ($request->user()->id !== $user->id && !$request->user()->hasRole('admin')) {
+            // The person asking is NOT the user they are asking about, AND they are NOT an admin.
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // --- Fetching Logic (copied and adapted from BookingController) ---
+        
+        // This query is now on the Booking model, not the User model
+        $query = Booking::query()
+            ->where('renter_user_id', $user->id) // Fetch bookings for the user ID from the URL
+            ->with([
+                'vehicle:id,license_plate,vehicle_model_id',
+                'vehicle.vehicleModel:id,title,brand,model',
+                'insurancePlan:id,name',
+            ]);
+
+        // Apply status filter if provided in the request
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            // Allow multiple statuses separated by a comma
+            $statuses = explode(',', $status);
+            $validStatuses = [];
+            foreach ($statuses as $s) {
+                if (BookingStatus::tryFrom(trim($s))) {
+                    $validStatuses[] = trim($s);
+                }
+            }
+            if (!empty($validStatuses)) {
+                $query->whereIn('status', $validStatuses);
+            }
+        }
+        
+        // Always return all bookings for this page
+        $bookings = $query->latest('start_date')->get();
+
+        // We need a way to transform the booking data just like in BookingController
+        // For simplicity, we can borrow the logic.
+        $transformedBookings = $bookings->map(function (Booking $booking) {
+             $booking->loadMissing(['vehicle.vehicleModel:id,title,brand,thumbnail_url']);
+             return [
+                'id' => $booking->id,
+                'status' => $booking->status,
+                'vehicle_display' => $booking->vehicle?->vehicleModel?->title ?? 'N/A',
+                'car_image' => $booking->vehicle?->vehicleModel?->thumbnail_url,
+                'start_date' => $booking->start_date,
+                'end_date' => $booking->end_date,
+                'final_price' => $booking->final_price,
+            ];
+        });
+
+        return response()->json(['data' => $transformedBookings]);
     }
 
     /**

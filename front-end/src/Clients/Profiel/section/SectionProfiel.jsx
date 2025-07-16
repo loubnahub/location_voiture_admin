@@ -13,7 +13,7 @@ const ProfielSection = () => {
       
       {/* The hero section with the background image */}
       <div
-        className="tw-relative tw-h-[50vh] sm:tw-h-[60vh] md:tw-h-96 lg:tw-h-[550px] tw-flex tw-items-center tw-justify-start tw-bg-cover tw-bg-center"
+        className="tw-relative tw-h-[100vh] sm:tw-h-[60vh] md:tw-h-96 lg:tw-h-[550px] tw-flex tw-items-center tw-justify-start tw-bg-cover tw-bg-center"
         style={{ backgroundImage: `url(${heroBackgroundImage})` }}
       >
         {/* Dark overlay for better text readability */}

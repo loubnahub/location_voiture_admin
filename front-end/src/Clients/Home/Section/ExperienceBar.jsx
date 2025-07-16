@@ -33,8 +33,8 @@ const ExperienceBar = () => {
   });
 
   return (
-    <div className="tw-w-full tw-bg-[#222222]/40  tw-font-sans ">
-      <div className=" tw-mx-auto tw-m-auto tw-px-4 sm:tw-px-6 lg:tw-px-8">
+    <div className="tw-w-full tw-bg-[#1b1b1b]  tw-font-sans tw-rounded-xl tw-shadow-md tw-shadow-[#E61C1C]  tw-z-[1000]">
+      <div className=" tw-mx-auto tw-m-auto tw-px-4 sm:tw-px-6 tw-rounded-xl lg:tw-px-8">
         {/* The ref is attached here. The animation starts when this div is in view. */}
         <div ref={ref} className="tw-p-8 sm:tw-p-5 ">
           
@@ -53,7 +53,7 @@ const ExperienceBar = () => {
 
                 {/* Stat Text */}
                 <div className="tw-text-center sm:tw-text-left">
-                  <p className="tw-text-4xl lg:tw-text-5xl tw-font-bold tw-text-[#FFA600]">
+                  <p className="tw-text-4xl lg:tw-text-5xl tw-font-bold tw-text-[#ffff]">
                     {inView ? (
                       <CountUp 
                         start={0} 

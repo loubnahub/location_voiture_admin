@@ -1,5 +1,6 @@
-// src/components/FiltersSidebar.jsx (or your path to it)
-import React, { useState, useEffect, useRef } from 'react';
+// src/components/FiltersSidebar.jsx
+import React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 import { useCars } from '../../../contexts/CarContext'; // <--- USE THE HOOK
 
@@ -15,7 +16,7 @@ const FilterSection = ({ title, children, isOpen, onToggle }) => (
   <div className="tw-border-b tw-border-[#3D3D47] ">
     <button
       onClick={onToggle}
-      className="tw-w-full tw-flex tw-justify-between tw-items-center tw-border-0 tw-bg-transparent "
+      className="tw-w-full tw-flex tw-justify-between tw-items-center tw-border-0 tw-bg-transparent tw-py-3"
       aria-expanded={isOpen}
     >
       <h3 className="tw-text-sm tw-font-semibold tw-text-gray-200 hover:tw-text-white tw-transition-colors">
@@ -53,10 +54,35 @@ const FiltersSidebar = ({ filters, setFilters, onApplyFilters, onResetFilters, t
     location: true, category: true, type: true, capacity: true,
     year: true, fuel: true, transmission: true, price: true,
   });
-  const { allCarsData, isLoading } = useCars(); 
-
-
+  const { allCarsData } = useCars();
   const priceRangeRef = useRef(null);
+
+  // --- START: MOBILE BEHAVIOR ENHANCEMENTS ---
+
+  useEffect(() => {
+    // This effect manages body scroll-locking when the sidebar is open on mobile devices.
+    // It also handles window resizing to ensure behavior is correct.
+    const checkAndSetScroll = () => {
+      if (isSidebarOpen && window.innerWidth < 1024) { // 1024px is Tailwind's default 'lg' breakpoint
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'auto';
+      }
+    };
+
+    checkAndSetScroll(); // Run on mount and when isSidebarOpen changes
+
+    window.addEventListener('resize', checkAndSetScroll);
+
+    // Cleanup function to restore scroll and remove listener when component unmounts
+    return () => {
+      window.removeEventListener('resize', checkAndSetScroll);
+      document.body.style.overflow = 'auto';
+    };
+  }, [isSidebarOpen]);
+
+  // --- END: MOBILE BEHAVIOR ENHANCEMENTS ---
+
 
   const toggleSection = (sectionName) => {
     setOpenSections(prev => ({ ...prev, [sectionName]: !prev[sectionName] }));
@@ -86,6 +112,7 @@ const FiltersSidebar = ({ filters, setFilters, onApplyFilters, onResetFilters, t
     }
   };
 
+  // --- START: DYNAMIC DATA GENERATION ---
   const availableLocations = [...new Set(allCarsData.map(car => car.location).filter(Boolean))].sort();
   const carCategories = [...new Set(allCarsData.map(car => car.category).filter(Boolean))].sort();
   const carTypes = [...new Set(allCarsData.map(car => car.type).filter(Boolean))].sort();
@@ -103,7 +130,7 @@ const FiltersSidebar = ({ filters, setFilters, onApplyFilters, onResetFilters, t
 
   const carFuelTypes = [...new Set(allCarsData.map(car => car.fuelType).filter(Boolean))].sort();
   const carTransmissions = [...new Set(allCarsData.map(car => car.transmission).filter(Boolean))].sort();
-  // --- END DYNAMIC GENERATION ---
+  // --- END: DYNAMIC DATA GENERATION ---
 
 
   useEffect(() => {
@@ -144,17 +171,25 @@ const FiltersSidebar = ({ filters, setFilters, onApplyFilters, onResetFilters, t
   `;
 
   return (
-    <div className='tw-px-10 '>
+    <>
       <style>{sidebarSpecificStyles}</style>
-      {/* Sidebar main container */}
-      <div className={`tw-fixed tw-inset-y-0 tw-left-0 tw-z-30 lg:tw-z-0 tw-w-72 tw-bg-[#2C2C34] tw-transform tw-transition-transform tw-duration-300 tw-ease-in-out lg:tw-relative lg:tw-translate-x-0 lg:tw-h-auto lg:tw-overflow-y-visible ${isSidebarOpen ? 'tw-translate-x-0 tw-shadow-2xl tw-overflow-y-auto tw-h-full custom-scrollbar' : 'tw--translate-x-full tw-overflow-y-auto tw-h-full custom-scrollbar'}`}>
+      
+      {/* Backdrop Overlay: Shows on mobile, closes sidebar on click */}
+      <div
+        onClick={toggleSidebar}
+        className={`tw-fixed tw-inset-0 tw-bg-black/60 tw-z-20 lg:tw-hidden tw-transition-opacity tw-duration-300 ${isSidebarOpen ? 'tw-opacity-100' : 'tw-opacity-0 tw-pointer-events-none'}`}
+        aria-hidden="true"
+      />
+
+      {/* Sidebar: Uses <aside> for semantic HTML */}
+      <aside className={`tw-fixed tw-inset-y-0 tw-left-0 tw-z-30 lg:tw-z-0 tw-w-72 tw-bg-[#2C2C34] tw-transform tw-transition-transform tw-duration-300 tw-ease-in-out lg:tw-relative lg:tw-translate-x-0 lg:tw-h-auto lg:tw-overflow-y-visible ${isSidebarOpen ? 'tw-translate-x-0 tw-shadow-2xl' : 'tw--translate-x-full'} ${isSidebarOpen && 'tw-overflow-y-auto tw-h-full custom-scrollbar'}`}>
         <div className="tw-p-5 tw-h-full tw-flex tw-flex-col">
           {/* Sidebar Header */}
           <div className="tw-flex tw-justify-between tw-items-center tw-mb-4 tw-flex-shrink-0">
             <h2 className="tw-text-lg tw-font-semibold tw-text-white lg:tw-hidden">Filters</h2>
             <p className="tw-text-sm tw-font-bold tw-text-[#FFA600] tw-mb-0 tw-hidden lg:tw-block">WHAT ARE YOU <span className='tw-text-white'>LOOKING FOR</span></p>
             <button onClick={toggleSidebar} className="tw-text-gray-400 hover:tw-text-white lg:tw-hidden">
-              {isSidebarOpen ? <X size={20} /> : <SlidersHorizontal size={20} />}
+              <X size={20} />
             </button>
           </div>
 
@@ -207,7 +242,7 @@ const FiltersSidebar = ({ filters, setFilters, onApplyFilters, onResetFilters, t
 
               <FilterSection title="Car Make Year" isOpen={openSections.year} onToggle={() => toggleSection('year')}>
                   <ScrollableCheckboxList maxHeightClass="tw-max-h-[132px] tw-p-3">
-                  {carMakeYears.map(year => ( <CheckboxItem key={year} id={`year-${year}`} label={year} checked={filters.years.includes(String(year))} onChange={() => handleCheckboxChange('years', String(year))} /> ))}
+                  {carMakeYears.map(year => ( <CheckboxItem key={year} id={`year-${year}`} label={String(year)} checked={filters.years.includes(String(year))} onChange={() => handleCheckboxChange('years', String(year))} /> ))}
                   </ScrollableCheckboxList>
               </FilterSection>
 
@@ -239,8 +274,8 @@ const FiltersSidebar = ({ filters, setFilters, onApplyFilters, onResetFilters, t
             <button onClick={onResetFilters} className="tw-w-full tw-border-0 tw-bg-gray-100 tw-text-[#2C2C34] tw-font-semibold tw-py-3 tw-rounded-md hover:tw-bg-gray-200 tw-transition-colors tw-text-sm">Reset Filter</button>
           </div>
         </div>
-      </div>
-    </div>
+      </aside>
+    </>
   );
 };
 

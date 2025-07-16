@@ -1,5 +1,4 @@
 import React from 'react'
-import CarRentalHero from './Section/FindCarsRental'
 import YouNeedCar from './Section/YouNeedCar'
 import OurServiceSection from './Section/ServiceHome'
 import VehicleFleet from './Section/CarsCard'
@@ -12,12 +11,14 @@ import Parterns from './Section/Partenrs'
 import '../../index.css'
 import WhyChooseUsSection from './Section/WhyChooseUs'
 import WriteReviewFormBeautiful from './Section/AvisClinet'
+// import Hero from './Section/Hero'
+import HeroSection2 from './Section/Hero2'
 
 export default function Home() {
   return (
     <div className="tw-bg-[#1b1b1b]">
     <Header />
-    <CarRentalHero />
+    <HeroSection2/>
     <YouNeedCar />
     <OurServiceSection />
     <VehicleFleet />

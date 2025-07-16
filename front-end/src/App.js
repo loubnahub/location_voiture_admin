@@ -1,5 +1,5 @@
-import React,{useEffect} from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate,Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Layouts
@@ -33,18 +33,16 @@ import VehicleCreatePage from './pages/VehicleCreatePage'
 import SignUpClient from './Clients/Compte/Singup'
 import Profiel from './Clients/Profiel/Profiel';
 import Testiominals from './Clients/testiominals/testiominals';
-import VedioStart from './Clients/Vedio';
 // In App.js
 import { CarProvider } from './contexts/CarContext'
 import Vehicle from './Clients/VEHICLE/Vehicle';
-import CarDetailPage from './Clients/DetailsCars/DetailsModalCar'; 
-import CarProductPage from './Clients/DetailsCars/DetailsCarColor'; 
+import CarDetailPage from './Clients/DetailsCars/DetailsModalCar';
+import CarProductPage from './Clients/DetailsCars/DetailsCarColor';
 import Service from './Clients/Services/Service';
 import Contact from './Clients/Contact/Contact';
 import About from './Clients/About/About';
-import CarDetails3d from './Clients/DetailsCars/DetailsCar3d'; 
+import CarDetails3d from './Clients/DetailsCars/DetailsCar3d';
 import BookingPageClient from './Clients/DetailsCars/RentNow';
-import SignUpPage from './Clients/Compte/Singup';
 import NotificationsPage from './Clients/Compte/Notification';
 import FAQs from './Clients/FAQs/Faqs';
 import Blog from './Clients/Blog/Blog';
@@ -52,6 +50,12 @@ import PrivacyPolicyPage from './Clients/Privacy/Section/PrivacyPage';
 import ReviewsPage from './pages/ReviewsPage';
 import ContactSubmissionsPage from './pages/ContactSubmissionsPage';
 import AdminProfilePage from './pages/AdminProfilePage';
+import Mybooking from './Clients/Booking/Booking';
+import ForgotPasswordPage from './Clients/Compte/ForgetPassword';
+import ResetConfirmationPage from './Clients/Compte/ResetConfirmationPage';
+import ResetPasswordPage from './Clients/Compte/ResetPasswordPage';
+import { ThemeProvider } from 'react-bootstrap';
+import BookingDetails from './Clients/Booking/BookingDetails';
 
 // In App.js
 const ProtectedRoute = ({ requiredRole }) => {
@@ -73,9 +77,9 @@ const ProtectedRoute = ({ requiredRole }) => {
 
   // --- THIS IS THE MOST IMPORTANT PART ---
   // At this point, we have a user. Let's inspect them carefully.
-  
+
   const userHasRole = currentUser.roles?.includes(requiredRole);
-  
+
 
   if (!userHasRole) {
     return <Navigate to="/" replace />;
@@ -100,7 +104,7 @@ const PublicRoute = ({ children }) => {
     if (!currentUser) {
       return <div>Finalizing Session...</div>;
     }
-    
+
     const isAdmin = currentUser.roles?.includes('admin');
     if (isAdmin) {
       return <Navigate to="/admin/dashboard" replace />;
@@ -126,79 +130,93 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-                <CarProvider> 
+          <CarProvider>
 
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<ClientLayout />}>
-            <Route index element={<VedioStart />} />
-                   <Route path='/Home' element={<Home />} />
-  <Route path="/notification" element={<NotificationsPage />} />
+            <Routes>
 
-                      <Route path="/fleet" element={<Vehicle />} /> 
-                      <Route path="/fleet/details/:vehicleId" element={<CarDetailPage />} />
-                      <Route path="/booking/:vehicleId" element={<BookingPageClient />} />
-                      <Route path="/fleet/details/:vehicleId/3d" element={<CarDetails3d />} />
-                      <Route path="/fleet/details/:vehicleId/ar" element={<CarProductPage />} />
-                      <Route path="/Services" element={<Service />} />
-                      <Route path="/Contact" element={<Contact />} />
-                      <Route path="/About" element={<About />} />
-                      <Route path="/FAQs" element={<FAQs />} />
-                      <Route path="/Blog" element={<Blog />} />
-                         <Route path="/Testiominals" element={<Testiominals />} />
-                                  <Route path="/Profiel/:user_id" element={<Profiel />} />
-                                  <Route path="/PrivacyPolicy" element={<PrivacyPolicyPage/>} />
-                    </Route>
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <LoginPage />
+
+              {/* Public Routes */}
+              <Route path="/" element={<ClientLayout />}>
+                <Route index element={<Home />} />
+                <Route path="/notification" element={<NotificationsPage />} />
+                <Route path="/fleet" element={<Vehicle />} />
+                <Route path="/fleet/details/:vehicleId" element={<CarDetailPage />} />
+                <Route path="/booking/:vehicleId" element={<BookingPageClient />} />
+                <Route path="/fleet/details/:vehicleId/3d" element={<CarDetails3d />} />
+                <Route path="/fleet/details/:vehicleId/ar" element={<CarProductPage />} />
+                <Route path="/Services" element={<Service />} />
+                <Route path="/Contact" element={<Contact />} />
+                <Route path="/About" element={<About />} />
+                <Route path="/FAQs" element={<FAQs />} />
+                <Route path="/Blog" element={<Blog />} />
+                
+                <Route path="/reset-confirmation" element={<ResetConfirmationPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/Testiominals" element={<Testiominals />} />
+                <Route path="/Profiel/:user_id" element={<Profiel />} />
+                <Route path="/Mybooking/:user_id" element={<Mybooking />} />     
+                <Route path="/bookings/:bookingId" element={<BookingDetails />} />
+                <Route path="/PrivacyPolicy" element={<PrivacyPolicyPage />} />
+              </Route>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/SignUp"
+                element={
+                  <PublicRoute>
+                    <SignUpClient />
+                  </PublicRoute>
+                }
+              />
+              <Route 
+              path="/forgot-password" 
+              element={
+                <PublicRoute>
+              <ForgotPasswordPage />
               </PublicRoute>
-            }
-          />
-<Route
-            path="/SignUp"
-            element={
-              <PublicRoute>
-                <SignUpClient />
-              </PublicRoute>
-            }
-          />
-          {/* Protected Admin Routes */}
-          <Route path="/admin" element={<ProtectedRoute  requiredRole="admin"/>}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-<Route path="customer-relations/reviews" element={<ReviewsPage />} />
-<Route path="profile" element={<AdminProfilePage />} />
-<Route path="customer-relations/contact-messages" element={<ContactSubmissionsPage />} />
-            <Route path="inventory/vehicles" element={<VehiclePage />} />
-            <Route path="fleet/vehicle-models" element={<VehicleModelPage />} />
-            <Route path="fleet/vehicle-models/:modelId" element={<VehicleModelDetailView />} />
-            <Route path="fleet/vehicle-models/:modelId/gallery" element={<VehicleDisplayGallery />} />
-            <Route path="fleet/vehicle-types" element={<VehicleTypePage />} />
-            <Route path="fleet/features" element={<FeaturePage />} />
-            <Route path="fleet/extras" element={<ExtraPage />} />
-            <Route path="fleet/vehicle-models/create" element={<VehicleModelCreatePage />} />
-            <Route path="fleet/insurance-plans" element={<InsurancePlanPage />} />
-            <Route path="/admin/inventory/bookings" element={<BookingPage />} />
-            <Route path="operations/damage-reports" element={<DamageReportPage />} />
-            <Route path="operations/operational-holds" element={<OperationalHoldPage />} />
-            <Route path="operations/rental-agreements" element={<RentalAgreementPage />} />
-            <Route path="users/customers" element={<UserPage />} />
-            <Route path="users/roles" element={<RolePage />} />
-            <Route path="marketing/promotion-campaigns" element={<PromotionCampaignPage />} />
-            <Route path="marketing/promotion-codes" element={<PromotionCodePage />} />
-            <Route path="financials/payments" element={<PaymentPage />} />
-            <Route path="vehicle-instance/:instanceId" element={<VehicleInstanceDetailView />} />
-               <Route path="vehicles/create" element={<VehicleCreatePage />} />
+              
+              } />
 
-            {/* Add other admin routes here */}
-          </Route>
-          {/* Fallback Route */}
-          <Route path="*" element={<AuthRedirect />} />
-        </Routes>
-        </CarProvider> 
+              {/* Protected Admin Routes */}
+              <Route path="/admin" element={<ProtectedRoute requiredRole="admin" />}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="customer-relations/reviews" element={<ReviewsPage />} />
+                <Route path="profile" element={<AdminProfilePage />} />
+                <Route path="customer-relations/contact-messages" element={<ContactSubmissionsPage />} />
+                <Route path="inventory/vehicles" element={<VehiclePage />} />
+                <Route path="fleet/vehicle-models" element={<VehicleModelPage />} />
+                <Route path="fleet/vehicle-models/:modelId" element={<VehicleModelDetailView />} />
+                <Route path="fleet/vehicle-models/:modelId/gallery" element={<VehicleDisplayGallery />} />
+                <Route path="fleet/vehicle-types" element={<VehicleTypePage />} />
+                <Route path="fleet/features" element={<FeaturePage />} />
+                <Route path="fleet/extras" element={<ExtraPage />} />
+                <Route path="fleet/vehicle-models/create" element={<VehicleModelCreatePage />} />
+                <Route path="fleet/insurance-plans" element={<InsurancePlanPage />} />
+                <Route path="/admin/inventory/bookings" element={<BookingPage />} />
+                <Route path="operations/damage-reports" element={<DamageReportPage />} />
+                <Route path="operations/operational-holds" element={<OperationalHoldPage />} />
+                <Route path="operations/rental-agreements" element={<RentalAgreementPage />} />
+                <Route path="users/customers" element={<UserPage />} />
+                <Route path="users/roles" element={<RolePage />} />
+                <Route path="marketing/promotion-campaigns" element={<PromotionCampaignPage />} />
+                <Route path="marketing/promotion-codes" element={<PromotionCodePage />} />
+                <Route path="financials/payments" element={<PaymentPage />} />
+                <Route path="vehicle-instance/:instanceId" element={<VehicleInstanceDetailView />} />
+                <Route path="vehicles/create" element={<VehicleCreatePage />} />
+
+                {/* Add other admin routes here */}
+              </Route>
+              {/* Fallback Route */}
+              <Route path="*" element={<AuthRedirect />} />
+            </Routes>
+          </CarProvider>
 
       </AuthProvider>
     </Router>

@@ -28,7 +28,7 @@ const Footer = () => {
   }, []); // The empty array ensures this effect runs only once
 
   const quickLinks = [
-    { name: 'Home', href: '/home' },
+    { name: 'Home', href: '/' },
     { name: 'About Us', href: '/about' },
     { name: 'Services', href: '/services' },
     { name: 'Vehicle Fleet', href: '/fleet' },

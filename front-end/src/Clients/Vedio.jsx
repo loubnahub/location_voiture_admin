@@ -9,7 +9,7 @@ const VedioStart = () => {
   // This state now controls if the video is muted. We start it as muted.
   const [isMuted, setIsMuted] = useState(true);
 
-  const videoSrc = "http://localhost:3000/vedio/car.mp4";
+  const videoSrc = "/vedio/car.mp4";
   const nextPage = "/home";
 
   // This function will run when the user clicks anywhere on the screen.

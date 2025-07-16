@@ -20,7 +20,7 @@ module.exports = {
       }
     },
      resolve: {
-    extensions: ['.mjs', '.js', '.jsx', '.ts', '.tsx'], // .mjs is important
+     extensions: ['.mjs', '.js', '.jsx', '.ts', '.tsx'],
   },
     keyframes: {
         marquee: {

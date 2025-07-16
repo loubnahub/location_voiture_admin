@@ -22,7 +22,7 @@ const sampleTags = [
 ]; 
 const BlogPostCard = ({ post }) => {
   return (
-    <article className="tw-bg-[#2a2a2a] tw-rounded-xl tw-shadow-xl tw-overflow-hidden tw-flex tw-flex-col">
+    <article className="tw-bg-[#2a2a2a] tw-rounded-xl tw-shadow-xl tw-overflow-hidden tw-flex tw-flex-col -tw-mt-80 md:tw-mt-0">
       {post.imageUrl && (
         <div className="tw-relative">
           <img 

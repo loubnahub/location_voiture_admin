@@ -3,24 +3,23 @@ import {
   Car,              
   CarFront,         
   MountainSnow,    
-  Gem,              // Luxury
-  PlaneTakeoff,     // Airport Rentals
-  CalendarClock,    // Long-Term
-  Edit3,            // Flexible Booking
-  Wrench,           // Roadside Support / Maintenance
-  ShieldCheck,      // Could be for reliability or premium
-  Users,            // For Vans/Minibuses (if included)
-  // Add any other icons you might want
+  Gem,             
+  PlaneTakeoff,     
+  CalendarClock,    
+  Edit3,            
+  Wrench,           
+  ShieldCheck,      
+  Users,            
 } from 'lucide-react';
 import Header from '../../Header/Nav'; // Ensure this path is correct
 
-// Updated servicesData focused on car rentals
 const rentalServicesData = [
+  // ... (data remains unchanged)
   {
     title: 'Economy & Compact Cars',
     description: 'Perfect for city driving and budget-conscious travelers. Fuel-efficient and easy to park.',
     icon: CarFront,
-    link: '/rentals/economy', // Example link
+    link: '/rentals/economy',
   },
   {
     title: 'Sedans & Family Cars',
@@ -31,7 +30,7 @@ const rentalServicesData = [
   {
     title: 'SUVs & 4x4 Adventure',
     description: 'Explore with confidence. Our SUVs offer ample space, power, and versatility for any terrain.',
-    icon: MountainSnow, // Or use Car if preferred and style it
+    icon: MountainSnow,
     link: '/rentals/suvs',
   },
   {
@@ -61,15 +60,13 @@ const rentalServicesData = [
   {
     title: '24/7 Roadside Assistance',
     description: 'Drive with peace of mind knowing our dedicated support team is available around the clock.',
-    icon: Wrench, // Or ShieldAlert
+    icon: Wrench,
     link: '/support/roadside-assistance',
   },
 ];
 
 const RentalCarsPage = () => {
-  // IMPORTANT: Replace this with your actual hero image for rental cars
-  // For example: 'public/images/banners/rental-hero.jpg' or an Unsplash URL
-  const heroBackgroundImage = '/images/Cars/ServicesPages.jpg'; // Placeholder image
+  const heroBackgroundImage = '/images/Cars/ServicesPages.jpg';
 
   return (
     <div className="tw-bg-[#1B1B1B] tw-min-h-screen tw-text-white">
@@ -77,12 +74,19 @@ const RentalCarsPage = () => {
 
       {/* Hero Section */}
       <div
-        className="tw-relative tw-h-[50vh] sm:tw-h-[60vh] md:tw-h-[450px] lg:tw-h-[690px] tw-flex tw-items-center tw-justify-start tw-text-center tw-bg-cover tw-bg-center tw-bg-fixed" // Added tw-bg-fixed and tw-justify-start
+        // --- UPDATED FOR MOBILE ---
+        // Centered on mobile, left on larger screens.
+        // Disabled fixed background on mobile for performance.
+        className="tw-relative tw-h-[50vh] sm:tw-h-[60vh] md:tw-h-[450px] lg:tw-h-[690px] tw-flex tw-items-center tw-justify-center sm:tw-justify-start tw-bg-cover tw-bg-center md:tw-bg-fixed"
         style={{ backgroundImage: `url(${heroBackgroundImage})` }}
       >
         <div className="tw-absolute tw-inset-0 tw-bg-black/40"></div> {/* Dark overlay */}
-        <div className="tw-relative tw-z-10 tw-text-left tw-px-8 md:tw-px-16 tw-max-w-4xl"> {/* Adjusted padding and alignment */}
-          <p className="tw-text-amber-400 tw-uppercase tw-tracking-wider tw-text-sm tw-font-semibold tw-mb-2 sm:tw-mb-3 ">
+        {/* --- UPDATED FOR MOBILE ---
+            Text centered on mobile, left on larger screens.
+            Adjusted padding for smaller devices.
+        */}
+        <div className="tw-relative tw-z-10 tw-text-center sm:tw-text-left tw-px-4 sm:tw-px-8 md:tw-px-16 tw-max-w-4xl">
+          <p className="tw-text-amber-400 tw-uppercase tw-tracking-wider tw-text-sm tw-font-semibold tw-mb-2 sm:tw-mb-3">
             WHAT WE DO  
           </p>
           <h1 className="tw-text-3xl sm:tw-text-4xl md:tw-text-5xl lg:tw-text-6xl tw-font-bold tw-leading-tight">
@@ -92,7 +96,8 @@ const RentalCarsPage = () => {
       </div>
 
       {/* Services Grid Section - Introduction */}
-      <div className="tw-bg-[#1B1B1B] tw-py-16 sm:tw-py-20 lg:tw-py-24">
+      {/* Adjusted vertical padding for mobile */}
+      <div className="tw-bg-[#1B1B1B] tw-py-12 sm:tw-py-20 lg:tw-py-24">
         <div className="container tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8">
           <div className="tw-text-center tw-mb-12 lg:tw-mb-16">
             <h2 className="tw-text-3xl sm:tw-text-4xl tw-font-semibold tw-text-white">
@@ -100,12 +105,11 @@ const RentalCarsPage = () => {
             </h2>
             <p className="tw-mt-3 sm:tw-mt-4 tw-text-gray-400 tw-max-w-2xl tw-mx-auto tw-text-sm sm:tw-text-base">
               Discover convenience, flexibility, and the right car for any purpose with our comprehensive rental services.
-              We offer a wide array of premium rental vehicles designed to meet your every need.
             </p>
           </div>
 
-          {/* Rental Services Grid */}
-          <div className="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 md:tw-grid-cols-3 lg:tw-grid-cols-4 tw-gap-6 md:tw-gap-8">
+          {/* Rental Services Grid (Already mobile-friendly) */}
+          <div className="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-6 md:tw-gap-8">
             {rentalServicesData.map((service, index) => {
               const IconComponent = service.icon;
               return (
@@ -123,7 +127,6 @@ const RentalCarsPage = () => {
                   <p className="tw-text-gray-400 tw-text-sm tw-leading-relaxed tw-mb-6 tw-flex-grow">
                     {service.description}
                   </p>
-                 
                 </div>
               );
             })}
@@ -132,7 +135,7 @@ const RentalCarsPage = () => {
       </div>
 
       {/* Why Choose Us / Features Section */}
-      <div className="tw-bg-[#1B1B1B] tw-py-16 sm:tw-py-20 lg:tw-py-24">
+      <div className="tw-bg-[#1F1F1F] tw-py-12 sm:tw-py-20 lg:tw-py-24">
         <div className="container tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8 tw-text-center">
           <h2 className="tw-text-3xl sm:tw-text-4xl tw-font-semibold tw-text-amber-400 tw-mb-4">
             Why Rent With Us?
@@ -140,16 +143,17 @@ const RentalCarsPage = () => {
           <p className="tw-text-gray-400 tw-max-w-2xl tw-mx-auto tw-mb-10 sm:tw-mb-12 lg:tw-mb-16 tw-text-sm sm:tw-text-base">
             We are committed to providing an exceptional car rental experience with benefits that set us apart.
           </p>
+          {/* Feature list grid (Already mobile-friendly) */}
           <div className="tw-max-w-4xl tw-mx-auto tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-8 tw-text-left">
             {[
-              { title: "Wide Vehicle Selection", description: "From compact cars to luxury SUVs, find the perfect vehicle for your needs from our diverse and modern fleet.", icon: Car /* Or use a 'List' icon */ },
-              { title: "Competitive & Transparent Pricing", description: "Enjoy affordable rates with no hidden fees. Get the best value for your money every time you rent.", icon: ShieldCheck /* Or a 'DollarSign' icon */ },
+              { title: "Wide Vehicle Selection", description: "From compact cars to luxury SUVs, find the perfect vehicle for your needs from our diverse and modern fleet.", icon: Car },
+              { title: "Competitive & Transparent Pricing", description: "Enjoy affordable rates with no hidden fees. Get the best value for your money every time you rent.", icon: ShieldCheck },
               { title: "Easy Online Booking", description: "Our user-friendly platform allows you to reserve your car in minutes, anytime, anywhere.", icon: Edit3 },
-              { title: "Excellent Customer Support", description: "Our friendly team is here to assist you at every step, ensuring a smooth and hassle-free rental.", icon: Users /* Or 'Smile' icon */ },
+              { title: "Excellent Customer Support", description: "Our friendly team is here to assist you at every step, ensuring a smooth and hassle-free rental.", icon: Users },
               { title: "Flexible Rental Terms", description: "We offer various rental durations and options to suit your specific travel plans and budget.", icon: CalendarClock },
               { title: "Well-Maintained Vehicles", description: "All our cars are regularly serviced and cleaned to ensure your safety and comfort on the road.", icon: Wrench },
             ].map((feature, idx) => (
-              <div key={idx} className="tw-bg-[#1F1F1F] tw-p-6 tw-rounded-lg tw-flex tw-items-start tw-space-x-4">
+              <div key={idx} className="tw-bg-[#242424] tw-p-6 tw-rounded-lg tw-flex tw-items-start tw-space-x-4">
                 <div className="tw-flex-shrink-0 tw-mt-1">
                   <feature.icon className="tw-h-7 tw-w-7 tw-text-amber-400" />
                 </div>
@@ -162,8 +166,6 @@ const RentalCarsPage = () => {
           </div>
         </div>
       </div>
-
-   
     </div>
   );
 };

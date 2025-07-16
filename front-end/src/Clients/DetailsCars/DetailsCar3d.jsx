@@ -221,7 +221,7 @@ export default function CarDetails3d() {
 
             {/* Center Panel: Main View & Thumbnails */}
             <div className="tw-col-span-12 lg:tw-col-span-7 tw-flex tw-flex-col tw-items-center tw-justify-center tw-relative -tw-mt-4 lg:tw-mt-0">
-              <div className="tw-w-full tw-aspect-video sm:tw-aspect-[16/9] tw-max-h-[calc(95vh-220px)] md:tw-max-h-[500px] lg:tw-max-h-[550px] tw-mb-2 sm:tw-mb-3 tw-flex tw-items-center tw-justify-center tw-bg-neutral-800 tw-rounded-lg tw-overflow-hidden tw-shadow-inner">{mainDisplayContent}</div>
+              <div className="tw-w-full tw-aspect-video sm:tw-aspect-[16/9] tw-max-h-[calc(95vh-220px)] md:tw-max-h-[500px] lg:tw-max-h-[550px] tw-mb-2 sm:tw-mb-3 tw-flex tw-items-center tw-justify-center p-5 tw-rounded-lg tw-overflow-hidden tw-shadow-inner">{mainDisplayContent}</div>
               {/* [THE FIX] Carousel only shows if there are images to display */}
               {currentGalleryMedia.length > 0 && (
                   <div className="tw-flex tw-items-center tw-space-x-1 sm:tw-space-x-2 tw-px-2 tw-py-1.5 tw-backdrop-blur-sm tw-bg-white/80 tw-rounded-lg tw-shadow-md tw-mt-1 tw-max-w-full">

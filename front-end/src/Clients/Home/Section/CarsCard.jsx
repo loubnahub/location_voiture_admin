@@ -222,7 +222,7 @@ const dynamicFilters = useMemo(() => {
                              tw-shadow-lg hover:tw-shadow-xl tw-transition-all tw-duration-300 tw-aspect-[4/5]" // Card style from HEAD
                 >
                     <img
-                      src={vehicle.thumbnail_url || vehicle.image_url || vehicle.imageUrl || vehicle.image || DEFAULT_IMAGE_URL} // Robust image source checking
+                      src={vehicle.thumbnail_url || vehicle.image_url || vehicle.imageUrl || vehicle.image } // Robust image source checking
                       alt={vehicle.title || vehicle.brand || 'Vehicle image'}
                       className="tw-absolute tw-inset-0 tw-w-full tw-h-full tw-object-cover tw-transition-transform tw-duration-300 group-hover:tw-scale-105 -tw-z-0" // Using -tw-z-0 from HEAD
                       loading="lazy"
@@ -286,16 +286,6 @@ const dynamicFilters = useMemo(() => {
                 </div>
               ))}
             </div>
-            {displayedVehicles.length < filteredVehicles.length && (
-            <div className="tw-text-center tw-mt-12 sm:tw-mt-16">
-                <button
-                  onClick={handleLoadMore}
-                  className="tw-bg-neutral-800 tw-text-neutral-300 tw-border tw-border-neutral-700 hover:tw-bg-neutral-700 hover:tw-text-amber-400 focus:tw-ring-amber-500 tw-px-8 tw-py-3 tw-rounded-xl tw-font-semibold tw-transition-colors"
-                >
-                  Load More
-                </button>
-            </div>
-        )}
           </>
         ): (
     <p className="tw-text-center tw-text-neutral-400 tw-col-span-full tw-py-20 tw-text-lg">

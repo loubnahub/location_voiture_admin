@@ -25,8 +25,8 @@ use App\Http\Controllers\Api\DamageReportController;
 use App\Http\Controllers\Api\RentalAgreementController;
 use App\Http\Controllers\Api\PromotionCampaignController;
 use App\Http\Controllers\Api\PromotionCodeController;
-use App\Http\Controllers\Api\Admin\DashboardController; 
-use App\Http\Controllers\Api\Admin\NotificationController; 
+use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\Admin\NotificationController;
 use App\Http\Controllers\Api\AvisController;
 use App\Http\Controllers\Api\ContactSubmissionController;
 
@@ -43,7 +43,7 @@ Route::get('/vehicle-models-3d/{vehicleModel}', [PublicFleetController::class, '
 | API Routes
 |--------------------------------------------------------------------------
 | This file is where you register API routes for your application.
-|
+| 
 */
 
 // ========================================================================
@@ -54,10 +54,10 @@ Route::get('/vehicle-models-3d/{vehicleModel}', [PublicFleetController::class, '
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/vehicle-models/list-all', [VehicleModelController::class, 'listAll']);
-    Route::get('/lov/renters', [AdminUserController::class, 'getRentersForDropdown']);
+Route::get('/lov/renters', [AdminUserController::class, 'getRentersForDropdown']);
 // In routes/api.php, inside the `auth:sanctum` group but OUTSIDE the `admin` prefix group
-        Route::apiResource('vehicle-types', VehicleTypeController::class)->parameters(['vehicle-types' => 'vehicle_type']);
-    Route::apiResource('vehicle-models', VehicleModelController::class)->parameters(['vehicle-models' => 'vehicle_model']);
+Route::apiResource('vehicle-types', VehicleTypeController::class)->parameters(['vehicle-types' => 'vehicle_type']);
+Route::apiResource('vehicle-models', VehicleModelController::class)->parameters(['vehicle-models' => 'vehicle_model']);
 // Publicly viewable fleet information
 Route::get('/vehicle-models/public', [VehicleModelController::class, 'publicIndex'])->name('public.vehicle-models.index');
 Route::get('/vehicle-models/public/{vehicle_model}', [VehicleModelController::class, 'publicShow'])->name('public.vehicle-models.show');
@@ -65,16 +65,20 @@ Route::get('lov/vehicles-available', [VehicleController::class, 'getAvailableFor
 Route::get('lov/insurance-plans-active', [InsurancePlanController::class, 'getActiveForDropdown']);
 // Special route for streaming 3D model files
 Route::get('/stream-glb/{filepath}', function ($filepath) {
-    if (Str::contains($filepath, '..')) { abort(403, 'Invalid file path.'); }
+    if (Str::contains($filepath, '..')) {
+        abort(403, 'Invalid file path.');
+    }
     $fullStoragePath = 'public/' . $filepath;
-    if (!Storage::disk('local')->exists($fullStoragePath)) { abort(404, 'File not found.'); }
+    if (!Storage::disk('local')->exists($fullStoragePath)) {
+        abort(404, 'File not found.');
+    }
     return Storage::disk('local')->response($fullStoragePath);
 })->where('filepath', '.*');
 // In routes/api.php
 
 // Route for the new client-side booking creation
 Route::post('/client-bookings', [BookingController::class, 'storeClientBooking'])->name('client.bookings.store');
-    Route::apiResource('insurance-plans', InsurancePlanController::class)->parameters(['insurance-plans' => 'insurance_plan']);
+Route::apiResource('insurance-plans', InsurancePlanController::class)->parameters(['insurance-plans' => 'insurance_plan']);
 Route::get('/my-rewards', [UserController::class, 'getMyRewards']);
 // ========================================================================
 //   Group 2: Authenticated Routes (User MUST be logged in)
@@ -104,11 +108,11 @@ Route::delete('/contact-submissions/{contactSubmission}', [ContactSubmissionCont
     ->whereNumber('contactSubmission');
 Route::apiResource('avis', AvisController::class);
 Route::middleware('auth:sanctum')->group(function () {
-Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // For regular users
-        Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-        Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
-        Route::delete('/notifications/clear-read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read'); // User clears their own read
-        Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // For regular users
+    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::delete('/notifications/clear-read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read'); // User clears their own read
+    Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
     // --- Core Authentication Routes ---
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
@@ -119,7 +123,7 @@ Route::get('/notifications', [NotificationController::class, 'index'])->name('no
     Route::delete('addresses/{address}', [AddressController::class, 'destroyForCurrentUser'])->name('my-addresses.destroy');
     Route::patch('user/default-address/{address}', [UserController::class, 'setDefaultAddress'])->name('user.default-address.update');
     Route::get('/my-promotion-codes', [PromotionCodeController::class, 'currentUserCodes'])->name('my-promotion-codes.index');
-Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedule'])->name('vehicles.schedule');
+    Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedule'])->name('vehicles.schedule');
     // --- General Application Resources (CRUD) ---
     Route::apiResource('users', UserController::class);
     Route::apiResource('addresses', AddressController::class);
@@ -133,7 +137,8 @@ Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedu
     Route::apiResource('rental-agreements', RentalAgreementController::class)->except(['store']);
     Route::apiResource('promotion-campaigns', PromotionCampaignController::class)->parameters(['promotion-campaigns' => 'promotion_campaign']);
     Route::apiResource('promotion-codes', PromotionCodeController::class)->parameters(['promotion-codes' => 'promotion_code']);
-    
+    Route::apiResource('bookings', BookingController::class);
+
     // Nested Media routes for Vehicle Models
     Route::apiResource('vehicle-models.media', VehicleModelMediaController::class)
         ->parameters(['vehicle-models' => 'vehicleModel', 'media' => 'medium'])->shallow();
@@ -144,7 +149,7 @@ Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedu
     Route::post('/vehicle-models/{vehicleModel}/colors', [VehicleModelColorController::class, 'store']);
     Route::put('/vehicle-models/{vehicleModel}/colors', [VehicleModelColorController::class, 'updateColors']);
     Route::delete('/vehicle-models/{vehicleModel}/colors/{color}', [VehicleModelColorController::class, 'destroy']);
-    
+
     // --- Custom Actions & Helper Routes ---
     Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirmBooking'])->name('bookings.confirm');
     Route::post('/bookings/{booking}/complete', [BookingController::class, 'completeBooking'])->name('bookings.complete');
@@ -154,19 +159,22 @@ Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedu
     Route::get('promotion-codes/lov/users', [PromotionCodeController::class, 'getUsersForDropdown'])->name('promotion-codes.lov.users');
     Route::get('promotion-codes/lov/campaigns', [PromotionCodeController::class, 'getCampaignsForDropdown'])->name('promotion-codes.lov.campaigns');
     Route::post('promotion-codes/validate-apply', [PromotionCodeController::class, 'validateAndApplyPreview'])->name('promotion-codes.validate-apply');
-        Route::get('bookings-for-agreement', [BookingController::class, 'forAgreementDropdown'])->name('bookings.for-agreement-dropdown');
+    Route::get('bookings-for-agreement', [BookingController::class, 'forAgreementDropdown'])->name('bookings.for-agreement-dropdown');
 
     // Rental Agreement Custom Actions
     Route::post('rental-agreements/generate', [RentalAgreementController::class, 'store'])->name('rental-agreements.generate');
     Route::get('rental-agreements/{rental_agreement}/download', [RentalAgreementController::class, 'downloadDocument'])->name('rental-agreements.download');
     Route::post('rental-agreements/{rental_agreement}/send-notification', [RentalAgreementController::class, 'sendAgreementNotification'])->name('rental-agreements.send-notification');
     Route::get('/bookings/{booking}/rental-agreement', [RentalAgreementController::class, 'showForBooking'])->name('bookings.rental-agreement.show');
-        Route::apiResource('bookings', BookingController::class);
+    Route::apiResource('bookings', BookingController::class);
 
-// In routes/api.php
 
-// ... inside Route::middleware('auth:sanctum')->group(...)
-// ... inside Route::prefix('admin')->middleware('role:admin')->group(...)
+
+    Route::get('/users/{user}/bookings', [UserController::class, 'getUserBookings'])->name('users.bookings.index');
+    // In routes/api.php
+
+    // ... inside Route::middleware('auth:sanctum')->group(...)
+    // ... inside Route::prefix('admin')->middleware('role:admin')->group(...)
 
 
     // ========================================================================
@@ -176,32 +184,30 @@ Route::get('/vehicles/{vehicle}/schedule', [VehicleController::class, 'getSchedu
     // THEN it's checked for the 'admin' role.
 
     Route::prefix('admin')
-         ->name('admin.')
-         ->group(function() {
-             Route::get('users/{user}/rewards', [AdminUserController::class, 'getUserRewards']);
-             Route::apiResource('users', AdminUserController::class);
-// ... inside Route::prefix('admin')->group(...)
+        ->name('admin.')
+        ->group(function () {
+            Route::get('users/{user}/rewards', [AdminUserController::class, 'getUserRewards']);
+            Route::apiResource('users', AdminUserController::class);
+            // ... inside Route::prefix('admin')->group(...)
 
-    // New route for updating the logged-in admin's own profile
-    Route::post('/profile', [AdminUserController::class, 'updateProfile'])->name('profile.update');
+            // New route for updating the logged-in admin's own profile
+            Route::post('/profile', [AdminUserController::class, 'updateProfile'])->name('profile.update');
 
-    // New route for clearing old read notifications
-    Route::delete('notifications/clear-old-read', [NotificationController::class, 'clearOldRead'])->name('notifications.clear-old-read');
+            // New route for clearing old read notifications
+            Route::delete('notifications/clear-old-read', [NotificationController::class, 'clearOldRead'])->name('notifications.clear-old-read');
             Route::get('roles-list', [AdminUserController::class, 'fetchRoles'])->name('roles.list');
             Route::apiResource('system/roles', AdminRoleController::class)
-                  ->parameters(['roles' => 'role'])
-                  ->names('system.roles');
-                  Route::delete('notifications/clear-all', [NotificationController::class, 'clearAll'])->name('admin.notifications.clear-all');
-Route::delete('notifications/clear-read', [NotificationController::class, 'clearRead'])->name('admin.notifications.clear-read');
-// ... inside Route::prefix('admin')->group(...)
+                ->parameters(['roles' => 'role'])
+                ->names('system.roles');
+            Route::delete('notifications/clear-all', [NotificationController::class, 'clearAll'])->name('admin.notifications.clear-all');
+            Route::delete('notifications/clear-read', [NotificationController::class, 'clearRead'])->name('admin.notifications.clear-read');
+            // ... inside Route::prefix('admin')->group(...)
 
-    // --- NEW ROUTE for pruning addresses ---
-    Route::delete('addresses/prune-unused', [AddressController::class, 'pruneUnused'])->name('addresses.prune-unused');
-Route::get('dashboard-stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats');
-Route::get('notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
-
-    });
-
+            // --- NEW ROUTE for pruning addresses ---
+            Route::delete('addresses/prune-unused', [AddressController::class, 'pruneUnused'])->name('addresses.prune-unused');
+            Route::get('dashboard-stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats');
+            Route::get('notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
+        });
 }); // --- End of Authenticated Routes Group ---
 
 
@@ -209,6 +215,6 @@ Route::get('notifications', [NotificationController::class, 'index'])->name('adm
 //   Fallback Route - This must be the very last route defined.
 // ========================================================================
 // Catches any request that doesn't match the routes above.
-Route::fallback(function(){
+Route::fallback(function () {
     return response()->json(['message' => 'API route not found.'], 404);
 });

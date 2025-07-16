@@ -15,7 +15,8 @@ return new class extends Migration
             $table->foreignUuid('reported_by_user_id')->nullable()->constrained('users')->nullOnDelete(); // User or staff who reported
             $table->timestamp('reported_at')->useCurrent();
             $table->text('description');
-            $table->enum('status', array_column(DamageReportStatus::cases(), 'value'))->default(DamageReportStatus::REPORTED->value);
+            $table->enum('status', array_column(DamageReportStatus::cases(), 'value'));
+            // ->default(DamageReportStatus::REPORTED->value);
             $table->decimal('repair_cost', 10, 2)->nullable();
             $table->timestamps(); // Record creation/update time
         });

@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../services/api';
 
 const navLinksData = [
-  { name: 'HOME', href: '/home' },
+  { name: 'HOME', href: '/' },
   { name: 'ABOUT', href: '/about' },
   { name: 'SERVICES', href: '/services' },
   { name: 'VEHICLE FLEET', href: '/fleet' },
@@ -165,7 +165,7 @@ const Header = () => {
 
           <nav className="tw-hidden md:tw-flex tw-items-center tw-space-x-1 lg:tw-space-x-2 xl:tw-space-x-3">
             {navLinksData.map(link => (
-              <Link key={link.name} to={link.href} className={`tw-no-underline tw-uppercase tw-text-xs lg:tw-text-sm tw-font-medium tw-transition-colors tw-duration-300 tw-whitespace-nowrap tw-px-3 lg:tw-px-4 tw-py-2 tw-rounded-md ${ location.pathname === link.href ? activeTextColorClass : `${textColorClass} ${hoverTextColorClass}` } ${ !scrolled ? 'tw-shadow-sm [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]' : '' }`}>
+              <Link key={link.name} to={link.href} className={`tw-no-underline tw-uppercase tw-text-xs lg:tw-text-sm tw-font-medium tw-transition-colors  tw-px-3 lg:tw-px-4 tw-py-2  ${ location.pathname === link.href ? activeTextColorClass : `${textColorClass} ${hoverTextColorClass}` } ${ !scrolled ? ' ' : '' }`}>
                 {link.name}
               </Link>
             ))}
@@ -229,13 +229,19 @@ const Header = () => {
                   </div>
                   <div className="tw-relative" ref={profileDropdownRef}>
                     <button onClick={toggleProfileDropdown} className="tw-flex tw-items-center tw-space-x-2 focus:tw-outline-none">
-                      {currentUser.profile_picture_url || currentUser.profile_photo_url ? ( <img src={currentUser.profile_picture_url || currentUser.profile_photo_url} alt={currentUser.full_name || currentUser.name} className="tw-w-8 tw-h-8 tw-rounded-full tw-object-cover tw-border-2 tw-border-amber-400" /> ) : ( <UserCircle size={32} className={activeTextColorClass} /> )}
+                      {currentUser.profile_picture_url || currentUser.profile_photo_url ? ( 
+                        <img 
+                        src={currentUser.profile_picture_url} 
+                        alt={currentUser.full_name || currentUser.name} 
+                        className="tw-w-8 tw-h-8 tw-rounded-full tw-object-cover tw-border-2 tw-border-amber-400" 
+                    /> 
+                       ) : ( <UserCircle size={32} className={activeTextColorClass} /> )}
                       <span className={`tw-hidden lg:tw-inline tw-text-xs lg:tw-text-sm tw-font-medium tw-transition-colors ${textColorClass} ${!scrolled ? '[text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]' : ''}`}>{(currentUser.full_name || currentUser.name)?.split(' ')[0]}</span>
                       <ChevronDown size={16} className={`tw-transition-transform tw-duration-200 ${profileDropdownOpen ? 'tw-rotate-180' : ''} ${textColorClass}`} />
                     </button>
                     {profileDropdownOpen && ( <div onMouseLeave={() => setProfileDropdownOpen(false)} className="tw-absolute tw-right-0 tw-mt-2 tw-w-48 tw-bg-[#1F1F23] tw-rounded-md tw-shadow-2xl tw-border tw-border-gray-700 tw-py-1 tw-z-40"> 
                     <Link to={`/Profiel/${currentUser.id}`} onClick={() => setProfileDropdownOpen(false)} className="tw-no-underline tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-gray-300 hover:tw-bg-gray-700 hover:tw-text-amber-400">My Profile</Link> 
-                    <Link to="/my-bookings" onClick={() => setProfileDropdownOpen(false)} className="tw-no-underline tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-gray-300 hover:tw-bg-gray-700 hover:tw-text-amber-400">My Bookings</Link> <button onClick={handleLogout} className="tw-w-full tw-text-left tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-red-400 hover:tw-bg-gray-700 hover:tw-text-red-300"> Logout </button> </div> )}
+                    <Link to={`/Mybooking/${currentUser.id}`} onClick={() => setProfileDropdownOpen(false)} className="tw-no-underline tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-gray-300 hover:tw-bg-gray-700 hover:tw-text-amber-400">My Bookings</Link> <button onClick={handleLogout} className="tw-w-full tw-text-left tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-red-400 hover:tw-bg-gray-700 hover:tw-text-red-300"> Logout </button> </div> )}
                   </div>
                 </>
               ) : (

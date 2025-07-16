@@ -1,7 +1,12 @@
 import React from 'react';
+// --- ANIMATION START ---
+// 1. Import the 'motion' component from framer-motion
+import { motion } from 'framer-motion';
+// --- ANIMATION END ---
 
 // Dummy data for the steps - replace with your actual data
 const stepsData = [
+  // ... (data is unchanged)
   {
     title: "Choose Your Car",
     description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim"
@@ -24,50 +29,103 @@ const stepsData = [
   },
 ];
 
-// Replace with your actual Jeep image URL
 const jeepImageUrl = "/images/Cars/Howitsworks.png";
-// A slightly different Jeep image that might match the angle better if you have one from the prompt.
-// const jeepImageUrlFromPromptLike = "https://images.unsplash.com/photo-1617094544983-120006093058?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGdyYXklMjBqZWVwJTIwd3JhbmdsZXJ8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=1200&q=80";
+
+// --- ANIMATION START ---
+// 2. Define animation variants for a clean, reusable animation logic.
+
+// Animation for the image: slide in from the left and fade in.
+const imageVariants = {
+  hidden: { opacity: 0, x: -100 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.6, 0.05, 0.01, 0.9], // A nice easing curve
+    },
+  },
+};
+
+// A container variant to orchestrate the staggered animation of the list items.
+const listContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2, // Each list item will animate 0.2s after the previous one.
+      delayChildren: 0.4,   // Wait 0.4s after the container starts animating before the children begin.
+    },
+  },
+};
+
+// Animation for each individual list item: slide in from the right and fade in.
+const listItemVariants = {
+  hidden: { opacity: 0, x: 50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+};
+// --- ANIMATION END ---
 
 
 const HowItWorksSection = () => {
   return (
-    <div className="tw-bg-[#1B1B1B] tw-text-white tw-py-16 sm:tw-py-20 md:tw-py-24 tw-overflow-x-hidden"> {/* Key: overflow-x-hidden to prevent horizontal scroll */}
+    <div className="tw-bg-[#1B1B1B] tw-text-white tw-py-16 sm:tw-py-20 md:tw-py-24 tw-overflow-x-hidden">
       <div className="tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8">
         <div className='tw-w-1/2 tw-m-auto'>
-        <h2 className="tw-text-3xl sm:tw-text-4xl tw-font-bold tw-mb-4 tw-text-center ">
+            <h2 className="tw-text-3xl sm:tw-text-4xl tw-font-bold tw-mb-4 tw-text-center ">
               How its works
             </h2>
-            {/* Note: 'text-howitworks-subtext' and 'text-howitworks-list-title' are custom class names. */}
-            {/* If these are defined in your global CSS or via Tailwind plugins, they will work. */}
-            {/* If they are meant to be Tailwind utility classes, their names are not standard. */}
-            {/* I am prefixing them assuming they are custom classes you want Tailwind to potentially process or ignore gracefully. */}
             <p className="tw-text-howitworks-subtext tw-mb-10 tw-text-center tw-text-base sm:tw-text-lg tw-leading-relaxed tw-mx-auto lg:tw-mx-0">
               Renting a luxury car has never been easier. Our streamlined process makes it simple for you to book and confirm your vehicle of choice online.
             </p>
         </div>
-        <div className="tw-flex tw-flex-col lg:tw-flex-row tw-items-center lg:tw-gap-x-16 xl:tw-gap-x-24">
+
+        {/* --- ANIMATION START --- */}
+        {/* 3. Convert the main flex container to a motion.div. */}
+        {/*    This will trigger the animations for its children when it scrolls into view. */}
+        <motion.div
+          className="tw-flex tw-flex-col lg:tw-flex-row tw-items-center lg:tw-gap-x-16 xl:tw-gap-x-24"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.25 }} // Animation triggers when 25% of the element is visible, and only runs once.
+        >
           
-          {/* Image Column - Designed for overflow effect */}
-          <div className="lg:tw-w-1/2 tw-w-full lg:tw-mb-0 tw-relative"> {/* Parent relative if needed for absolute positioning inside */}
+          {/* 4. Convert the image's wrapper div to a motion.div and apply the imageVariants. */}
+          <motion.div
+            className="lg:tw-w-1/2 tw-w-full lg:tw-mb-0 tw-relative"
+            variants={imageVariants}
+          >
             <img
               src={jeepImageUrl}
               alt="Luxury Jeep rental process"
               className="tw-w-full tw-mx-auto lg:tw-max-w-none lg:tw-w-[100%] xl:tw-w-[115%] 
                          lg:tw--ml-12 xl:tw--ml-10 2xl:tw--ml-20 
                          tw-object-cover"
-              // w-[120%] makes image wider than its column
-              // -ml-* pulls the oversized image to the left, creating the overflow effect
-              // object-cover ensures the image covers the area without distortion if height is constrained
             />
-          </div>
+          </motion.div>
 
           {/* Text Content Column */}
-          <div className="lg:tw-w-1/2 tw-w-full">
+          {/* 5. Convert the text content's wrapper div to a motion.div. */}
+          {/*    This will act as the container for the staggered list animation. */}
+          <motion.div
+            className="lg:tw-w-1/2 tw-w-full"
+            variants={listContainerVariants}
+          >
             
             <ul className="tw-space-y-6">
               {stepsData.map((step, index) => (
-                <li key={index} className="tw-flex tw-items-start">
+                <motion.li
+                  key={index}
+                  className="tw-flex tw-items-start"
+                  variants={listItemVariants}
+                >
                   <span 
                     className="tw-flex-shrink-0 tw-w-2.5 tw-h-2.5 tw-bg-blue-200 tw-rounded-full tw-mt-[7px] tw-mr-3 sm:tw-mr-4" 
                     aria-hidden="true"
@@ -76,15 +134,14 @@ const HowItWorksSection = () => {
                     <h3 className="tw-font-semibold tw-text-md sm:tw-text-lg tw-text-howitworks-list-title">{step.title}</h3>
                     <p className="tw-text-howitworks-subtext tw-text-sm tw-mt-1 tw-w-10/12 tw-leading-relaxed">{step.description}</p>
                   </div>
-                </li>
+                </motion.li>
               ))}
             </ul>
-          </div>
-
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );
 };
 
-export default HowItWorksSection;
+export default  HowItWorksSection

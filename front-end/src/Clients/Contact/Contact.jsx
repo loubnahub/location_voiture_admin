@@ -19,7 +19,6 @@ export default function Contact() {
         <OurClinetSaying />
         <OurTeam />
         <Partners />
-        <Footer />
     </div>
   )
 }
