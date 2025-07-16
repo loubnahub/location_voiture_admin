@@ -38,8 +38,7 @@ apiClient.interceptors.request.use(
 
 // --- Authentication Functions ---
 export const login = async (credentials) => {
-  // --- THIS IS THE FIX ---
-  // Use a direct axios call for the CSRF cookie to bypass the '/api' prefix.
+
   await axios.get('http://localhost:8000/sanctum/csrf-cookie');
 
   // Then use the configured apiClient for the actual login request.
