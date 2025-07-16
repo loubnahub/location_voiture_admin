@@ -55,6 +55,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/vehicle-models/list-all', [VehicleModelController::class, 'listAll']);
 Route::get('/lov/renters', [AdminUserController::class, 'getRentersForDropdown']);
+
 // In routes/api.php, inside the `auth:sanctum` group but OUTSIDE the `admin` prefix group
 Route::apiResource('vehicle-types', VehicleTypeController::class)->parameters(['vehicle-types' => 'vehicle_type']);
 Route::apiResource('vehicle-models', VehicleModelController::class)->parameters(['vehicle-models' => 'vehicle_model']);
@@ -63,20 +64,26 @@ Route::get('/vehicle-models/public', [VehicleModelController::class, 'publicInde
 Route::get('/vehicle-models/public/{vehicle_model}', [VehicleModelController::class, 'publicShow'])->name('public.vehicle-models.show');
 Route::get('lov/vehicles-available', [VehicleController::class, 'getAvailableForDropdown']);
 Route::get('lov/insurance-plans-active', [InsurancePlanController::class, 'getActiveForDropdown']);
-// Special route for streaming 3D model files
-Route::get('/stream-glb/{filepath}', function ($filepath) {
-    if (Str::contains($filepath, '..')) {
-        abort(403, 'Invalid file path.');
-    }
-    $fullStoragePath = 'public/' . $filepath;
-    if (!Storage::disk('local')->exists($fullStoragePath)) {
-        abort(404, 'File not found.');
-    }
-    return Storage::disk('local')->response($fullStoragePath);
-})->where('filepath', '.*');
-// In routes/api.php
 
-// Route for the new client-side booking creation
+Route::get('/stream-glb/vehicle_media/{filepath}', function ($filepath) {
+
+    if (Str::contains($filepath, '..')) {
+        Log::info('File not found at path: ' . storage_path('app/' . $fullStoragePath));
+    }
+
+   
+    $fullStoragePath = 'public/vehicle_media/' . $filepath;
+
+    if (!Storage::disk('local')->exists($fullStoragePath)) {
+        // This log will now show the CORRECT path it's looking for.
+        Log::info('File not found at path: ' . storage_path('app/' . $fullStoragePath));
+      
+    }
+
+    // Return the file as a stream
+    return Storage::disk('local')->response($fullStoragePath);
+
+})->where('filepath', '.*'); 
 Route::post('/client-bookings', [BookingController::class, 'storeClientBooking'])->name('client.bookings.store');
 Route::apiResource('insurance-plans', InsurancePlanController::class)->parameters(['insurance-plans' => 'insurance_plan']);
 Route::get('/my-rewards', [UserController::class, 'getMyRewards']);
