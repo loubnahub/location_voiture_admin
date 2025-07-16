@@ -44,7 +44,7 @@ const InvoiceTemplate = React.forwardRef(({ booking }, ref) => {
             fontSize: '12px'
         }}>
             {/* Header Section */}
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #007BFF', paddingBottom: '20px' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #f59e0b', paddingBottom: '20px' }}>
                 <div>
                     {/* <<< CHANGE HERE: Replaced H1 with IMG tag for the logo */}
                     <img
