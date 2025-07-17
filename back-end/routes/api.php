@@ -37,6 +37,8 @@ use App\Http\Controllers\Api\AgencyInfoController;
 use App\Http\Controllers\Api\PartnerController;
 // in routes/api.php
 use App\Http\Controllers\Api\PublicFleetController; // Using a new, dedicated controller
+use App\Http\Controllers\Api\TeamMemberController;
+
 Route::get('/vehicle-models-client/{vehicleModel}', [PublicFleetController::class, 'show'])->name('public.vehicle-model.show');
 Route::get('/all-cars', [PublicFleetController::class, 'index'])->name('public.all-cars');
 Route::get('/vehicle-models-3d/{vehicleModel}', [PublicFleetController::class, 'show3d'])->name('public.vehicle-model.show3d');
@@ -78,19 +80,17 @@ Route::get('/stream-glb/vehicle_media/{filepath}', function ($filepath) {
         Log::info('File not found at path: ' . storage_path('app/' . $fullStoragePath));
     }
 
-   
+
     $fullStoragePath = 'public/vehicle_media/' . $filepath;
 
     if (!Storage::disk('local')->exists($fullStoragePath)) {
         // This log will now show the CORRECT path it's looking for.
         Log::info('File not found at path: ' . storage_path('app/' . $fullStoragePath));
-      
     }
 
     // Return the file as a stream
     return Storage::disk('local')->response($fullStoragePath);
-
-})->where('filepath', '.*'); 
+})->where('filepath', '.*');
 Route::post('/client-bookings', [BookingController::class, 'storeClientBooking'])->name('client.bookings.store');
 Route::apiResource('insurance-plans', InsurancePlanController::class)->parameters(['insurance-plans' => 'insurance_plan']);
 Route::get('/my-rewards', [UserController::class, 'getMyRewards']);
@@ -124,6 +124,10 @@ Route::apiResource('avis', AvisController::class);
 
 // Publicly accessible agency info route
 Route::get('/agency-info', [AgencyInfoController::class, 'show'])->name('agency-info.show');
+
+// Publicly accessible team members route
+Route::get('/team-members', [TeamMemberController::class, 'index'])->name('team-members.public.index');
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // For regular users
@@ -187,7 +191,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('bookings', BookingController::class);
     Route::get('/users/{user}/bookings', [UserController::class, 'getUserBookings'])->name('users.bookings.index');
 
-    
+
     // --- Public Fleet Information ---
     // In routes/api.php
 
@@ -232,8 +236,9 @@ Route::middleware('auth:sanctum')->group(function () {
             // --- Admin Partners Routes ---
             Route::apiResource('partners', PartnerController::class);
 
-            
-            
+            Route::apiResource('team-members', TeamMemberController::class);
+            // For FormData updates, you might want a dedicated POST route
+            Route::post('team-members/{teamMember}', [TeamMemberController::class, 'update'])->name('team-members.update');
         });
 }); // --- End of Authenticated Routes Group ---
 

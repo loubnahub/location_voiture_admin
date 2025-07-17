@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             MaintenanceRecordSeeder::class,
             SeedersAgencyInfoSeeder::class,
             PartnerSeeder::class,
+            TeamMemberSeeder::class,
+
         ]);
     }
 }

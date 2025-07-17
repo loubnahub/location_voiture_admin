@@ -339,11 +339,16 @@ export const deleteVehicleModelColor = (vehicleModelId, colorHex) =>
   };
 
 
-// Fetch public partners (no authentication required)
+// Fetch public partners 
   export const fetchPublicPartners = () => {
     return apiClient.get('/partners');
   };
   
+
+// Fetch public team members 
+  export const fetchPublicTeamMembers = () => {
+    return apiClient.get('/team-members');
+  };
 
 
 export default apiClient;

@@ -1,52 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchPublicTeamMembers } from '../../../services/api'; // Ensure path is correct
 
-// Data for the team members
-const teamMembersData = [
-  {
-    id: 1,
-    name: "Lahyane Oussama",
-    role: "Fleet Manager",
-    imageUrl: "/images/Teams/ossama.jpg",
-  },
-  {
-    id: 2,
-    name: "Messoussi Loubna",
-    role: "Lead Mechanic",
-    imageUrl: "/images/Teams/loubna.jpg",
-  },
-  {
-    id: 3,
-    name: "Gouiss Youssef",
-    role: "Customer Success Manager",
-    imageUrl: "/images/Teams/yousef.jpg",
-  },
-  {
-    id: 4,
-    name: "Zaffou Nihad",
-    role: "Marketing Head",
-    imageUrl: "/images/Teams/nihad.jpg",
-  },
-  {
-    id: 5,
-    name: "Aisha Khan",
-    role: "Operations Director",
-    imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500&q=80",
-  },
-];
+// A helper function to get initials from a name
+const getInitials = (name) => {
+  if (!name) return '?';
+  const names = name.split(' ');
+  const initials = names.map(n => n[0]).join('');
+  return initials.substring(0, 2).toUpperCase();
+};
 
 const TeamMemberCard = ({ member }) => {
   return (
-    // The card wrapper defines its size in the scrolling container and prevents shrinking
     <div className="tw-w-[80vw] sm:tw-w-[45vw] md:tw-w-[30vw] lg:tw-w-[22vw] tw-flex-shrink-0 tw-px-4">
       <div className="tw-relative tw-rounded-3xl tw-overflow-hidden tw-aspect-[4/5] 
                      tw-bg-[#1b1b1b]/60 tw-backdrop-blur-lg 
                      tw-border tw-border-white/10">
         
-        <img
-          src={member.imageUrl}
-          alt={member.name}
-          className="tw-w-full tw-h-full tw-object-cover"
-        />
+        {/* ✅ CONDITIONAL RENDERING FOR THE IMAGE ✅ */}
+        {member.image_url ? (
+          // If image_url exists, show the image
+          <img
+            src={member.image_url} 
+            alt={member.name}
+            className="tw-w-full tw-h-full tw-object-cover"
+          />
+        ) : (
+          // If no image, show a placeholder with initials
+          <div className="tw-w-full tw-h-full tw-bg-gray-800 tw-flex tw-items-center tw-justify-center">
+            <span className="tw-text-5xl tw-font-bold tw-text-gray-500">
+              {getInitials(member.name)}
+            </span>
+          </div>
+        )}
         
         <div className="tw-absolute tw-inset-0 tw-bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         
@@ -64,7 +49,24 @@ const TeamMemberCard = ({ member }) => {
 };
 
 const OurTeam = () => {
-  // All state and scroll logic has been removed for a much cleaner component.
+  const [teamMembers, setTeamMembers] = useState([]);
+
+  useEffect(() => {
+    const getTeamMembers = async () => {
+      try {
+        const response = await fetchPublicTeamMembers();
+        setTeamMembers(response.data);
+      } catch (error) {
+        console.error("Failed to fetch team members:", error);
+      }
+    };
+    getTeamMembers();
+  }, []);
+
+  if (teamMembers.length === 0) {
+    return null;
+  }
+
   return (
     <section className="tw-bg-[#1b1b1b] tw-py-16 sm:tw-py-20 md:tw-py-24">
       <div className="tw-container tw-mx-auto tw-max-w-7xl tw-px-4">
@@ -81,20 +83,12 @@ const OurTeam = () => {
         </div>
       </div>
 
-      {/* 
-        MARQUEE CONTAINER:
-        - group is used to pause the animation on hover.
-        - overflow-hidden hides the duplicated content.
-      */}
       <div className="tw-relative tw-flex group tw-overflow-hidden">
-        {/* The animating track. It pauses when the container above is hovered. */}
         <div className="tw-flex tw-animate-marquee group-hover:[animation-play-state:paused]">
-          {/* We render the list of cards */}
-          {teamMembersData.map((member) => (
+          {teamMembers.map((member) => (
             <TeamMemberCard key={member.id} member={member} />
           ))}
-          {/* We render it a second time to create the infinite loop effect */}
-          {teamMembersData.map((member) => (
+          {teamMembers.map((member) => (
             <TeamMemberCard key={`duplicate-${member.id}`} member={member} />
           ))}
         </div>
