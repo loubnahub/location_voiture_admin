@@ -33,6 +33,8 @@ use App\Http\Controllers\Api\ContactSubmissionController;
 // --- Admin Controller Imports ---
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Api\AgencyInfoController;
+use App\Http\Controllers\Api\PartnerController;
 // in routes/api.php
 use App\Http\Controllers\Api\PublicFleetController; // Using a new, dedicated controller
 Route::get('/vehicle-models-client/{vehicleModel}', [PublicFleetController::class, 'show'])->name('public.vehicle-model.show');
@@ -46,6 +48,11 @@ Route::get('/vehicle-models-3d/{vehicleModel}', [PublicFleetController::class, '
 | 
 */
 
+// These routes for AgencyInformation
+Route::get('/agency-info', [AgencyInfoController::class, 'show'])->name('agency-info.show');
+
+// These routes for Partenrs
+Route::get('/partners', [PartnerController::class, 'index'])->name('partners.public.index');
 // ========================================================================
 //   Group 1: Public Routes (No Authentication Required)
 // ========================================================================
@@ -114,6 +121,10 @@ Route::delete('/contact-submissions/{contactSubmission}', [ContactSubmissionCont
     ->name('contact-submissions.destroy')
     ->whereNumber('contactSubmission');
 Route::apiResource('avis', AvisController::class);
+
+// Publicly accessible agency info route
+Route::get('/agency-info', [AgencyInfoController::class, 'show'])->name('agency-info.show');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // For regular users
     Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
@@ -174,10 +185,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('rental-agreements/{rental_agreement}/send-notification', [RentalAgreementController::class, 'sendAgreementNotification'])->name('rental-agreements.send-notification');
     Route::get('/bookings/{booking}/rental-agreement', [RentalAgreementController::class, 'showForBooking'])->name('bookings.rental-agreement.show');
     Route::apiResource('bookings', BookingController::class);
-
-
-
     Route::get('/users/{user}/bookings', [UserController::class, 'getUserBookings'])->name('users.bookings.index');
+
+    
+    // --- Public Fleet Information ---
     // In routes/api.php
 
     // ... inside Route::middleware('auth:sanctum')->group(...)
@@ -196,7 +207,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('users/{user}/rewards', [AdminUserController::class, 'getUserRewards']);
             Route::apiResource('users', AdminUserController::class);
             // ... inside Route::prefix('admin')->group(...)
-
+            Route::get('/agency-info', [AgencyInfoController::class, 'getForAdmin'])->name('admin.agency-info.get');
+            Route::post('/agency-info', [AgencyInfoController::class, 'update'])->name('admin.agency-info.update');
             // New route for updating the logged-in admin's own profile
             Route::post('/profile', [AdminUserController::class, 'updateProfile'])->name('profile.update');
 
@@ -214,6 +226,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('addresses/prune-unused', [AddressController::class, 'pruneUnused'])->name('addresses.prune-unused');
             Route::get('dashboard-stats', [DashboardController::class, 'getStats'])->name('admin.dashboard.stats');
             Route::get('notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
+
+
+
+            // --- Admin Partners Routes ---
+            Route::apiResource('partners', PartnerController::class);
+
+            
+            
         });
 }); // --- End of Authenticated Routes Group ---
 
@@ -222,6 +242,7 @@ Route::middleware('auth:sanctum')->group(function () {
 //   Fallback Route - This must be the very last route defined.
 // ========================================================================
 // Catches any request that doesn't match the routes above.
+
 Route::fallback(function () {
     return response()->json(['message' => 'API route not found.'], 404);
 });

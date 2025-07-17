@@ -1,26 +1,23 @@
 // src/components/HeroSection2.jsx
 
-import React from 'react';
-import { motion } from 'framer-motion'; // Import Framer Motion
-import Header from '../../Header/Nav';
-import ExperienceBar from './ExperienceBar';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import Header from '../../Header/Nav'; // Ensure this path is correct for your project
+import ExperienceBar from './ExperienceBar'; // Ensure this path is correct for your project
+import { fetchAgencyInfo } from '../../../services/api'; // Ensure this path is correct for your project
 
-// --- Animation Variants Definition ---
-// We define animation states here to keep the JSX clean.
-
-// A container variant to orchestrate staggered animations for its children.
+// --- Animation Variants Definition (Unchanged) ---
 const contentContainerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      delay: 0.5, // Wait a moment before starting
-      staggerChildren: 0.3, // Animate each child 0.3s after the previous one
+      delay: 0.5,
+      staggerChildren: 0.3,
     },
   },
 };
 
-// A simple "slide up and fade in" animation for individual text elements.
 const itemSlideUpVariants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
@@ -30,7 +27,6 @@ const itemSlideUpVariants = {
   },
 };
 
-// Animation for the sidebar to slide in from the left.
 const sidebarVariants = {
   hidden: { x: -100, opacity: 0 },
   visible: {
@@ -40,7 +36,6 @@ const sidebarVariants = {
   },
 };
 
-// Animation for the footer bar to slide up from the bottom.
 const footerVariants = {
   hidden: { y: 100, opacity: 0 },
   visible: {
@@ -50,16 +45,39 @@ const footerVariants = {
   },
 };
 
-
 const HeroSection2 = () => {
+    // --- STATE FOR DYNAMIC CONTENT ---
+    const [agencyInfo, setAgencyInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // --- FETCH DATA ON COMPONENT MOUNT ---
+    useEffect(() => {
+        const getInfo = async () => {
+            try {
+                const response = await fetchAgencyInfo();
+                setAgencyInfo(response.data);
+            } catch (error) {
+                console.error("Failed to fetch agency info for Hero Section:", error);
+                // If API fails, the component will gracefully use the default name.
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        getInfo();
+    }, []); // Empty dependency array ensures this runs only once
+
+    // --- GRACEFUL NAME HANDLING ---
+    // Use the fetched name if available, otherwise default to "Recalo".
+    // This prevents errors and visual glitches during loading.
+    const agencyName = loading || !agencyInfo ? 'Recalo' : agencyInfo.agency_name;
+
     return (
-        // The main container that triggers the initial animations on load.
         <motion.div initial="hidden" animate="visible">
             <div
                 className="tw-relative tw-flex tw-h-screen tw-w-full tw-flex-col tw-border-b-2 tw-border-[#E61C1C] tw-bg-cover tw-bg-center tw-text-white"
                 style={{ backgroundImage: "url('/images/Cars/HeroSection.png')" }}
             >
-                {/* The overlay fades in for a smoother background reveal */}
                 <motion.div
                     className="tw-absolute tw-inset-0 tw-bg-black/45"
                     initial={{ opacity: 0 }}
@@ -67,10 +85,10 @@ const HeroSection2 = () => {
                     transition={{ duration: 1.5 }}
                 ></motion.div>
 
-                {/* Header component (remains static) */}
+                {/* Header component */}
                 <Header />
 
-                {/* Animated sidebar */}
+                {/* Animated sidebar (NOW DYNAMIC) */}
                 <motion.aside
                     className="tw-absolute tw-left-0 tw-top-1/2 tw-hidden tw-h-72 tw--translate-y-1/2 lg:tw-flex"
                     variants={sidebarVariants}
@@ -79,25 +97,23 @@ const HeroSection2 = () => {
                     <div className="tw-relative tw-flex tw-h-full tw-items-center">
                         <div className="tw-flex tw-items-center tw-gap-4 tw--rotate-90">
                             <div className="tw-h-px tw-w-16 tw-bg-[#E61C1C]"></div>
-                            <p className="tw-text-sm tw-font-bold tw-tracking-[0.2em]">RECALO</p>
+                            <p className="tw-text-sm tw-font-bold tw-tracking-[0.2em]">{agencyName.toUpperCase()}</p>
                             <div className="tw-h-px tw-w-16 tw-bg-[#E61C1C]"></div>
                         </div>
                     </div>
                 </motion.aside>
 
-                {/* Main Content */}
+                {/* Main Content (NOW DYNAMIC) */}
                 <main className="tw-relative tw-z-10 tw-flex tw-w-full tw-flex-grow tw-items-center tw-px-4 sm:tw-px-8">
-                    {/* This motion.div orchestrates the staggered animations for the content inside */}
                     <motion.div
                         className="tw-w-full tw-max-w-md tw-text-center md:tw-max-w-xl md:tw-text-right md:tw-ml-auto md:tw-mr-16 lg:tw-mr-48 [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)]"
                         variants={contentContainerVariants}
                     >
-                        {/* Each element below will use the `itemSlideUpVariants` */}
                         <motion.h1
                             className="tw-text-5xl tw-font-extrabold tw-uppercase tw-tracking-[15px] tw-text-white lg:tw-text-8xl md:tw-tracking-[25px]"
                             variants={itemSlideUpVariants}
                         >
-                            Recalo
+                            {agencyName}
                         </motion.h1>
                         
                         <motion.div
@@ -118,15 +134,15 @@ const HeroSection2 = () => {
                             className="tw-mx-auto tw-max-w-lg tw-px-4 tw-text-center md:tw-mx-0 md:tw-ml-auto md:tw-max-w-xl md:tw-px-1 md:tw-text-left"
                             variants={itemSlideUpVariants}
                         >
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                            Sedeiusmod tempor incididunt ut labore et dolore exercitation.
+                            Planning a trip, running errands, or just need a car for the day? We’ve got you covered.
+                            Choose from a variety of reliable, clean, and comfortable vehicles at great rates. With quick booking,
+                            flexible pickup options, and friendly support, renting a car has never been easier.
                         </motion.p>
 
                         <motion.div
                             role="button"
                             className="tw-mt-8 tw-flex tw-cursor-pointer tw-items-center tw-justify-center tw-font-bold tw-pt-10 md:tw-justify-end"
                             variants={itemSlideUpVariants}
-                            // Add interactive animations for hover and tap
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
@@ -141,7 +157,7 @@ const HeroSection2 = () => {
 
             {/* Animated footer */}
             <motion.footer
-                className='tw-relative tw-z-20 tw-w-[90%] lg:tw-w-[85%] tw-mx-auto  -tw-mt-20 tw-drop-shadow-glow-white-lg'
+                className='tw-relative tw-z-20 tw-w-[90%] lg:tw-w-[85%] tw-mx-auto -tw-mt-20 tw-drop-shadow-glow-white-lg'
                 variants={footerVariants}
             >
                 <ExperienceBar />

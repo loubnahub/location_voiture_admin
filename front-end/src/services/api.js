@@ -322,4 +322,30 @@ export const updateVehicleModelColors = (vehicleModelId, colors) =>
   apiClient.put(`/vehicle-models/${vehicleModelId}/colors`, { colors });
 export const deleteVehicleModelColor = (vehicleModelId, colorHex) =>
   apiClient.delete(`/vehicle-models/${vehicleModelId}/colors/${encodeURIComponent(colorHex)}`);
+
+
+  export const fetchAgencyInfo = () => {
+    return apiClient.get('/agency-info');
+  };
+  
+  // Admin function to get info for an editing form
+  export const fetchAgencyInfoForAdmin = () => {
+    return apiClient.get('/admin/agency-info');
+  };
+  
+  // Admin function to update the info. Takes FormData to support logo upload.
+  export const updateAgencyInfo = (formData) => {
+    return apiClient.post('/admin/agency-info', formData); // Using POST
+  };
+
+
+// Fetch public partners (no authentication required)
+  export const fetchPublicPartners = () => {
+    return apiClient.get('/partners');
+  };
+  
+
+
 export default apiClient;
+
+

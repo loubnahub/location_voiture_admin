@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, UserCircle, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../services/api';
+import apiClient, { fetchAgencyInfo } from '../../services/api'; // Import fetchAgencyInfo
 
 const navLinksData = [
   { name: 'HOME', href: '/' },
@@ -19,6 +19,9 @@ const Header = () => {
   const navigate = useNavigate();
   const { isAuthenticated, currentUser, logout, isLoading: authIsLoading } = useAuth();
 
+  // --- State for dynamic agency info ---
+  const [agencyInfo, setAgencyInfo] = useState(null);
+
   // --- Notification & Dropdown States ---
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -30,14 +33,26 @@ const Header = () => {
   const notificationsDropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
 
+  // --- Lifecycle Effects ---
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll); 
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const logoSrc = "/images/Logo/Logobe.png";
+  
+  useEffect(() => {
+    const getAgencyInfo = async () => {
+      try {
+        const response = await fetchAgencyInfo();
+        setAgencyInfo(response.data);
+      } catch (error) {
+        console.error("Header: Could not fetch agency info.", error);
+        // The component will gracefully use the fallback logo if this fails.
+      }
+    };
+    getAgencyInfo();
+  }, []); // Empty array ensures this runs only once on mount.
 
   const fetchNotifications = async () => {
     if (!isAuthenticated) return;
@@ -79,6 +94,12 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // --- Dynamic Logo Source with Fallback ---
+  const defaultLogo = "/images/Logo/Logobe.png";
+  const logoSrc = agencyInfo?.logo_full_url || defaultLogo;
+  const logoAlt = `${agencyInfo?.agency_name || 'Oussama'} Logo`;
+
+  // --- Handlers ---
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
     setProfileDropdownOpen(false);
@@ -102,11 +123,8 @@ const Header = () => {
   };
 
   const handleMarkAllAsRead = () => {
-    // Optimistically update UI for instant feedback
     setUnreadCount(0);
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    
-    // Send API request in the background
     apiClient.post('/notifications/mark-all-as-read').catch(err => {
         console.error("Failed to sync 'mark all as read':", err);
     });
@@ -114,19 +132,14 @@ const Header = () => {
 
   const handleNotificationClick = (notification) => {
     if (!notification.is_read) {
-        // Optimistically update UI for instant feedback
         setUnreadCount(prev => Math.max(0, prev - 1));
-        setNotifications(prev => 
-            prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
-        );
-
-        // Send API request in the background
+        setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
         apiClient.post(`/notifications/${notification.id}/mark-as-read`).catch(err => {
             console.error("Failed to sync 'mark as read':", err);
         });
     }
     setNotificationsOpen(false);
-    navigate('/notification'); // Corrected from '/notification' to '/notifications'
+    navigate('/notification');
   };
 
   if (authIsLoading) {
@@ -135,7 +148,7 @@ const Header = () => {
             <div className="tw-container tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8">
                 <div className="tw-flex tw-items-center tw-justify-between">
                     <Link to="/home" className="tw-flex tw-items-center tw-flex-shrink-0">
-                        <img src={logoSrc} alt="RENTACAR Logo" className="tw-h-8 sm:tw-h-10" />
+                        <img src={logoSrc} alt={logoAlt} className="tw-h-8 sm:tw-h-10" />
                     </Link>
                 </div>
             </div>
@@ -158,7 +171,7 @@ const Header = () => {
       <div className="tw-container tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8">
         <div className="tw-flex tw-items-center tw-justify-between">
           <Link to="/home" className="tw-flex tw-items-center tw-flex-shrink-0">
-            <img src={logoSrc} alt="RENTACAR Logo" 
+            <img src={logoSrc} alt={logoAlt} 
               className={`tw-transition-all tw-duration-300 ${scrolled ? 'tw-h-12 sm:tw-h-14' : 'tw-h-16 sm:tw-h-20'}`} 
             />
           </Link>
@@ -218,30 +231,29 @@ const Header = () => {
                                     </div>
                                 ))}
                             </div>
-                                <div className="tw-p-2.5 tw-text-center tw-border-t tw-border-gray-700/50">
-                                    <Link to="/notification" onClick={() => setNotificationsOpen(false)} className="tw-text-xs tw-font-medium tw-text-amber-400 hover:tw-text-amber-300 tw-no-underline">
-                                        View All Notifications ({unreadCount})
-                                    </Link>
-                                </div>
-                             
+                            <div className="tw-p-2.5 tw-text-center tw-border-t tw-border-gray-700/50">
+                                <Link to="/notification" onClick={() => setNotificationsOpen(false)} className="tw-text-xs tw-font-medium tw-text-amber-400 hover:tw-text-amber-300 tw-no-underline">
+                                    View All Notifications ({unreadCount})
+                                </Link>
+                            </div>
                         </div>
                     )}
                   </div>
                   <div className="tw-relative" ref={profileDropdownRef}>
                     <button onClick={toggleProfileDropdown} className="tw-flex tw-items-center tw-space-x-2 focus:tw-outline-none">
                       {currentUser.profile_picture_url || currentUser.profile_photo_url ? ( 
-                        <img 
-                        src={currentUser.profile_picture_url} 
-                        alt={currentUser.full_name || currentUser.name} 
-                        className="tw-w-8 tw-h-8 tw-rounded-full tw-object-cover tw-border-2 tw-border-amber-400" 
-                    /> 
+                        <img src={currentUser.profile_picture_url} alt={currentUser.full_name || currentUser.name} className="tw-w-8 tw-h-8 tw-rounded-full tw-object-cover tw-border-2 tw-border-amber-400" /> 
                        ) : ( <UserCircle size={32} className={activeTextColorClass} /> )}
                       <span className={`tw-hidden lg:tw-inline tw-text-xs lg:tw-text-sm tw-font-medium tw-transition-colors ${textColorClass} ${!scrolled ? '[text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]' : ''}`}>{(currentUser.full_name || currentUser.name)?.split(' ')[0]}</span>
                       <ChevronDown size={16} className={`tw-transition-transform tw-duration-200 ${profileDropdownOpen ? 'tw-rotate-180' : ''} ${textColorClass}`} />
                     </button>
-                    {profileDropdownOpen && ( <div onMouseLeave={() => setProfileDropdownOpen(false)} className="tw-absolute tw-right-0 tw-mt-2 tw-w-48 tw-bg-[#1F1F23] tw-rounded-md tw-shadow-2xl tw-border tw-border-gray-700 tw-py-1 tw-z-40"> 
-                    <Link to={`/Profiel/${currentUser.id}`} onClick={() => setProfileDropdownOpen(false)} className="tw-no-underline tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-gray-300 hover:tw-bg-gray-700 hover:tw-text-amber-400">My Profile</Link> 
-                    <Link to={`/Mybooking/${currentUser.id}`} onClick={() => setProfileDropdownOpen(false)} className="tw-no-underline tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-gray-300 hover:tw-bg-gray-700 hover:tw-text-amber-400">My Bookings</Link> <button onClick={handleLogout} className="tw-w-full tw-text-left tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-red-400 hover:tw-bg-gray-700 hover:tw-text-red-300"> Logout </button> </div> )}
+                    {profileDropdownOpen && ( 
+                        <div onMouseLeave={() => setProfileDropdownOpen(false)} className="tw-absolute tw-right-0 tw-mt-2 tw-w-48 tw-bg-[#1F1F23] tw-rounded-md tw-shadow-2xl tw-border tw-border-gray-700 tw-py-1 tw-z-40"> 
+                            <Link to={`/Profiel/${currentUser.id}`} onClick={() => setProfileDropdownOpen(false)} className="tw-no-underline tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-gray-300 hover:tw-bg-gray-700 hover:tw-text-amber-400">My Profile</Link> 
+                            <Link to={`/Mybooking/${currentUser.id}`} onClick={() => setProfileDropdownOpen(false)} className="tw-no-underline tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-gray-300 hover:tw-bg-gray-700 hover:tw-text-amber-400">My Bookings</Link> 
+                            <button onClick={handleLogout} className="tw-w-full tw-text-left tw-block tw-px-4 tw-py-2 tw-text-sm tw-text-red-400 hover:tw-bg-gray-700 hover:tw-text-red-300"> Logout </button> 
+                        </div> 
+                    )}
                   </div>
                 </>
               ) : (
@@ -255,7 +267,36 @@ const Header = () => {
           </div>
         </div>
 
-        {mobileMenuOpen && ( <div className={`md:tw-hidden tw-absolute tw-left-0 tw-right-0 tw-top-full tw-mt-0.5 tw-mx-0 tw-shadow-2xl tw-overflow-hidden tw-border-gray-700/50 tw-bg-black/90 tw-backdrop-blur-md tw-rounded-b-lg tw-border`}> <nav className="tw-flex tw-flex-col"> {navLinksData.map(link => ( <Link key={link.name} to={link.href} onClick={toggleMobileMenu} className={`tw-no-underline tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3.5 tw-border-b tw-border-gray-800/70 tw-transition-colors tw-text-sm tw-font-medium ${location.pathname === link.href ? 'tw-text-amber-400 tw-bg-gray-800' : 'tw-text-gray-200 hover:tw-bg-gray-800 hover:tw-text-amber-400'}`}> {link.name} <ChevronDown size={16} className="tw-ml-2 tw-transform -tw-rotate-90 tw-text-gray-500" /> </Link> ))} </nav> <div className={`tw-p-4 tw-bg-black/80`}> <p className="tw-text-gray-400 tw-mb-3 tw-text-xs tw-font-medium tw-uppercase tw-tracking-wider"> {isAuthenticated && currentUser ? `Welcome, ${(currentUser.full_name || currentUser.name)?.split(' ')[0]}` : "Account Access"} </p> <div className="tw-space-y-3"> {isAuthenticated && currentUser ? ( <> <Link to="/profile" onClick={toggleMobileMenu} className="tw-no-underline tw-block tw-w-full tw-text-center tw-font-medium tw-text-gray-200 tw-border tw-border-gray-700 hover:tw-border-amber-400 hover:tw-text-amber-400 tw-px-4 tw-py-2.5 tw-rounded-lg tw-text-sm">My Profile</Link> <Link to="/my-bookings" onClick={toggleMobileMenu} className="tw-no-underline tw-block tw-w-full tw-text-center tw-font-medium tw-text-gray-200 tw-border tw-border-gray-700 hover:tw-border-amber-400 hover:tw-text-amber-400 tw-px-4 tw-py-2.5 tw-rounded-lg tw-text-sm">My Bookings</Link> <button onClick={handleLogout} className="tw-block tw-w-full tw-text-center tw-bg-red-500/80 hover:tw-bg-red-600/90 tw-text-white tw-px-4 tw-py-2.5 tw-rounded-lg tw-font-medium tw-shadow-md tw-text-sm"> Logout </button> </> ) : ( <div className="tw-grid tw-grid-cols-2 tw-gap-3"> <Link to="/Login" onClick={toggleMobileMenu} className="tw-no-underline tw-text-center tw-font-medium tw-text-gray-200 tw-border tw-border-gray-700 hover:tw-border-amber-400 hover:tw-text-amber-400 tw-px-4 tw-py-2.5 tw-rounded-lg tw-text-sm">Sign in</Link> <Link to="/SignUp" onClick={toggleMobileMenu} className="tw-no-underline tw-text-center tw-bg-blue-500 hover:tw-bg-blue-600 tw-px-4 tw-py-2.5 tw-rounded-lg tw-font-medium tw-text-white tw-shadow-md tw-text-sm">Sign up</Link> </div> )} </div> </div> </div> )}
+        {mobileMenuOpen && ( 
+            <div className={`md:tw-hidden tw-absolute tw-left-0 tw-right-0 tw-top-full tw-mt-0.5 tw-mx-0 tw-shadow-2xl tw-overflow-hidden tw-border-gray-700/50 tw-bg-black/90 tw-backdrop-blur-md tw-rounded-b-lg tw-border`}> 
+                <nav className="tw-flex tw-flex-col"> 
+                    {navLinksData.map(link => ( 
+                        <Link key={link.name} to={link.href} onClick={toggleMobileMenu} className={`tw-no-underline tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3.5 tw-border-b tw-border-gray-800/70 tw-transition-colors tw-text-sm tw-font-medium ${location.pathname === link.href ? 'tw-text-amber-400 tw-bg-gray-800' : 'tw-text-gray-200 hover:tw-bg-gray-800 hover:tw-text-amber-400'}`}> 
+                            {link.name} <ChevronDown size={16} className="tw-ml-2 tw-transform -tw-rotate-90 tw-text-gray-500" /> 
+                        </Link> 
+                    ))} 
+                </nav> 
+                <div className={`tw-p-4 tw-bg-black/80`}> 
+                    <p className="tw-text-gray-400 tw-mb-3 tw-text-xs tw-font-medium tw-uppercase tw-tracking-wider"> 
+                        {isAuthenticated && currentUser ? `Welcome, ${(currentUser.full_name || currentUser.name)?.split(' ')[0]}` : "Account Access"} 
+                    </p> 
+                    <div className="tw-space-y-3"> 
+                        {isAuthenticated && currentUser ? ( 
+                            <> 
+                                <Link to="/profile" onClick={toggleMobileMenu} className="tw-no-underline tw-block tw-w-full tw-text-center tw-font-medium tw-text-gray-200 tw-border tw-border-gray-700 hover:tw-border-amber-400 hover:tw-text-amber-400 tw-px-4 tw-py-2.5 tw-rounded-lg tw-text-sm">My Profile</Link> 
+                                <Link to="/my-bookings" onClick={toggleMobileMenu} className="tw-no-underline tw-block tw-w-full tw-text-center tw-font-medium tw-text-gray-200 tw-border tw-border-gray-700 hover:tw-border-amber-400 hover:tw-text-amber-400 tw-px-4 tw-py-2.5 tw-rounded-lg tw-text-sm">My Bookings</Link> 
+                                <button onClick={handleLogout} className="tw-block tw-w-full tw-text-center tw-bg-red-500/80 hover:tw-bg-red-600/90 tw-text-white tw-px-4 tw-py-2.5 tw-rounded-lg tw-font-medium tw-shadow-md tw-text-sm"> Logout </button> 
+                            </> 
+                        ) : ( 
+                            <div className="tw-grid tw-grid-cols-2 tw-gap-3"> 
+                                <Link to="/Login" onClick={toggleMobileMenu} className="tw-no-underline tw-text-center tw-font-medium tw-text-gray-200 tw-border tw-border-gray-700 hover:tw-border-amber-400 hover:tw-text-amber-400 tw-px-4 tw-py-2.5 tw-rounded-lg tw-text-sm">Sign in</Link> 
+                                <Link to="/SignUp" onClick={toggleMobileMenu} className="tw-no-underline tw-text-center tw-bg-blue-500 hover:tw-bg-blue-600 tw-px-4 tw-py-2.5 tw-rounded-lg tw-font-medium tw-text-white tw-shadow-md tw-text-sm">Sign up</Link> 
+                            </div> 
+                        )} 
+                    </div> 
+                </div> 
+            </div> 
+        )}
       </div>
     </header>
   );

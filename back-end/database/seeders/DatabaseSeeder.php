@@ -1,5 +1,7 @@
 <?php
 namespace Database\Seeders;
+
+use Database\Seeders\AgencyInfoSeeder as SeedersAgencyInfoSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,6 +21,8 @@ class DatabaseSeeder extends Seeder
             BookingSeeder::class,
             OperationalHoldSeeder::class,
             MaintenanceRecordSeeder::class,
+            SeedersAgencyInfoSeeder::class,
+            PartnerSeeder::class,
         ]);
     }
 }

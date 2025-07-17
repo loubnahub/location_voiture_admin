@@ -118,7 +118,7 @@ const LoginClient = () => {
               Your <br /> Account<span className={`${accentBlue}`}>.</span>
             </h1>
             <p className="tw-mt-4 tw-text-gray-300 tw-text-base sm:tw-text-lg">
-              Welcome back to RECALO! Access your account.
+              Welcome back !! Access your account.
             </p>
           </motion.div>
 

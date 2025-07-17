@@ -10,8 +10,8 @@ const YouNeedCar = () => {
   const features = [
     {
       icon: <Car size={22} className="tw-text-white" />,
-      title: 'Over 500 Cars Available',
-      description: 'Choose from economy, premium, or luxury models all well-maintained and ready to go.',
+      title: 'Wide Range of Vehicles',
+      description: 'From compact cars to luxury SUVs, find the perfect ride for every occasion.',
     },
     {
       icon: <Shield size={22} className="tw-text-white" />,

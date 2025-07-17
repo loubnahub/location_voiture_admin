@@ -6,28 +6,28 @@ import { motion } from 'framer-motion';
 
 // Dummy data for the steps - replace with your actual data
 const stepsData = [
-  // ... (data is unchanged)
   {
     title: "Choose Your Car",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim"
+    description: "Browse our selection of vehicles and pick the one that suits your trip—compact, SUV, or luxury, we have it all."
   },
   {
     title: "Pick Your Dates",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim"
+    description: "Select the pickup and return dates that fit your schedule. Enjoy full flexibility with daily, weekly, or monthly rentals."
   },
   {
     title: "Book Online",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim"
+    description: "Reserve your vehicle in just a few clicks with our quick and secure online booking system."
   },
   {
     title: "Pick Up Your Car",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim"
+    description: "Head to your selected pickup location and drive away—your car will be clean, fueled, and ready to go."
   },
   {
     title: "Return the Car",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim"
+    description: "Drop off the car at the agreed location. It's simple, quick, and hassle-free."
   },
 ];
+
 
 const jeepImageUrl = "/images/Cars/Howitsworks.png";
 
